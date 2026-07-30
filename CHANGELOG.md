@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added private registry authentication for job and service container images. Workflow credential expressions are resolved before Docker pulls missing images, while images already cached locally skip the registry request.
 - Hardened the DTU mock server by requiring a cryptographically secure per-run control token for internal seed/start-runner/dump endpoints (including trailing-slash routes), failing closed if secure randomness is unavailable, constraining runner log paths to the real run log root, and removing shell interpolation from compare handling.
 - Updated direct and transitive dependencies to remediate security advisories, including replacing the unpatched `decompress` transitive dependency.
 - Fixed parallel dependency-install races by giving every job private writable `node_modules`. Completed pnpm, Yarn, and Bun dependency trees are now atomically published as lockfile-keyed Agent CI snapshots and copied into jobs with copy-on-write when available; npm keeps private installs while reusing its shared download cache. `--prewarm-through` now populates this safe dependency cache instead of exposing a shared writable tree.

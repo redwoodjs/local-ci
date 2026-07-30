@@ -23,7 +23,7 @@ function makeMockContainer(id: string, healthStatus?: string) {
   };
 }
 
-function makeMockDocker(opts?: { healthStatus?: string }) {
+function makeMockDocker(opts?: { healthStatus?: string; imagePresent?: boolean }) {
   const containers = new Map<string, ReturnType<typeof makeMockContainer>>();
   let containerCounter = 0;
 
@@ -53,13 +53,18 @@ function makeMockDocker(opts?: { healthStatus?: string }) {
       };
     }),
     getImage: vi.fn().mockReturnValue({
-      inspect: vi.fn().mockResolvedValue({}),
+      inspect:
+        opts?.imagePresent === false
+          ? vi.fn().mockRejectedValue(new Error("not found"))
+          : vi.fn().mockResolvedValue({}),
     }),
     getNetwork: vi.fn().mockReturnValue({
       remove: vi.fn().mockResolvedValue(undefined),
     }),
-    pull: vi.fn(),
-    modem: { followProgress: vi.fn() },
+    pull: vi.fn().mockImplementation((_image, _options, callback) => callback(null, {})),
+    modem: {
+      followProgress: vi.fn().mockImplementation((_stream, callback) => callback(null)),
+    },
     _containers: containers,
   };
 
@@ -215,6 +220,29 @@ describe("startServiceContainers", () => {
     const ctx = await startServiceContainers(docker, [svc], "agent-ci-42");
 
     expect(ctx.portForwards).toHaveLength(0);
+  });
+
+  it("uses service credentials when pulling a private image", async () => {
+    const docker = makeMockDocker({ imagePresent: false });
+    const service: WorkflowService = {
+      name: "cache",
+      image: "ghcr.io/private-org/cache:latest",
+      credentials: { username: "ci-user", password: "secret-token" },
+    };
+
+    await startServiceContainers(docker, [service], "agent-ci-42");
+
+    expect(docker.pull).toHaveBeenCalledWith(
+      service.image,
+      {
+        authconfig: {
+          username: "ci-user",
+          password: "secret-token",
+          serveraddress: "ghcr.io",
+        },
+      },
+      expect.any(Function),
+    );
   });
 
   it("pre-cleans stale containers with the same name", async () => {

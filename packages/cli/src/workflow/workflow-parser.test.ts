@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   parseJobRunsOnLabels,
   parseMergedJobEnv,
+  parseWorkflowContainer,
   parseWorkflowServices,
 } from "./workflow-parser.ts";
 
@@ -60,6 +61,27 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_PASSWORD: secret
+    steps:
+      - run: echo hi
+`.trimStart();
+
+const WORKFLOW_WITH_PRIVATE_IMAGES = `
+name: Private Images
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: \${{ vars.registry }}/private-org/ci-image:latest
+      credentials:
+        username: \${{ github.actor }}
+        password: \${{ secrets.CONTAINER_TOKEN }}
+    services:
+      cache:
+        image: \${{ vars.registry }}/private-org/cache:latest
+        credentials:
+          username: \${{ matrix.registry_user }}
+          password: \${{ secrets.SERVICE_TOKEN }}
     steps:
       - run: echo hi
 `.trimStart();
@@ -164,6 +186,23 @@ describe("parseWorkflowServices", () => {
     expect(pg.options).toBeUndefined();
   });
 
+  it("expands private registry credentials and image expressions", async () => {
+    const filePath = writeWorkflow(WORKFLOW_WITH_PRIVATE_IMAGES);
+    const services = await parseWorkflowServices(filePath, "test", {
+      secrets: { SERVICE_TOKEN: "service-secret" },
+      matrixContext: { registry_user: "ci-service-user" },
+      vars: { registry: "ghcr.io" },
+    });
+
+    expect(services[0]).toMatchObject({
+      image: "ghcr.io/private-org/cache:latest",
+      credentials: {
+        username: "ci-service-user",
+        password: "service-secret",
+      },
+    });
+  });
+
   it("converts env values to strings", async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oa-svc-test-"));
     const filePath = path.join(tmpDir, "workflow.yml");
@@ -192,6 +231,35 @@ jobs:
     expect(db.env!.PORT).toBe("3306");
     expect(db.env!.SKIP_TZINFO).toBe("1");
     expect(db.env!.DEBUG).toBe("true");
+  });
+});
+
+describe("parseWorkflowContainer", () => {
+  let tmpDir: string;
+
+  afterEach(() => {
+    if (tmpDir) {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it("expands private registry credentials and image expressions", async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oa-container-test-"));
+    const filePath = path.join(tmpDir, "workflow.yml");
+    fs.writeFileSync(filePath, WORKFLOW_WITH_PRIVATE_IMAGES);
+
+    const container = await parseWorkflowContainer(filePath, "test", {
+      secrets: { CONTAINER_TOKEN: "container-secret" },
+      vars: { registry: "ghcr.io" },
+    });
+
+    expect(container).toEqual({
+      image: "ghcr.io/private-org/ci-image:latest",
+      credentials: {
+        username: "local",
+        password: "container-secret",
+      },
+    });
   });
 });
 

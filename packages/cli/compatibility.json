@@ -233,8 +233,12 @@
         },
         {
           "key": "`jobs.<id>.container.credentials`",
-          "status": "unsupported",
-          "notes": "Registry `username` / `password` credentials for pulling a private container image are not parsed. Private images fail to pull unless the host's docker already has credentials for the registry (e.g. `docker login` was run out-of-band)."
+          "status": "supported",
+          "notes": "Registry `username` / `password` credentials are expanded from workflow contexts and passed to Docker only when a missing private image must be pulled.",
+          "proof": [
+            "packages/cli/src/workflow/workflow-parser.test.ts",
+            "packages/cli/src/docker/image-pull.test.ts"
+          ]
         },
         {
           "key": "`jobs.<id>.services`",
@@ -244,8 +248,12 @@
         },
         {
           "key": "`jobs.<id>.services.*.credentials`",
-          "status": "unsupported",
-          "notes": "Per-service registry credentials are not parsed — see `jobs.<id>.container.credentials`. Private service images fail to pull unless the host's docker has credentials out-of-band."
+          "status": "supported",
+          "notes": "Each service can provide registry `username` / `password` credentials. Expressions are expanded before Docker pulls a missing image.",
+          "proof": [
+            "packages/cli/src/workflow/workflow-parser.test.ts",
+            "packages/cli/src/docker/service-containers.test.ts"
+          ]
         },
         {
           "key": "`jobs.<id>.uses` (reusable workflows)",

@@ -1,7 +1,71 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, vi } from "vitest";
 import Docker from "dockerode";
-import { ensureImagePulled } from "./image-pull.ts";
+import { ensureImagePulled, registryServerAddress } from "./image-pull.ts";
 import { resolveDockerSocket } from "./docker-socket.ts";
+
+function makeMockDocker(imagePresent: boolean): Docker {
+  const inspect = imagePresent
+    ? vi.fn().mockResolvedValue({})
+    : vi.fn().mockRejectedValue(new Error("not found"));
+  return {
+    getImage: vi.fn().mockReturnValue({ inspect }),
+    pull: vi.fn().mockImplementation((_image, _options, callback) => callback(null, {})),
+    modem: {
+      followProgress: vi.fn().mockImplementation((_stream, callback, onProgress) => {
+        onProgress?.({
+          status: "Downloading",
+          id: "layer-1",
+          progressDetail: { current: 1, total: 2 },
+        });
+        callback(null);
+      }),
+    },
+  } as unknown as Docker;
+}
+
+describe("ensureImagePulled auth and cache behavior", () => {
+  it("does not contact the registry when the image is already cached", async () => {
+    const docker = makeMockDocker(true);
+    const onPullStart = vi.fn();
+
+    await ensureImagePulled(docker, "ghcr.io/private-org/ci-image:latest", {
+      credentials: { username: "ci-user", password: "secret-token" },
+      onPullStart,
+    });
+
+    expect(docker.pull).not.toHaveBeenCalled();
+    expect(onPullStart).not.toHaveBeenCalled();
+  });
+
+  it("passes workflow credentials through Docker's auth config", async () => {
+    const docker = makeMockDocker(false);
+    const onProgress = vi.fn();
+
+    await ensureImagePulled(docker, "ghcr.io/private-org/ci-image:latest", {
+      credentials: { username: "ci-user", password: "secret-token" },
+      onProgress,
+    });
+
+    expect(docker.pull).toHaveBeenCalledWith(
+      "ghcr.io/private-org/ci-image:latest",
+      {
+        authconfig: {
+          username: "ci-user",
+          password: "secret-token",
+          serveraddress: "ghcr.io",
+        },
+      },
+      expect.any(Function),
+    );
+    expect(onProgress).toHaveBeenCalled();
+  });
+
+  it("uses Docker's canonical registry address for Docker Hub images", () => {
+    expect(registryServerAddress("ubuntu:latest")).toBe("https://index.docker.io/v1/");
+    expect(registryServerAddress("redwoodjs/agent-ci:latest")).toBe("https://index.docker.io/v1/");
+    expect(registryServerAddress("localhost:5000/team/image:latest")).toBe("localhost:5000");
+  });
+});
 
 // Integration test: requires a running Docker daemon and network access.
 // Uses hello-world (~13 KB) to keep pull time minimal.

@@ -717,8 +717,17 @@ async function runPrewarmThrough(options: {
       },
       runnerName: `agent-ci-prewarm-${getNextLogNum("agent-ci")}-j1`,
       steps,
-      services: await parseWorkflowServices(workflowPath, options.spec.jobId),
-      container: (await parseWorkflowContainer(workflowPath, options.spec.jobId)) ?? undefined,
+      services: await parseWorkflowServices(workflowPath, options.spec.jobId, {
+        repoPath: repoRoot,
+        secrets,
+        vars: options.vars,
+      }),
+      container:
+        (await parseWorkflowContainer(workflowPath, options.spec.jobId, {
+          repoPath: repoRoot,
+          secrets,
+          vars: options.vars,
+        })) ?? undefined,
       workflowPath,
       taskId: `prewarm:${options.spec.jobId}:${options.spec.stepId}`,
     },
@@ -1637,6 +1646,23 @@ async function handleWorkflow(options: {
       inputsContext,
       vars,
     );
+    const expressionContext = {
+      repoPath: repoRoot,
+      secrets,
+      matrixContext: ej.matrixContext,
+      inputsContext,
+      vars,
+    };
+    const services = await parseWorkflowServices(
+      ej.workflowPath,
+      actualTaskName,
+      expressionContext,
+    );
+    const container = await parseWorkflowContainer(
+      ej.workflowPath,
+      actualTaskName,
+      expressionContext,
+    );
 
     store.addJob(ej.workflowPath, actualTaskName, ej.runnerName, {
       classification: ej.classification,
@@ -1665,8 +1691,8 @@ async function handleWorkflow(options: {
       },
       runnerName: ej.runnerName,
       steps,
-      services: ej.services,
-      container: ej.container ?? undefined,
+      services,
+      container: container ?? undefined,
       workflowPath: ej.workflowPath,
       parentWorkflowPath: ej.callerJobId ? workflowPath : undefined,
       taskId: ej.taskName,
@@ -1788,8 +1814,24 @@ async function handleWorkflow(options: {
       inputsContext,
       vars,
     );
-    const services = await parseWorkflowServices(ej.workflowPath, actualTaskName);
-    const container = await parseWorkflowContainer(ej.workflowPath, actualTaskName);
+    const expressionContext = {
+      repoPath: repoRoot,
+      secrets,
+      matrixContext,
+      needsContext,
+      inputsContext,
+      vars,
+    };
+    const services = await parseWorkflowServices(
+      ej.workflowPath,
+      actualTaskName,
+      expressionContext,
+    );
+    const container = await parseWorkflowContainer(
+      ej.workflowPath,
+      actualTaskName,
+      expressionContext,
+    );
 
     const job = buildJob(ej);
     job.steps = steps;

@@ -1147,17 +1147,64 @@ export async function parseWorkflowSteps(
     .filter(Boolean);
 }
 
+export interface WorkflowRegistryCredentials {
+  username: string;
+  password: string;
+}
+
+export interface WorkflowExpressionContext {
+  repoPath?: string;
+  secrets?: Record<string, string>;
+  matrixContext?: Record<string, string>;
+  needsContext?: Record<string, Record<string, string>>;
+  inputsContext?: Record<string, string>;
+  vars?: Record<string, string>;
+}
+
 export interface WorkflowService {
   name: string;
   image: string;
+  credentials?: WorkflowRegistryCredentials;
   env?: Record<string, string>;
   ports?: string[];
   options?: string;
 }
 
+function expandWorkflowExpression(value: unknown, context: WorkflowExpressionContext): string {
+  return expandExpressions(
+    String(value),
+    context.repoPath,
+    context.secrets,
+    context.matrixContext,
+    context.needsContext,
+    context.inputsContext,
+    context.vars,
+  );
+}
+
+function parseRegistryCredentials(
+  value: unknown,
+  context: WorkflowExpressionContext,
+): WorkflowRegistryCredentials | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const raw = value as Record<string, unknown>;
+  if (raw.username === undefined || raw.password === undefined) {
+    return undefined;
+  }
+
+  return {
+    username: expandWorkflowExpression(raw.username, context),
+    password: expandWorkflowExpression(raw.password, context),
+  };
+}
+
 export async function parseWorkflowServices(
   filePath: string,
   taskName: string,
+  context: WorkflowExpressionContext = {},
 ): Promise<WorkflowService[]> {
   const rawYaml = parseYaml(fs.readFileSync(filePath, "utf8"));
   const rawJob = rawYaml.jobs?.[taskName] || {};
@@ -1169,8 +1216,12 @@ export async function parseWorkflowServices(
   return Object.entries(rawServices).map(([name, def]: [string, any]) => {
     const svc: WorkflowService = {
       name,
-      image: def.image || "",
+      image: expandWorkflowExpression(def.image || "", context),
     };
+    const credentials = parseRegistryCredentials(def.credentials, context);
+    if (credentials) {
+      svc.credentials = credentials;
+    }
     if (def.env && typeof def.env === "object") {
       svc.env = Object.fromEntries(Object.entries(def.env).map(([k, v]) => [k, String(v)]));
     }
@@ -1186,6 +1237,7 @@ export async function parseWorkflowServices(
 
 export interface WorkflowContainer {
   image: string;
+  credentials?: WorkflowRegistryCredentials;
   env?: Record<string, string>;
   ports?: string[];
   volumes?: string[];
@@ -1202,6 +1254,7 @@ export interface WorkflowContainer {
 export async function parseWorkflowContainer(
   filePath: string,
   taskName: string,
+  context: WorkflowExpressionContext = {},
 ): Promise<WorkflowContainer | null> {
   const rawYaml = parseYaml(fs.readFileSync(filePath, "utf8"));
   const rawJob = rawYaml.jobs?.[taskName] || {};
@@ -1212,7 +1265,7 @@ export async function parseWorkflowContainer(
 
   // Short form: `container: node:18`
   if (typeof rawContainer === "string") {
-    return { image: rawContainer };
+    return { image: expandWorkflowExpression(rawContainer, context) };
   }
 
   if (typeof rawContainer !== "object") {
@@ -1220,10 +1273,14 @@ export async function parseWorkflowContainer(
   }
 
   const result: WorkflowContainer = {
-    image: rawContainer.image || "",
+    image: expandWorkflowExpression(rawContainer.image || "", context),
   };
   if (!result.image) {
     return null;
+  }
+  const credentials = parseRegistryCredentials(rawContainer.credentials, context);
+  if (credentials) {
+    result.credentials = credentials;
   }
   if (rawContainer.env && typeof rawContainer.env === "object") {
     result.env = Object.fromEntries(

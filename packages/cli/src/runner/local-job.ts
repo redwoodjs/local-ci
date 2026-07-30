@@ -37,7 +37,7 @@ import {
   resolveDockerExtraHosts,
 } from "../docker/container-config.ts";
 import { buildJobResult, isJobSuccessful } from "./result-builder.ts";
-import { ensureImagePulled } from "../docker/image-pull.ts";
+import { ensureImagePulled, type ImageRegistryCredentials } from "../docker/image-pull.ts";
 import { wrapJobSteps, appendOutputCaptureStep } from "./step-wrapper.ts";
 import { syncWorkspaceForRetry } from "./sync.ts";
 import {
@@ -174,100 +174,87 @@ async function pullContainerImageWithProgress(
   image: string,
   store: RunStateStore | undefined,
   containerName: string,
+  credentials?: ImageRegistryCredentials,
 ): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    docker.pull(image, (err: Error | null, stream: NodeJS.ReadableStream) => {
-      if (err) {
-        return reject(err);
-      }
-      // Track per-layer progress across download and extraction phases
-      const downloadProgress = new Map<string, { current: number; total: number }>();
-      const extractProgress = new Map<string, { current: number; total: number }>();
-      let lastProgressUpdate = 0;
-      let currentPhase: "downloading" | "extracting" = "downloading";
+  const downloadProgress = new Map<string, { current: number; total: number }>();
+  const extractProgress = new Map<string, { current: number; total: number }>();
+  let lastProgressUpdate = 0;
+  let currentPhase: "downloading" | "extracting" = "downloading";
 
-      const flushProgress = (force = false) => {
-        const map = currentPhase === "downloading" ? downloadProgress : extractProgress;
-        if (map.size === 0) {
-          return;
-        }
-        const now = Date.now();
-        if (!force && now - lastProgressUpdate < 250) {
-          return;
-        }
-        lastProgressUpdate = now;
-        let totalBytes = 0;
-        let currentBytes = 0;
-        for (const layer of map.values()) {
-          totalBytes += layer.total;
-          currentBytes += layer.current;
-        }
-        store?.updateJob(containerName, {
-          pullProgress: { phase: currentPhase, currentBytes, totalBytes },
-        });
-      };
-
-      docker.modem.followProgress(
-        stream,
-        (followErr: Error | null) => {
-          if (followErr) {
-            return reject(followErr);
-          }
-          store?.updateJob(containerName, { pullProgress: undefined });
-          resolve();
-        },
-        (event: {
-          status?: string;
-          id?: string;
-          progressDetail?: { current?: number; total?: number };
-        }) => {
-          if (!event.id) {
-            return;
-          }
-
-          const detail = event.progressDetail;
-          const hasByteCounts =
-            detail &&
-            typeof detail.current === "number" &&
-            typeof detail.total === "number" &&
-            detail.total > 0;
-
-          if (event.status === "Downloading" && hasByteCounts) {
-            downloadProgress.set(event.id, {
-              current: detail.current!,
-              total: detail.total!,
-            });
-          } else if (event.status === "Download complete") {
-            const existing = downloadProgress.get(event.id);
-            if (existing) {
-              existing.current = existing.total;
-            }
-          } else if (event.status === "Extracting" && hasByteCounts) {
-            const phaseChanged = currentPhase !== "extracting";
-            currentPhase = "extracting";
-            extractProgress.set(event.id, {
-              current: detail.current!,
-              total: detail.total!,
-            });
-            // Force update on first extraction event so the phase change is visible immediately
-            if (phaseChanged) {
-              flushProgress(true);
-              return;
-            }
-          } else if (event.status === "Pull complete") {
-            const existing = extractProgress.get(event.id);
-            if (existing) {
-              existing.current = existing.total;
-            }
-          } else {
-            return;
-          }
-
-          flushProgress();
-        },
-      );
+  const flushProgress = (force = false) => {
+    const map = currentPhase === "downloading" ? downloadProgress : extractProgress;
+    if (map.size === 0) {
+      return;
+    }
+    const now = Date.now();
+    if (!force && now - lastProgressUpdate < 250) {
+      return;
+    }
+    lastProgressUpdate = now;
+    let totalBytes = 0;
+    let currentBytes = 0;
+    for (const layer of map.values()) {
+      totalBytes += layer.total;
+      currentBytes += layer.current;
+    }
+    store?.updateJob(containerName, {
+      pullProgress: { phase: currentPhase, currentBytes, totalBytes },
     });
-  });
+  };
+
+  try {
+    await ensureImagePulled(docker, image, {
+      credentials,
+      onPullStart: () => debugRunner(`Pulling ${image}...`),
+      onProgress: (event) => {
+        if (!event.id) {
+          return;
+        }
+
+        const detail = event.progressDetail;
+        const hasByteCounts =
+          detail &&
+          typeof detail.current === "number" &&
+          typeof detail.total === "number" &&
+          detail.total > 0;
+
+        if (event.status === "Downloading" && hasByteCounts) {
+          downloadProgress.set(event.id, {
+            current: detail.current!,
+            total: detail.total!,
+          });
+        } else if (event.status === "Download complete") {
+          const existing = downloadProgress.get(event.id);
+          if (existing) {
+            existing.current = existing.total;
+          }
+        } else if (event.status === "Extracting" && hasByteCounts) {
+          const phaseChanged = currentPhase !== "extracting";
+          currentPhase = "extracting";
+          extractProgress.set(event.id, {
+            current: detail.current!,
+            total: detail.total!,
+          });
+          // Force update on first extraction event so the phase change is visible immediately
+          if (phaseChanged) {
+            flushProgress(true);
+            return;
+          }
+        } else if (event.status === "Pull complete") {
+          const existing = extractProgress.get(event.id);
+          if (existing) {
+            existing.current = existing.total;
+          }
+        } else {
+          return;
+        }
+
+        flushProgress();
+      },
+    });
+  } finally {
+    store?.updateJob(containerName, { pullProgress: undefined });
+  }
 }
 
 /**
@@ -895,8 +882,13 @@ export async function executeLocalJob(
       const resolvedUrl = `${dockerApiUrl}/${githubRepo}`;
       writeRunnerCredentials(hostRunnerDir, containerName, resolvedUrl);
 
-      debugRunner(`Pulling ${containerImage}...`);
-      await pullContainerImageWithProgress(getDocker(), containerImage, store, containerName);
+      await pullContainerImageWithProgress(
+        getDocker(),
+        containerImage,
+        store,
+        containerName,
+        job.container!.credentials,
+      );
     }
 
     const containerEnv = buildContainerEnv({
