@@ -161,6 +161,7 @@ type ExprContext = {
   vars?: Record<string, string>;
   runnerContext?: RunnerContext;
   envContext?: Record<string, string>;
+  githubContext?: Record<string, string>;
 };
 
 const ZERO_SHA = "0000000000000000000000000000000000000000";
@@ -367,6 +368,13 @@ function resolveContextRef(trimmed: string, ctx: ExprContext): string | undefine
   }
   if (trimmed === "strategy.job-index") {
     return ctx.matrixContext?.["__job_index"] ?? "0";
+  }
+  if (trimmed.startsWith("github.")) {
+    const key = trimmed.slice("github.".length);
+    const dynamicValue = ctx.githubContext?.[key];
+    if (dynamicValue !== undefined) {
+      return dynamicValue;
+    }
   }
   if (trimmed in CONST_CONTEXT_REFS) {
     return CONST_CONTEXT_REFS[trimmed];
@@ -576,6 +584,7 @@ export function expandExpressions(
   vars?: Record<string, string>,
   runnerContext?: RunnerContext,
   envContext?: Record<string, string>,
+  githubContext?: Record<string, string>,
 ): string {
   const ctx: ExprContext = {
     repoPath,
@@ -586,6 +595,7 @@ export function expandExpressions(
     vars,
     runnerContext,
     envContext,
+    githubContext,
   };
   return value.replace(/\$\{\{([\s\S]*?)\}\}/g, (_match, expr: string) =>
     evaluateExprValue(expr, ctx),
@@ -1159,6 +1169,8 @@ export interface WorkflowExpressionContext {
   needsContext?: Record<string, Record<string, string>>;
   inputsContext?: Record<string, string>;
   vars?: Record<string, string>;
+  envContext?: Record<string, string>;
+  githubContext?: Record<string, string>;
 }
 
 export interface WorkflowService {
@@ -1179,7 +1191,41 @@ function expandWorkflowExpression(value: unknown, context: WorkflowExpressionCon
     context.needsContext,
     context.inputsContext,
     context.vars,
+    undefined,
+    context.envContext,
+    context.githubContext,
   );
+}
+
+function resolveWorkflowJobEnv(
+  rawYaml: unknown,
+  rawJob: unknown,
+  context: WorkflowExpressionContext,
+): Record<string, string> {
+  const pick = (source: unknown): Record<string, unknown> => {
+    if (!source || typeof source !== "object") {
+      return {};
+    }
+    const env = (source as { env?: unknown }).env;
+    return env && typeof env === "object" && !Array.isArray(env)
+      ? (env as Record<string, unknown>)
+      : {};
+  };
+  const resolveScope = (
+    values: Record<string, unknown>,
+    envContext: Record<string, string>,
+  ): Record<string, string> =>
+    Object.fromEntries(
+      Object.entries(values).map(([key, value]) => [
+        key,
+        expandWorkflowExpression(value, { ...context, envContext }),
+      ]),
+    );
+
+  const outerEnv = context.envContext ?? {};
+  const workflowEnv = resolveScope(pick(rawYaml), outerEnv);
+  const jobEnv = resolveScope(pick(rawJob), { ...outerEnv, ...workflowEnv });
+  return { ...outerEnv, ...workflowEnv, ...jobEnv };
 }
 
 function parseRegistryCredentials(
@@ -1212,13 +1258,17 @@ export async function parseWorkflowServices(
   if (!rawServices || typeof rawServices !== "object") {
     return [];
   }
+  const expressionContext = {
+    ...context,
+    envContext: resolveWorkflowJobEnv(rawYaml, rawJob, context),
+  };
 
   return Object.entries(rawServices).map(([name, def]: [string, any]) => {
     const svc: WorkflowService = {
       name,
-      image: expandWorkflowExpression(def.image || "", context),
+      image: expandWorkflowExpression(def.image || "", expressionContext),
     };
-    const credentials = parseRegistryCredentials(def.credentials, context);
+    const credentials = parseRegistryCredentials(def.credentials, expressionContext);
     if (credentials) {
       svc.credentials = credentials;
     }
@@ -1262,10 +1312,14 @@ export async function parseWorkflowContainer(
   if (!rawContainer) {
     return null;
   }
+  const expressionContext = {
+    ...context,
+    envContext: resolveWorkflowJobEnv(rawYaml, rawJob, context),
+  };
 
   // Short form: `container: node:18`
   if (typeof rawContainer === "string") {
-    return { image: expandWorkflowExpression(rawContainer, context) };
+    return { image: expandWorkflowExpression(rawContainer, expressionContext) };
   }
 
   if (typeof rawContainer !== "object") {
@@ -1273,12 +1327,12 @@ export async function parseWorkflowContainer(
   }
 
   const result: WorkflowContainer = {
-    image: expandWorkflowExpression(rawContainer.image || "", context),
+    image: expandWorkflowExpression(rawContainer.image || "", expressionContext),
   };
   if (!result.image) {
     return null;
   }
-  const credentials = parseRegistryCredentials(rawContainer.credentials, context);
+  const credentials = parseRegistryCredentials(rawContainer.credentials, expressionContext);
   if (credentials) {
     result.credentials = credentials;
   }

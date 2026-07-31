@@ -671,6 +671,16 @@ async function runPrewarmThrough(options: {
   const realHeadSha = headSha ?? dirtySha ?? headSlug.headSha;
   const baseSha = await resolveBaseSha(repoRoot, realHeadSha);
   const [owner, name] = config.GITHUB_REPO.split("/");
+  const workflowExpressionContext = {
+    repoPath: repoRoot,
+    vars: options.vars,
+    githubContext: {
+      repository: config.GITHUB_REPO,
+      repository_owner: owner,
+      actor: owner,
+      sha: realHeadSha,
+    },
+  };
 
   const requiredRefs = extractSecretRefs(workflowPath, options.spec.jobId);
   const secrets = loadMachineSecrets(repoRoot, requiredRefs);
@@ -718,15 +728,13 @@ async function runPrewarmThrough(options: {
       runnerName: `agent-ci-prewarm-${getNextLogNum("agent-ci")}-j1`,
       steps,
       services: await parseWorkflowServices(workflowPath, options.spec.jobId, {
-        repoPath: repoRoot,
+        ...workflowExpressionContext,
         secrets,
-        vars: options.vars,
       }),
       container:
         (await parseWorkflowContainer(workflowPath, options.spec.jobId, {
-          repoPath: repoRoot,
+          ...workflowExpressionContext,
           secrets,
-          vars: options.vars,
         })) ?? undefined,
       workflowPath,
       taskId: `prewarm:${options.spec.jobId}:${options.spec.stepId}`,
@@ -1489,6 +1497,12 @@ async function handleWorkflow(options: {
   const githubRepo = slugFromRemote;
   config.GITHUB_REPO = githubRepo;
   const [owner, name] = githubRepo.split("/");
+  const workflowGithubContext = {
+    repository: githubRepo,
+    repository_owner: owner,
+    actor: owner,
+    sha: realHeadSha,
+  };
 
   const remoteCacheDir = path.resolve(getWorkingDirectory(), "cache", "remote-workflows");
   const remoteCache = await prefetchRemoteWorkflows(workflowPath, remoteCacheDir, githubToken);
@@ -1652,6 +1666,7 @@ async function handleWorkflow(options: {
       matrixContext: ej.matrixContext,
       inputsContext,
       vars,
+      githubContext: workflowGithubContext,
     };
     const services = await parseWorkflowServices(
       ej.workflowPath,
@@ -1821,6 +1836,7 @@ async function handleWorkflow(options: {
       needsContext,
       inputsContext,
       vars,
+      githubContext: workflowGithubContext,
     };
     const services = await parseWorkflowServices(
       ej.workflowPath,
