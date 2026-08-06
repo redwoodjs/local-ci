@@ -23,7 +23,7 @@ export function wrapStepScript(script: string, stepName: string, stepIndex: numb
   // The original script runs in a subshell `( ... )` so that:
   //  1. `exit N` inside the script terminates the subshell, not the retry loop
   //  2. The runner's `set -e` (bash -e {0}) doesn't bypass the wrapper
-  return `__SIGNALS="/tmp/agent-ci-signals"
+  return `__SIGNALS="/tmp/local-ci-signals"
 __STEP_INDEX=${stepIndex}
 # ── from-step skip logic ──
 if [ -f "$__SIGNALS/from-step" ]; then
@@ -91,7 +91,7 @@ export function wrapJobSteps(steps: any[], pauseOnFailure: boolean): any[] {
 // ─── Output capture step injection ────────────────────────────────────────────
 //
 // Appends a synthetic step that reads `$GITHUB_OUTPUT` files and echoes their
-// contents to stdout with a `::agent-ci-output::` prefix. The DTU parses these
+// contents to stdout with a `::local-ci-output::` prefix. The DTU parses these
 // lines and persists them to `outputs.json` so the CLI can resolve cross-job
 // outputs via `needs.*.outputs.*`.
 //
@@ -103,11 +103,11 @@ export function wrapJobSteps(steps: any[], pauseOnFailure: boolean): any[] {
  * Build the shell script for the output-capture synthetic step.
  *
  * Reads all `set_output_*` files from `GITHUB_OUTPUT`'s directory and
- * echoes each `key=value` line with the prefix `::agent-ci-output::`.
+ * echoes each `key=value` line with the prefix `::local-ci-output::`.
  * Multiline values (heredoc format) are flattened into single-line JSON.
  */
 function outputCaptureScript(): string {
-  return `# Agent CI: capture step outputs for cross-job passing
+  return `# Local CI: capture step outputs for cross-job passing
 DIR="$(dirname "$GITHUB_OUTPUT")"
 if [ -d "$DIR" ]; then
   for f in "$DIR"/set_output_*; do
@@ -122,9 +122,9 @@ if [ -d "$DIR" ]; then
           [ "$hline" = "$DELIM" ] && break
           [ -n "$VAL" ] && VAL="$VAL\\\\n$hline" || VAL="$hline"
         done
-        echo "::agent-ci-output::$KEY=$VAL"
+        echo "::local-ci-output::$KEY=$VAL"
       else
-        echo "::agent-ci-output::$line"
+        echo "::local-ci-output::$line"
       fi
     done < "$f"
   done
@@ -138,7 +138,7 @@ fi`;
  */
 export function createOutputCaptureStep(): Record<string, any> {
   return {
-    Name: "__agent_ci_output_capture",
+    Name: "__local_ci_output_capture",
     DisplayName: "Capture outputs",
     Reference: { Type: "Script" },
     Inputs: {
@@ -146,7 +146,7 @@ export function createOutputCaptureStep(): Record<string, any> {
     },
     Condition: "always()",
     Environment: {},
-    ContextName: "__agent_ci_output_capture",
+    ContextName: "__local_ci_output_capture",
   };
 }
 

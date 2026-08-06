@@ -2,7 +2,7 @@
 
 ## Demo Recording
 
-Terminal demo of agent-ci using [VHS](https://github.com/charmbracelet/vhs).
+Terminal demo of local-ci using [VHS](https://github.com/charmbracelet/vhs).
 
 ### Prerequisites
 

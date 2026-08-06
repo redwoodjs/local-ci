@@ -1,0 +1,52 @@
+{
+  "workflow": "wave-partial-failure.yml",
+  "plan": {
+    "jobs": [
+      {
+        "id": "dependent",
+        "runnerName": "local-ci-1-j1",
+        "target": "linux:ubuntu-latest",
+        "needs": ["first", "middle", "last"],
+        "if": "${{ always() }}",
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "first",
+        "runnerName": "local-ci-1-j2",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "last",
+        "runnerName": "local-ci-1-j3",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "middle",
+        "runnerName": "local-ci-1-j4",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      }
+    ],
+    "schedule": [["first", "last", "middle"], ["dependent"]]
+  }
+}

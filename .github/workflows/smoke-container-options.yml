@@ -4,7 +4,7 @@ name: "Smoke: jobs.<id>.container.options passthrough"
 # passes to the runner's container. We verify one benign flag (`--env`) and
 # a `--label` tag that we can read back via `docker inspect` from the host.
 #
-# If agent-ci silently drops the options string, the env var is unset and
+# If local-ci silently drops the options string, the env var is unset and
 # the label is missing, failing the assertions.
 
 on:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/actions/actions-runner:latest
-      options: --env SMOKE_OPTIONS_FLAG=from-options --label agent-ci.smoke=options
+      options: --env SMOKE_OPTIONS_FLAG=from-options --label local-ci.smoke=options
     steps:
       - name: --env in options propagates to the step's environment
         run: |

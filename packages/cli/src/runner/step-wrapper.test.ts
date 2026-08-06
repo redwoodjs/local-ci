@@ -7,7 +7,7 @@ describe("wrapStepScript", () => {
   it("wraps the original script in a retry loop", () => {
     const wrapped = wrapStepScript("npm test", "Run tests", 1);
     expect(wrapped).toContain("npm test");
-    expect(wrapped).toContain('__SIGNALS="/tmp/agent-ci-signals"');
+    expect(wrapped).toContain('__SIGNALS="/tmp/local-ci-signals"');
     expect(wrapped).toContain("while true; do");
     expect(wrapped).toContain("Retrying step...");
   });

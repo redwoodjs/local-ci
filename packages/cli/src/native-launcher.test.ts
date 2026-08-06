@@ -14,36 +14,36 @@ describe("native launcher", () => {
     expect(nativePackageSuffix("darwin", "x64")).toBe("darwin-x64");
     expect(nativePackageSuffix("darwin", "arm64")).toBe("darwin-arm64");
     expect(nativePackageSuffix("win32", "x64")).toBeNull();
-    expect(nativePackageName("darwin", "arm64")).toBe("@redwoodjs/agent-ci-darwin-arm64");
+    expect(nativePackageName("darwin", "arm64")).toBe("@redwoodjs/local-ci-darwin-arm64");
   });
 
   it("resolves the binary from the optional platform package", () => {
-    const packageJson = path.join("/repo/node_modules/@redwoodjs/agent-ci-linux-x64/package.json");
+    const packageJson = path.join("/repo/node_modules/@redwoodjs/local-ci-linux-x64/package.json");
 
     const resolved = resolveNativeBinary({
       platform: "linux",
       arch: "x64",
-      env: { AGENT_CI_FORCE_RUST: "1" },
+      env: { LOCAL_CI_FORCE_RUST: "1" },
       resolvePackageJson: () => packageJson,
-      existsSync: (candidate) => candidate.endsWith("/bin/agent-ci"),
+      existsSync: (candidate) => candidate.endsWith("/bin/local-ci"),
     });
 
-    expect(resolved).toBe(path.join(path.dirname(packageJson), "bin", "agent-ci"));
+    expect(resolved).toBe(path.join(path.dirname(packageJson), "bin", "local-ci"));
   });
 
   it("falls back to a bundled binary path when optional package is absent", () => {
     const resolved = resolveNativeBinary({
       platform: "darwin",
       arch: "arm64",
-      env: { AGENT_CI_FORCE_RUST: "1" },
+      env: { LOCAL_CI_FORCE_RUST: "1" },
       launcherDir: "/repo/packages/cli/dist",
       resolvePackageJson: () => {
         throw new Error("missing optional dependency");
       },
-      existsSync: (candidate) => candidate === "/repo/packages/cli/native/darwin-arm64/agent-ci",
+      existsSync: (candidate) => candidate === "/repo/packages/cli/native/darwin-arm64/local-ci",
     });
 
-    expect(resolved).toBe("/repo/packages/cli/native/darwin-arm64/agent-ci");
+    expect(resolved).toBe("/repo/packages/cli/native/darwin-arm64/local-ci");
   });
 
   it("defaults to TypeScript while Rust execution parity is incomplete", () => {
@@ -51,7 +51,7 @@ describe("native launcher", () => {
       resolveNativeBinary({
         platform: "linux",
         arch: "x64",
-        resolvePackageJson: () => "/repo/node_modules/@redwoodjs/agent-ci-linux-x64/package.json",
+        resolvePackageJson: () => "/repo/node_modules/@redwoodjs/local-ci-linux-x64/package.json",
         existsSync: () => true,
       }),
     ).toBeNull();
@@ -62,7 +62,7 @@ describe("native launcher", () => {
       resolveNativeBinary({
         platform: "linux",
         arch: "x64",
-        env: { AGENT_CI_FORCE_TYPESCRIPT: "1", AGENT_CI_FORCE_RUST: "1" },
+        env: { LOCAL_CI_FORCE_TYPESCRIPT: "1", LOCAL_CI_FORCE_RUST: "1" },
         resolvePackageJson: () => "/unused/package.json",
         existsSync: () => true,
       }),
@@ -71,7 +71,7 @@ describe("native launcher", () => {
       resolveNativeBinary({
         platform: "win32",
         arch: "x64",
-        env: { AGENT_CI_FORCE_RUST: "1" },
+        env: { LOCAL_CI_FORCE_RUST: "1" },
         existsSync: () => true,
       }),
     ).toBeNull();
@@ -79,10 +79,10 @@ describe("native launcher", () => {
 
   it("explains how to recover when forced Rust has no binary", () => {
     expect(forcedRustMissingBinaryMessage("linux", "x64")).toContain(
-      "Unset AGENT_CI_FORCE_RUST to use the TypeScript fallback",
+      "Unset LOCAL_CI_FORCE_RUST to use the TypeScript fallback",
     );
     expect(forcedRustMissingBinaryMessage("linux", "x64")).toContain(
-      "@redwoodjs/agent-ci-linux-x64",
+      "@redwoodjs/local-ci-linux-x64",
     );
   });
 });

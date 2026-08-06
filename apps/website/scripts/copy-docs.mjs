@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Copy the public CLI docs into the website's static assets so they are
-// reachable at https://agent-ci.dev/docs/... and regenerate the Agent Skills
+// reachable at https://local-ci.dev/docs/... and regenerate the Agent Skills
 // discovery index with fresh sha256 digests.
 //
 // This script is idempotent and safe to run repeatedly. It is hooked into
@@ -61,11 +61,11 @@ async function writeAgentSkillsIndex(copied) {
     version: "0.2.0",
     skills: [
       {
-        name: "agent-ci",
+        name: "local-ci",
         type: "skill",
         description:
           "Run GitHub Actions workflows locally with pause-on-failure for AI-agent-driven CI iteration.",
-        url: "https://agent-ci.dev/docs/SKILL.md",
+        url: "https://local-ci.dev/docs/SKILL.md",
         sha256: skillDigest,
       },
     ],

@@ -8,7 +8,7 @@ const configSchema = z.object({
    * The secret used to sign GitHub webhooks.
    * Hardcoded for local-only mock usage.
    */
-  GITHUB_WEBHOOK_SECRET: z.string().min(1).default("agent-ci-local"),
+  GITHUB_WEBHOOK_SECRET: z.string().min(1).default("local-ci-local"),
 
   /**
    * The internal URL where the DTU Mock Server is reachable.

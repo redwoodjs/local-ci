@@ -8,7 +8,7 @@ import os from "node:os";
 import type Docker from "dockerode";
 import { parse as parseYaml } from "yaml";
 
-import { config, loadMachineSecrets, resolveRepoSlug } from "../config.ts";
+import { config, loadMachineSecrets, resolveMachineEnvPath, resolveRepoSlug } from "../config.ts";
 import { loadVarFiles } from "../workflow-vars.ts";
 import { getNextLogNum } from "../output/logger.ts";
 import {
@@ -119,13 +119,13 @@ export type PrewarmThroughSpec = {
 export function parsePrewarmThroughSpec(raw: string): PrewarmThroughSpec {
   const parts = raw.split(":");
   if (parts.length < 3) {
-    exitWithError("[Agent CI] Error: --prewarm-through expects <workflow-path>:<job-id>:<step-id>");
+    exitWithError("[Local CI] Error: --prewarm-through expects <workflow-path>:<job-id>:<step-id>");
   }
   const stepId = parts.pop()!.trim();
   const jobId = parts.pop()!.trim();
   const workflowPath = parts.join(":").trim();
   if (!workflowPath || !jobId || !stepId) {
-    exitWithError("[Agent CI] Error: --prewarm-through expects <workflow-path>:<job-id>:<step-id>");
+    exitWithError("[Local CI] Error: --prewarm-through expects <workflow-path>:<job-id>:<step-id>");
   }
   return { workflowPath, jobId, stepId };
 }
@@ -207,18 +207,18 @@ export function formatPrewarmWarning(candidates: PrewarmInstallCandidate[]): str
   const selector = prewarmSelectorForCandidates(candidates);
   const stepIdHint = example.stepId
     ? ""
-    : "\nAdd a stable `id: install` to the install step you want Agent CI to prewarm through.\n";
+    : "\nAdd a stable `id: install` to the install step you want Local CI to prewarm through.\n";
   return [
-    `[Agent CI] Notice: ${candidates.length} parallel jobs will start with a cold dependency cache.`,
+    `[Local CI] Notice: ${candidates.length} parallel jobs will start with a cold dependency cache.`,
     "Each job has private node_modules, but prewarming can avoid duplicate installation work.",
     stepIdHint.trim(),
     "To prewarm dependencies explicitly, run:",
     "",
-    `  agent-ci run --all --prewarm-through ${selector}`,
+    `  local-ci run --all --prewarm-through ${selector}`,
     "",
-    "Or persist this in .env.agent-ci:",
+    "Or persist this in .env.local-ci:",
     "",
-    `  AGENT_CI_PREWARM_THROUGH=${selector}`,
+    `  LOCAL_CI_PREWARM_THROUGH=${selector}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -258,7 +258,7 @@ export function truncateStepsThroughId<T extends { ContextName?: string } | null
   const idx = steps.findIndex((step) => step?.ContextName === stepId);
   if (idx === -1) {
     throw new Error(
-      `[Agent CI] Prewarm step '${stepId}' not found. Add a stable 'id: ${stepId}' to the target step.`,
+      `[Local CI] Prewarm step '${stepId}' not found. Add a stable 'id: ${stepId}' to the target step.`,
     );
   }
   return steps.slice(0, idx + 1).filter((step): step is NonNullable<T> => step != null);
@@ -272,7 +272,7 @@ function exitWithError(msg: string): never {
 function parseJobsFlag(raw: string): number {
   const n = parseInt(raw, 10);
   if (!Number.isFinite(n) || n < 1) {
-    exitWithError("[Agent CI] Error: --jobs must be a positive integer");
+    exitWithError("[Local CI] Error: --jobs must be a positive integer");
   }
   return n;
 }
@@ -280,11 +280,11 @@ function parseJobsFlag(raw: string): number {
 function parseVarFlag(raw: string): [string, string] {
   const eqIdx = raw.indexOf("=");
   if (eqIdx < 1) {
-    exitWithError(`[Agent CI] Error: --var expects KEY=VALUE, got: ${raw}`);
+    exitWithError(`[Local CI] Error: --var expects KEY=VALUE, got: ${raw}`);
   }
   const key = raw.slice(0, eqIdx).trim();
   if (!key) {
-    exitWithError(`[Agent CI] Error: --var expects KEY=VALUE, got: ${raw}`);
+    exitWithError(`[Local CI] Error: --var expects KEY=VALUE, got: ${raw}`);
   }
   return [key, raw.slice(eqIdx + 1)];
 }
@@ -307,7 +307,7 @@ function resolveGithubTokenFlag(
     return { token, consumedNext: false };
   } catch {
     exitWithError(
-      "[Agent CI] Error: --github-token requires `gh` CLI to be installed and authenticated, or pass a token value: --github-token <value>",
+      "[Local CI] Error: --github-token requires `gh` CLI to be installed and authenticated, or pass a token value: --github-token <value>",
     );
   }
 }
@@ -351,13 +351,13 @@ function parseRunArgs(args: string[]): ParsedRunArgs {
     } else if (arg === "--var-file") {
       const file = args[++i];
       if (!file) {
-        exitWithError("[Agent CI] Error: --var-file expects a path or - for stdin");
+        exitWithError("[Local CI] Error: --var-file expects a path or - for stdin");
       }
       parsed.varFiles.push(file);
     } else if (arg.startsWith("--var-file=")) {
       const file = arg.slice("--var-file=".length);
       if (!file) {
-        exitWithError("[Agent CI] Error: --var-file expects a path or - for stdin");
+        exitWithError("[Local CI] Error: --var-file expects a path or - for stdin");
       }
       parsed.varFiles.push(file);
     } else if (arg === "--github-token") {
@@ -371,13 +371,13 @@ function parseRunArgs(args: string[]): ParsedRunArgs {
     }
   }
 
-  // Also accept AGENT_CI_GITHUB_TOKEN env var (CLI flag takes precedence)
-  if (!parsed.githubToken && process.env.AGENT_CI_GITHUB_TOKEN) {
-    parsed.githubToken = process.env.AGENT_CI_GITHUB_TOKEN;
+  // Also accept LOCAL_CI_GITHUB_TOKEN env var (CLI flag takes precedence)
+  if (!parsed.githubToken && process.env.LOCAL_CI_GITHUB_TOKEN) {
+    parsed.githubToken = process.env.LOCAL_CI_GITHUB_TOKEN;
   }
 
-  if (!parsed.prewarmThrough && process.env.AGENT_CI_PREWARM_THROUGH) {
-    parsed.prewarmThrough = process.env.AGENT_CI_PREWARM_THROUGH;
+  if (!parsed.prewarmThrough && process.env.LOCAL_CI_PREWARM_THROUGH) {
+    parsed.prewarmThrough = process.env.LOCAL_CI_PREWARM_THROUGH;
   }
 
   return parsed;
@@ -389,7 +389,7 @@ function materializeStdinVarFileArgs(args: string[], varFiles: string[]): string
     return args;
   }
   if (stdinCount > 1) {
-    exitWithError("[Agent CI] Error: --var-file - can only be used once");
+    exitWithError("[Local CI] Error: --var-file - can only be used once");
   }
 
   let content: string;
@@ -397,10 +397,10 @@ function materializeStdinVarFileArgs(args: string[], varFiles: string[]): string
     content = fs.readFileSync(0, "utf-8");
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    exitWithError(`[Agent CI] Error: Failed to read --var-file stdin: ${msg}`);
+    exitWithError(`[Local CI] Error: Failed to read --var-file stdin: ${msg}`);
   }
 
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-vars-"));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-vars-"));
   const tmpPath = path.join(tmpDir, "stdin-vars.json");
   fs.writeFileSync(tmpPath, content, "utf-8");
 
@@ -436,7 +436,7 @@ async function discoverRelevantWorkflows(
 ): Promise<string[]> {
   const workflowsDir = path.resolve(repoRoot, ".github", "workflows");
   if (!fs.existsSync(workflowsDir)) {
-    exitWithError(`[Agent CI] No .github/workflows directory found in ${repoRoot}`);
+    exitWithError(`[Local CI] No .github/workflows directory found in ${repoRoot}`);
   }
   const files = fs
     .readdirSync(workflowsDir)
@@ -536,7 +536,7 @@ export default async function runCmd(args: string[]): Promise<void> {
     process.exit(exitCode);
   }
 
-  let workingDir = process.env.AGENT_CI_WORKING_DIR;
+  let workingDir = process.env.LOCAL_CI_WORKING_DIR;
   if (workingDir) {
     if (!path.isAbsolute(workingDir)) {
       workingDir = path.resolve(PROJECT_ROOT, workingDir);
@@ -573,7 +573,7 @@ export default async function runCmd(args: string[]): Promise<void> {
     const branch = branchOut.trim();
     const relevant = await discoverRelevantWorkflows(repoRoot, branch, changedFiles);
     if (relevant.length === 0) {
-      console.log(`[Agent CI] No relevant workflows found for branch '${branch}'.`);
+      console.log(`[Local CI] No relevant workflows found for branch '${branch}'.`);
       process.exit(0);
     }
     const results = await runWorkflows({ workflowPaths: relevant, ...runWorkflowsOpts });
@@ -581,7 +581,7 @@ export default async function runCmd(args: string[]): Promise<void> {
   }
 
   if (!parsed.workflow) {
-    console.error("[Agent CI] Error: You must specify --workflow <path> or --all");
+    console.error("[Local CI] Error: You must specify --workflow <path> or --all");
     console.log("");
     printUsageMinimal();
     process.exit(1);
@@ -645,20 +645,20 @@ async function runPrewarmThrough(options: {
     options.store.addWorkflow(workflowPath);
   }
   if (!fs.existsSync(workflowPath)) {
-    throw new Error(`[Agent CI] Prewarm workflow not found: ${workflowPath}`);
+    throw new Error(`[Local CI] Prewarm workflow not found: ${workflowPath}`);
   }
 
   const repoRoot = resolveRepoRootFromWorkflow(workflowPath);
   config.GITHUB_REPO ??= await resolveRepoSlug(repoRoot);
   if (await isDependencyCacheReadyForWorkflow(workflowPath)) {
-    debugCli("[Agent CI] Prewarm skipped — dependency cache is already complete.");
+    debugCli("[Local CI] Prewarm skipped — dependency cache is already complete.");
     return;
   }
 
   const kind = classifyRunsOn(parseJobRunsOn(workflowPath, options.spec.jobId));
   if (isUnsupportedOS(kind)) {
     throw new Error(
-      `[Agent CI] Prewarm job '${options.spec.jobId}' targets unsupported runs-on kind '${kind}'.`,
+      `[Local CI] Prewarm job '${options.spec.jobId}' targets unsupported runs-on kind '${kind}'.`,
     );
   }
 
@@ -687,7 +687,7 @@ async function runPrewarmThrough(options: {
   if (options.githubToken && !secrets["GITHUB_TOKEN"]) {
     secrets["GITHUB_TOKEN"] = options.githubToken;
   }
-  validateSecrets(workflowPath, options.spec.jobId, secrets, path.join(repoRoot, ".env.agent-ci"));
+  validateSecrets(workflowPath, options.spec.jobId, secrets, resolveMachineEnvPath(repoRoot));
   validateVars(workflowPath, options.spec.jobId, options.vars ?? {});
 
   const steps = truncateStepsThroughId(
@@ -704,7 +704,7 @@ async function runPrewarmThrough(options: {
   );
 
   debugCli(
-    `[Agent CI] Prewarming node_modules through ${path.basename(workflowPath)}:${options.spec.jobId}:${options.spec.stepId}...`,
+    `[Local CI] Prewarming node_modules through ${path.basename(workflowPath)}:${options.spec.jobId}:${options.spec.stepId}...`,
   );
   const result = await executeLocalJob(
     {
@@ -718,14 +718,14 @@ async function runPrewarmThrough(options: {
       realHeadSha,
       repoRoot,
       shaRef,
-      env: { AGENT_CI_LOCAL: "true" },
+      env: { LOCAL_CI_LOCAL: "true", AGENT_CI_LOCAL: "true" },
       repository: {
         name,
         full_name: config.GITHUB_REPO,
         owner: { login: owner },
         default_branch: "main",
       },
-      runnerName: `agent-ci-prewarm-${getNextLogNum("agent-ci")}-j1`,
+      runnerName: `local-ci-prewarm-${getNextLogNum("local-ci")}-j1`,
       steps,
       services: await parseWorkflowServices(workflowPath, options.spec.jobId, {
         ...workflowExpressionContext,
@@ -744,7 +744,7 @@ async function runPrewarmThrough(options: {
 
   if (!result.succeeded) {
     throw new Error(
-      `[Agent CI] Prewarm failed for ${path.basename(workflowPath)}:${options.spec.jobId}:${options.spec.stepId}`,
+      `[Local CI] Prewarm failed for ${path.basename(workflowPath)}:${options.spec.jobId}:${options.spec.stepId}`,
     );
   }
 }
@@ -763,7 +763,7 @@ async function prefetchRunnerImages(workflowPaths: string[]): Promise<void> {
   // directly, direct-container mode uses it to seed the runner binary.
   // Check whether it's already cached — if not, pull with visible progress
   // so first-time users understand what's happening instead of seeing a
-  // frozen spinner. See https://github.com/redwoodjs/agent-ci/issues/242
+  // frozen spinner. See https://github.com/redwoodjs/local-ci/issues/242
   const pulls: Promise<unknown>[] = [pullUpstreamRunnerImage(docker)];
 
   // Additionally, each unique repo root may resolve to a custom runner
@@ -789,7 +789,7 @@ async function prefetchRunnerImages(workflowPaths: string[]): Promise<void> {
   } catch (err) {
     // Surface the error so users know what went wrong. Per-job calls in
     // local-job.ts will retry, so this doesn't block startup.
-    console.error(`[Agent CI] Image prefetch failed: ${(err as Error).message}`);
+    console.error(`[Local CI] Image prefetch failed: ${(err as Error).message}`);
   }
 }
 
@@ -930,7 +930,7 @@ function preflightVars(workflowPaths: string[], vars: Record<string, string>): v
     return;
   }
   const lines: string[] = [
-    `[Agent CI] Missing vars required by workflow(s):`,
+    `[Local CI] Missing vars required by workflow(s):`,
     "",
     ...perFile.map((m) => {
       const rel = path.relative(process.cwd(), m.file);
@@ -988,7 +988,7 @@ async function runWorkflows(options: {
 
   // ── NDJSON event stream (issues #289 + #315) ─────────────────────────────
   // Two emit modes share one listener:
-  //   - Full stream (`--json` / `AGENT_CI_JSON=1`): all lifecycle events on
+  //   - Full stream (`--json` / `LOCAL_CI_JSON=1`): all lifecycle events on
   //     stdout for agent harnesses. Decoupled from `--quiet` so `-q` doesn't
   //     silently swap stdout for a JSON stream.
   //   - Sentinel-only (detached worker, #315): just `run.paused` and
@@ -1089,7 +1089,7 @@ async function runWorkflows(options: {
                 step: job.pausedAtStep,
                 attempt: job.attempt,
                 workflow: wf.id,
-                retry_cmd: `agent-ci retry --name ${job.runnerId}`,
+                retry_cmd: `local-ci retry --name ${job.runnerId}`,
               });
             }
           }
@@ -1132,7 +1132,7 @@ async function runWorkflows(options: {
           if (job.status !== "queued" && !reportedRunners.has(job.runnerId)) {
             reportedRunners.add(job.runnerId);
             const degradedTag = job.classification === "degraded" ? " [degraded]" : "";
-            emit(`[Agent CI] Starting runner ${job.runnerId}${degradedTag} (${wf.id} > ${job.id})`);
+            emit(`[Local CI] Starting runner ${job.runnerId}${degradedTag} (${wf.id} > ${job.id})`);
             if (job.logDir) {
               emit(`  Logs: ${job.logDir}`);
             }
@@ -1156,7 +1156,7 @@ async function runWorkflows(options: {
           if (job.status === "paused" && !reportedPauses.has(job.runnerId)) {
             reportedPauses.add(job.runnerId);
             const lines: string[] = [];
-            lines.push(`\n[Agent CI] Step failed: "${job.pausedAtStep}" (${wf.id} > ${job.id})`);
+            lines.push(`\n[Local CI] Step failed: "${job.pausedAtStep}" (${wf.id} > ${job.id})`);
             if (job.attempt && job.attempt > 1) {
               lines.push(`  Attempt: ${job.attempt}`);
             }
@@ -1166,7 +1166,7 @@ async function runWorkflows(options: {
                 lines.push(`    ${l}`);
               }
             }
-            lines.push(`  To retry:  agent-ci retry --name ${job.runnerId}`);
+            lines.push(`  To retry:  local-ci retry --name ${job.runnerId}`);
             emit(lines.join("\n"));
           } else if (job.status !== "paused" && reportedPauses.has(job.runnerId)) {
             reportedPauses.delete(job.runnerId);
@@ -1258,7 +1258,7 @@ async function runWorkflows(options: {
     } else {
       // Every workflow gets private node_modules, so cold workflows are safe to
       // launch together. Pre-allocate run numbers to avoid container collisions.
-      const baseRunNum = getNextLogNum("agent-ci");
+      const baseRunNum = getNextLogNum("local-ci");
       const runNums = workflowPaths.map((_, i) => baseRunNum + i);
       const settled = await Promise.allSettled(
         workflowPaths.map((wf, i) =>
@@ -1279,7 +1279,7 @@ async function runWorkflows(options: {
         if (s.status === "fulfilled") {
           allResults.push(...s.value);
         } else {
-          console.error(`\n[Agent CI] Workflow failed: ${s.reason?.message || String(s.reason)}`);
+          console.error(`\n[Local CI] Workflow failed: ${s.reason?.message || String(s.reason)}`);
         }
       }
     }
@@ -1324,7 +1324,7 @@ type ExpandedJob = {
 /**
  * Expand each reusable-job entry into one ExpandedJob per matrix combination,
  * or a single ExpandedJob when the entry has no matrix. `nextRunnerName`
- * assigns the deterministic `agent-ci-<run>-jN[-mM]` runner id.
+ * assigns the deterministic `local-ci-<run>-jN[-mM]` runner id.
  */
 async function expandJobs(
   expandedEntries: ExpandedJobEntry[],
@@ -1442,7 +1442,7 @@ async function runWaveJobs(
     const errorMessage = isJobError(r.reason) ? r.reason.message : String(r.reason);
     if (!seenErrorMessages.has(errorMessage)) {
       seenErrorMessages.add(errorMessage);
-      console.error(`\n[Agent CI] Job failed with error: ${taskName}`);
+      console.error(`\n[Local CI] Job failed with error: ${taskName}`);
       console.error(`  Error: ${errorMessage}`);
     }
     out.push(createFailedJobResult(taskName, workflowPath, r.reason));
@@ -1475,7 +1475,7 @@ async function handleWorkflow(options: {
 
   const repoRoot = resolveRepoRootFromWorkflow(workflowPath);
 
-  if (!process.env.AGENT_CI_WORKING_DIR) {
+  if (!process.env.LOCAL_CI_WORKING_DIR) {
     setWorkingDirectory(DEFAULT_WORKING_DIR);
   }
 
@@ -1509,12 +1509,12 @@ async function handleWorkflow(options: {
   const expandedEntries = expandReusableJobs(workflowPath, repoRoot, remoteCache);
 
   if (expandedEntries.length === 0) {
-    debugCli(`[Agent CI] No jobs found in workflow: ${path.basename(workflowPath)}`);
+    debugCli(`[Local CI] No jobs found in workflow: ${path.basename(workflowPath)}`);
     return [];
   }
 
   // ── Collect expanded jobs (with matrix expansion) ─────────────────────────
-  const baseRunNum = options.baseRunNum ?? getNextLogNum("agent-ci");
+  const baseRunNum = options.baseRunNum ?? getNextLogNum("local-ci");
   let globalIdx = 0;
   const nextRunnerName = (matrixContext?: Record<string, string>): string => {
     const idx = globalIdx++;
@@ -1523,7 +1523,7 @@ async function handleWorkflow(options: {
       const shardIdx = parseInt(matrixContext.__job_index ?? "0", 10) + 1;
       suffix += `-m${shardIdx}`;
     }
-    return `agent-ci-${baseRunNum}${suffix}`;
+    return `local-ci-${baseRunNum}${suffix}`;
   };
 
   const expandedJobs = await expandJobs(expandedEntries, noMatrix, nextRunnerName);
@@ -1539,7 +1539,7 @@ async function handleWorkflow(options: {
         const shardIdx = parseInt(ej.matrixContext.__job_index ?? "0", 10) + 1;
         suffix += `-m${shardIdx}`;
       }
-      const runnerId = `agent-ci-${options.baseRunNum}${suffix}`;
+      const runnerId = `local-ci-${options.baseRunNum}${suffix}`;
       const storeWfPath = ej.callerJobId ? workflowPath : ej.workflowPath;
       store.addJob(storeWfPath, ej.taskName, runnerId, {
         matrixValues: ej.matrixContext
@@ -1553,13 +1553,13 @@ async function handleWorkflow(options: {
 
   // ── Unsupported-OS skip (shared between single- and multi-job paths) ──────
   // Jobs with `runs-on: macos-*` or `windows-*` can't be executed locally
-  // today — agent-ci only runs jobs in a Linux container. Rather than
+  // today — local-ci only runs jobs in a Linux container. Rather than
   // silently landing them there and failing at the first OS-specific step,
   // we skip them with a visible warning. See:
-  //   https://github.com/redwoodjs/agent-ci/issues/254  (this guardrail)
-  //   https://github.com/redwoodjs/agent-ci/issues/258  (real macOS support)
+  //   https://github.com/redwoodjs/local-ci/issues/254  (this guardrail)
+  //   https://github.com/redwoodjs/local-ci/issues/258  (real macOS support)
   const skippedResult = (ej: ExpandedJob): JobResult => ({
-    name: `agent-ci-skipped-${ej.taskName}`,
+    name: `local-ci-skipped-${ej.taskName}`,
     workflow: path.basename(ej.workflowPath),
     taskId: ej.taskName,
     succeeded: true,
@@ -1609,7 +1609,7 @@ async function handleWorkflow(options: {
 
     degradedWarnings.add(job.runnerName);
     console.warn(
-      `[Agent CI] Running ${path.basename(workflowPath)}:${job.taskName} in degraded mode: ${job.classificationSummary}`,
+      `[Local CI] Running ${path.basename(workflowPath)}:${job.taskName} in degraded mode: ${job.classificationSummary}`,
     );
   };
 
@@ -1625,7 +1625,7 @@ async function handleWorkflow(options: {
     if (githubToken && !secrets["GITHUB_TOKEN"]) {
       secrets["GITHUB_TOKEN"] = githubToken;
     }
-    const secretsFilePath = path.join(repoRoot, ".env.agent-ci");
+    const secretsFilePath = resolveMachineEnvPath(repoRoot);
     validateSecrets(ej.workflowPath, actualTaskName, secrets, secretsFilePath);
     validateVars(ej.workflowPath, actualTaskName, vars);
 
@@ -1697,7 +1697,7 @@ async function handleWorkflow(options: {
       realHeadSha: realHeadSha,
       repoRoot: repoRoot,
       shaRef: shaRef,
-      env: { AGENT_CI_LOCAL: "true" },
+      env: { LOCAL_CI_LOCAL: "true", AGENT_CI_LOCAL: "true" },
       repository: {
         name: name,
         full_name: githubRepo,
@@ -1724,7 +1724,7 @@ async function handleWorkflow(options: {
     if (githubToken && !secrets["GITHUB_TOKEN"]) {
       secrets["GITHUB_TOKEN"] = githubToken;
     }
-    const secretsFilePath = path.join(repoRoot, ".env.agent-ci");
+    const secretsFilePath = resolveMachineEnvPath(repoRoot);
     validateSecrets(ej.workflowPath, actualTaskName, secrets, secretsFilePath);
     validateVars(ej.workflowPath, actualTaskName, vars);
 
@@ -1736,7 +1736,7 @@ async function handleWorkflow(options: {
       const shardIdx = parseInt(ej.matrixContext.__job_index ?? "0", 10) + 1;
       suffix += `-m${shardIdx}`;
     }
-    const derivedRunnerName = `agent-ci-${baseRunNum}${suffix}`;
+    const derivedRunnerName = `local-ci-${baseRunNum}${suffix}`;
 
     return {
       deliveryId: `run-${Date.now()}`,
@@ -1749,7 +1749,7 @@ async function handleWorkflow(options: {
       realHeadSha: realHeadSha,
       repoRoot: repoRoot,
       shaRef: shaRef,
-      env: { AGENT_CI_LOCAL: "true" },
+      env: { LOCAL_CI_LOCAL: "true", AGENT_CI_LOCAL: "true" },
       repository: {
         name: name,
         full_name: githubRepo,
@@ -1816,7 +1816,7 @@ async function handleWorkflow(options: {
     if (githubToken && !secrets["GITHUB_TOKEN"]) {
       secrets["GITHUB_TOKEN"] = githubToken;
     }
-    const secretsFilePath = path.join(repoRoot, ".env.agent-ci");
+    const secretsFilePath = resolveMachineEnvPath(repoRoot);
     validateSecrets(ej.workflowPath, actualTaskName, secrets, secretsFilePath);
     validateVars(ej.workflowPath, actualTaskName, vars);
     const inputsContext = resolveInputsForJob(ej, secrets, needsContext, vars);
@@ -2095,7 +2095,7 @@ async function resolveHeadSha(repoRoot: string, sha: string) {
 /**
  * Emit the final `run.finish` NDJSON event when running under an agent harness
  * or as a detached worker. In detached mode the launcher (and a sibling
- * `agent-ci retry` tailing this log) reads it to drive its own exit code.
+ * `local-ci retry` tailing this log) reads it to drive its own exit code.
  * No-op in normal interactive runs.
  */
 function emitRunFinishSentinel(status: "passed" | "failed"): void {
@@ -2155,6 +2155,6 @@ async function resolveBaseSha(repoRoot: string, headSha?: string): Promise<strin
 // The full --help text lives in cli.ts to avoid forcing run.ts's heavy
 // dependency graph onto bare `--help` invocations.
 function printUsageMinimal() {
-  console.log("Usage: agent-ci run [sha] (--workflow <path> | --all) [options]");
-  console.log("Run 'agent-ci --help' for full usage.");
+  console.log("Usage: local-ci run [sha] (--workflow <path> | --all) [options]");
+  console.log("Run 'local-ci --help' for full usage.");
 }

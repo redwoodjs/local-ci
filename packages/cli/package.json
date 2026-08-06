@@ -1,7 +1,7 @@
 {
-  "name": "@redwoodjs/agent-ci",
+  "name": "run-local-ci",
   "version": "0.17.1",
-  "description": "Local GitHub Actions runner — pause on failure, ~0ms cache, official runner binary. Built for AI coding agents.",
+  "description": "Run GitHub Actions locally — pause on failure, retry in place, and keep caches on your machine.",
   "keywords": [
     "act-alternative",
     "ai-agent",
@@ -19,11 +19,11 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/redwoodjs/agent-ci.git",
+    "url": "https://github.com/redwoodjs/local-ci.git",
     "directory": "packages/cli"
   },
   "bin": {
-    "agent-ci": "./dist/native-launcher.js"
+    "local-ci": "./dist/native-launcher.js"
   },
   "files": [
     "dist",
@@ -31,14 +31,18 @@
     "SKILL.md"
   ],
   "type": "module",
+  "exports": {
+    "./native-launcher": "./dist/native-launcher.js"
+  },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "build": "tsgo && node -e \"const fs=require('node:fs'); for (const file of ['dist/native-launcher.js','dist/cli.js']) if (fs.existsSync(file)) fs.chmodSync(file, 0o755)\"",
     "typecheck": "tsgo",
-    "agent-ci": "node src/cli.ts",
-    "test": "vitest run"
+    "local-ci": "node src/cli.ts",
+    "test": "vitest run",
+    "agent-ci": "node src/cli.ts"
   },
   "dependencies": {
     "@actions/workflow-parser": "0.3.43",

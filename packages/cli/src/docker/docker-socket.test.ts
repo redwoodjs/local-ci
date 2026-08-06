@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { resolveDockerSocket, type DockerSocketDeps } from "./docker-socket.ts";
 
 afterEach(() => {
-  delete process.env.AGENT_CI_DOCKER_HOST;
+  delete process.env.LOCAL_CI_DOCKER_HOST;
 });
 
 function deps(overrides: DockerSocketDeps = {}): DockerSocketDeps {
@@ -19,10 +19,10 @@ function deps(overrides: DockerSocketDeps = {}): DockerSocketDeps {
 }
 
 describe("resolveDockerSocket", () => {
-  // ── AGENT_CI_DOCKER_HOST set ──────────────────────────────────────────────────────
+  // ── LOCAL_CI_DOCKER_HOST set ──────────────────────────────────────────────────────
 
-  it("uses AGENT_CI_DOCKER_HOST when set to a unix socket that exists", () => {
-    process.env.AGENT_CI_DOCKER_HOST = "unix:///tmp/test-docker.sock";
+  it("uses LOCAL_CI_DOCKER_HOST when set to a unix socket that exists", () => {
+    process.env.LOCAL_CI_DOCKER_HOST = "unix:///tmp/test-docker.sock";
 
     const result = resolveDockerSocket(
       deps({
@@ -36,8 +36,8 @@ describe("resolveDockerSocket", () => {
     expect(result.bindMountPath).toBe("/tmp/test-docker.sock");
   });
 
-  it("uses original AGENT_CI_DOCKER_HOST path as bindMountPath even when it resolves elsewhere", () => {
-    process.env.AGENT_CI_DOCKER_HOST = "unix:///var/run/docker.sock";
+  it("uses original LOCAL_CI_DOCKER_HOST path as bindMountPath even when it resolves elsewhere", () => {
+    process.env.LOCAL_CI_DOCKER_HOST = "unix:///var/run/docker.sock";
 
     const result = resolveDockerSocket(
       deps({
@@ -50,8 +50,8 @@ describe("resolveDockerSocket", () => {
     expect(result.bindMountPath).toBe("/var/run/docker.sock");
   });
 
-  it("returns non-unix AGENT_CI_DOCKER_HOST as-is (e.g. ssh://)", () => {
-    process.env.AGENT_CI_DOCKER_HOST = "ssh://user@remote";
+  it("returns non-unix LOCAL_CI_DOCKER_HOST as-is (e.g. ssh://)", () => {
+    process.env.LOCAL_CI_DOCKER_HOST = "ssh://user@remote";
 
     const result = resolveDockerSocket(deps());
 
@@ -60,11 +60,11 @@ describe("resolveDockerSocket", () => {
     expect(result.bindMountPath).toBe("");
   });
 
-  it("throws with doc link when AGENT_CI_DOCKER_HOST points to non-existent socket", () => {
-    process.env.AGENT_CI_DOCKER_HOST = "unix:///nonexistent/docker.sock";
+  it("throws with doc link when LOCAL_CI_DOCKER_HOST points to non-existent socket", () => {
+    process.env.LOCAL_CI_DOCKER_HOST = "unix:///nonexistent/docker.sock";
 
     expect(() => resolveDockerSocket(deps())).toThrow(
-      "AGENT_CI_DOCKER_HOST=unix:///nonexistent/docker.sock",
+      "LOCAL_CI_DOCKER_HOST=unix:///nonexistent/docker.sock",
     );
     expect(() => resolveDockerSocket(deps())).toThrow("docs/docker-socket.md");
   });
@@ -72,7 +72,7 @@ describe("resolveDockerSocket", () => {
   // ── Default socket path ────────────────────────────────────────────────
 
   it("resolves /var/run/docker.sock symlink", () => {
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
 
     const result = resolveDockerSocket(
       deps({
@@ -96,7 +96,7 @@ describe("resolveDockerSocket", () => {
   });
 
   it("uses /var/run/docker.sock as bindMountPath when it resolves to Docker Desktop path (regression #197)", () => {
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
 
     const result = resolveDockerSocket(
       deps({
@@ -118,7 +118,7 @@ describe("resolveDockerSocket", () => {
   // ── EACCES fallthrough ─────────────────────────────────────────────────
 
   it("falls through to docker context when default socket is not accessible, and uses /var/run/docker.sock for bind mount (regression #209)", () => {
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
     // Exact #209 cell: Linux + Docker Desktop, user not in docker group.
     // - /var/run/docker.sock exists (owned by root:docker 660) — exists but EACCES for us
     // - Active docker context points at the Desktop socket — what our API client must use
@@ -157,7 +157,7 @@ describe("resolveDockerSocket", () => {
   // ── Missing / dangling /var/run/docker.sock ─────────────────────────────
 
   it("throws with doc link when /var/run/docker.sock is missing", () => {
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
 
     expect(() => resolveDockerSocket(deps())).toThrow("/var/run/docker.sock");
     expect(() => resolveDockerSocket(deps())).toThrow("missing or a dangling symlink");
@@ -165,7 +165,7 @@ describe("resolveDockerSocket", () => {
   });
 
   it("appends Docker Desktop toggle hint when ~/.docker/run/docker.sock exists but /var/run/docker.sock is missing", () => {
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
     const socketDeps = deps({
       existsSync: (p) => {
         const s = String(p);
@@ -189,13 +189,13 @@ describe("resolveDockerSocket", () => {
     // Regression for #263 debugging session: /var/run/docker.sock → ~/.orbstack/...
     // but OrbStack is stopped, so the link dangles. fs.existsSync returns false for
     // dangling symlinks, which is the signal we want.
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
 
     expect(() => resolveDockerSocket(deps())).toThrow("dangling symlink");
   });
 
   it("throws with doc link when /var/run/docker.sock exists but EACCES and no readable context", () => {
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
     const socketDeps = deps({
       existsSync: () => true,
       realpathSync: () => "/var/run/docker.sock",

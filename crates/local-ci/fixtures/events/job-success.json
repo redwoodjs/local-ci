@@ -1,0 +1,62 @@
+{
+  "input": [
+    {
+      "event": "run.start",
+      "ts": "2026-01-01T00:00:00.000Z",
+      "schemaVersion": 1,
+      "runId": "run-123"
+    },
+    {
+      "event": "job.start",
+      "ts": "2026-01-01T00:00:01.000Z",
+      "job": "test",
+      "runner": "local-ci-1-j1",
+      "workflow": "ci.yml"
+    },
+    {
+      "event": "step.finish",
+      "ts": "2026-01-01T00:00:02.000Z",
+      "job": "test",
+      "runner": "local-ci-1-j1",
+      "step": "Run tests",
+      "index": 1,
+      "status": "passed"
+    },
+    {
+      "event": "job.finish",
+      "ts": "2026-01-01T00:00:03.000Z",
+      "job": "test",
+      "runner": "local-ci-1-j1",
+      "workflow": "ci.yml",
+      "status": "passed",
+      "durationMs": 42
+    }
+  ],
+  "normalized": [
+    {
+      "event": "run.start",
+      "schemaVersion": 1
+    },
+    {
+      "event": "job.start",
+      "job": "test",
+      "runner": "local-ci-1-j1",
+      "workflow": "ci.yml"
+    },
+    {
+      "event": "step.finish",
+      "job": "test",
+      "runner": "local-ci-1-j1",
+      "step": "Run tests",
+      "index": 1,
+      "status": "passed"
+    },
+    {
+      "event": "job.finish",
+      "job": "test",
+      "runner": "local-ci-1-j1",
+      "workflow": "ci.yml",
+      "status": "passed"
+    }
+  ]
+}

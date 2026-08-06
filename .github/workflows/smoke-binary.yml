@@ -23,7 +23,14 @@ jobs:
           node-version: 22
           cache: "pnpm"
       - run: pnpm install
-      - run: pnpm --filter @redwoodjs/agent-ci... -r build
+      - run: pnpm --filter run-local-ci... -r build
+      - run: pnpm --filter @redwoodjs/agent-ci build
+      - name: Run legacy Agent CI compatibility binary
+        run: |
+          output=$(node packages/agent-ci-compat/bin/agent-ci.mjs --help 2>&1)
+          echo "$output"
+          echo "$output" | grep -q "Usage: local-ci" || (echo "❌ Usage text not found through compatibility package" && exit 1)
+          echo "✅ Legacy agent-ci executable forwards to Local CI"
       - name: Verify shebang
         run: |
           head -1 packages/cli/dist/cli.js | grep -q '#!/usr/bin/env node'
@@ -36,7 +43,7 @@ jobs:
           set -e
           echo "$output"
           [ "$exit_code" -eq 1 ] || (echo "❌ Expected exit code 1, got $exit_code" && exit 1)
-          echo "$output" | grep -q "Usage: agent-ci" || (echo "❌ Usage text not found" && exit 1)
+          echo "$output" | grep -q "Usage: local-ci" || (echo "❌ Usage text not found" && exit 1)
           echo "✅ Built binary executes correctly via node"
       - name: Run built binary (npx)
         run: |
@@ -46,5 +53,5 @@ jobs:
           set -e
           echo "$output"
           [ "$exit_code" -eq 1 ] || (echo "❌ Expected exit code 1, got $exit_code" && exit 1)
-          echo "$output" | grep -q "Usage: agent-ci" || (echo "❌ Usage text not found in npx output" && exit 1)
+          echo "$output" | grep -q "Usage: local-ci" || (echo "❌ Usage text not found in npx output" && exit 1)
           echo "✅ Built binary executes correctly via npx"

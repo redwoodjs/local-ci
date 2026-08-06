@@ -21,7 +21,7 @@ describe("node_modules dependency cache", () => {
   let cacheDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-node-modules-cache-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-node-modules-cache-"));
     sourceNodeModules = path.join(tmpDir, "source", "node_modules");
     cacheDir = path.join(tmpDir, "cache", "node-modules-v2", "org-repo", "pnpm", "abc");
     fs.mkdirSync(path.join(sourceNodeModules, "package-a", "bin"), { recursive: true });

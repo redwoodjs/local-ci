@@ -34,7 +34,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
               Blog
             </a>
             <a
-              href="https://github.com/redwoodjs/agent-ci"
+              href="https://github.com/redwoodjs/local-ci"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#e0eee5] transition-colors"

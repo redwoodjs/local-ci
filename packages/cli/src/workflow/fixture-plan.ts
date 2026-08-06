@@ -60,8 +60,8 @@ export async function planFixtureWorkflow(
       jobs.push({
         id: jobId,
         runnerName: matrix
-          ? `agent-ci-1-j${jobNumber}-m${matrixIndex + 1}`
-          : `agent-ci-1-j${jobNumber}`,
+          ? `local-ci-1-j${jobNumber}-m${matrixIndex + 1}`
+          : `local-ci-1-j${jobNumber}`,
         target,
         needs: parseNeeds(yaml?.jobs?.[jobId]?.needs),
         if: rawJobIf(workflowPath, jobId),

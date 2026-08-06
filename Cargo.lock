@@ -3,43 +3,6 @@
 version = 4
 
 [[package]]
-name = "agent-ci"
-version = "0.0.0"
-dependencies = [
- "agent-ci-core",
- "agent-ci-runtime",
- "globset",
- "serde",
- "serde_json",
- "serde_yaml",
- "sha1",
- "sha2",
-]
-
-[[package]]
-name = "agent-ci-core"
-version = "0.0.0"
-dependencies = [
- "globset",
- "serde",
- "serde_json",
- "serde_yaml",
- "sha2",
-]
-
-[[package]]
-name = "agent-ci-runtime"
-version = "0.0.0"
-dependencies = [
- "agent-ci-core",
- "getrandom",
- "serde",
- "serde_json",
- "sha1",
- "sha2",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -170,6 +133,43 @@ name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
+
+[[package]]
+name = "local-ci"
+version = "0.0.0"
+dependencies = [
+ "globset",
+ "local-ci-core",
+ "local-ci-runtime",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sha1",
+ "sha2",
+]
+
+[[package]]
+name = "local-ci-core"
+version = "0.0.0"
+dependencies = [
+ "globset",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sha2",
+]
+
+[[package]]
+name = "local-ci-runtime"
+version = "0.0.0"
+dependencies = [
+ "getrandom",
+ "local-ci-core",
+ "serde",
+ "serde_json",
+ "sha1",
+ "sha2",
+]
 
 [[package]]
 name = "log"

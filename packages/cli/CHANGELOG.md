@@ -1,4 +1,4 @@
-# @redwoodjs/agent-ci
+# Local CI
 
 ## 0.17.1
 

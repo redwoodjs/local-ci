@@ -1,0 +1,30 @@
+{
+  "workflow": "two-job-chain.yml",
+  "plan": {
+    "jobs": [
+      {
+        "id": "build",
+        "runnerName": "local-ci-1-j1",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "deploy",
+        "runnerName": "local-ci-1-j2",
+        "target": "linux:ubuntu-latest",
+        "needs": ["build"],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      }
+    ],
+    "schedule": [["build"], ["deploy"]]
+  }
+}

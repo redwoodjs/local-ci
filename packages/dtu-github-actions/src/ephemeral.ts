@@ -54,11 +54,11 @@ function resolveContainerIp(): string | undefined {
 function resolveContainerHost(): string {
   const isInsideDocker =
     fs.existsSync("/.dockerenv") ||
-    process.env.AGENT_CI_LOCAL === "true" ||
-    process.env.AGENT_CI_LOCAL_SYNC === "true";
+    process.env.LOCAL_CI_LOCAL === "true" ||
+    process.env.LOCAL_CI_LOCAL_SYNC === "true";
   return resolveContainerHostForEnv({
-    configuredHost: process.env.AGENT_CI_DTU_HOST?.trim(),
-    bridgeGateway: process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY?.trim(),
+    configuredHost: process.env.LOCAL_CI_DTU_HOST?.trim(),
+    bridgeGateway: process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY?.trim(),
     containerIp: isInsideDocker ? resolveContainerIp() : undefined,
     isInsideDocker,
   });
@@ -70,7 +70,7 @@ function resolveContainerHost(): string {
  * Each call creates an independent server instance — no shared state between
  * calls. Typical startup overhead is ~50ms.
  *
- * @param cacheDir  Where cache archives should be stored (e.g. `os.tmpdir()/agent-ci/<repo>/cache/dtu`).
+ * @param cacheDir  Where cache archives should be stored (e.g. `os.tmpdir()/local-ci/<repo>/cache/dtu`).
  */
 export async function startEphemeralDtu(
   cacheDir: string,
@@ -108,7 +108,7 @@ export async function startEphemeralDtu(
   });
 
   // Use 127.0.0.1 for CLI access and a host reachable from sibling Docker
-  // containers for runner access. When agent-ci itself is running in Docker,
+  // containers for runner access. When local-ci itself is running in Docker,
   // that host must be this container's own IP, not the inherited outer DTU host.
   const containerHost = resolveContainerHost();
   const cliUrl = `http://127.0.0.1:${port}`;

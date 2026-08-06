@@ -1,6 +1,6 @@
 name: "Smoke: docker/setup-buildx-action fails to run"
 
-# Reproduces #257 — docker/setup-buildx-action@v4 fails to run under agent-ci.
+# Reproduces #257 — docker/setup-buildx-action@v4 fails to run under local-ci.
 #
 # Reported by @PatrikTheDev. A workflow step as trivial as
 #
@@ -13,8 +13,8 @@ name: "Smoke: docker/setup-buildx-action fails to run"
 # github.com.
 #
 # This smoke test creates a throwaway project with a minimal workflow that
-# runs setup-buildx-action, executes it through agent-ci, and fails if
-# either agent-ci exits non-zero or if `docker buildx version` can't be
+# runs setup-buildx-action, executes it through local-ci, and fails if
+# either local-ci exits non-zero or if `docker buildx version` can't be
 # resolved after the action claims to have completed.
 
 on:
@@ -41,8 +41,8 @@ jobs:
 
       - run: pnpm install
 
-      - name: Build agent-ci
-        run: pnpm --filter @redwoodjs/agent-ci... -r build
+      - name: Build local-ci
+        run: pnpm --filter run-local-ci... -r build
 
       - name: Create temp docker-buildx project
         run: |
@@ -52,7 +52,7 @@ jobs:
           { "name": "docker-buildx-repro", "private": true }
           PKG
 
-          # Inner workflow: the one agent-ci will execute inside a container
+          # Inner workflow: the one local-ci will execute inside a container
           cat > /tmp/docker-buildx-repro/.github/workflows/test.yml << 'WF'
           name: Test
           on: push
@@ -68,41 +68,41 @@ jobs:
                     echo "buildx is working"
           WF
 
-          # agent-ci needs a git repo with a remote to resolve the repo slug
+          # local-ci needs a git repo with a remote to resolve the repo slug
           cd /tmp/docker-buildx-repro
           git init
           git remote add origin https://github.com/test-org/docker-buildx-repro.git
           git add -A
           git -c user.name="test" -c user.email="test@test.com" commit -m "init"
 
-      - name: Run agent-ci against docker-buildx project
+      - name: Run local-ci against docker-buildx project
         id: run
         working-directory: /tmp/docker-buildx-repro
         env:
-          DEBUG: "agent-ci:*"
+          DEBUG: "local-ci:*"
           AI_AGENT: "1" # same as --quiet: no animated TUI, but still full logs
           # Pin the per-run log dir so the assert step below has a known path.
           # Since #312 logs live next to the checks JSON (default `<stateDir>/logs`),
           # not under the runner's tmp working dir.
-          AGENT_CI_LOG_DIR: /tmp/agent-ci-buildx-logs
+          LOCAL_CI_LOG_DIR: /tmp/local-ci-buildx-logs
         run: |
-          # agent-ci exits non-zero if any step fails, so propagate via pipefail
+          # local-ci exits non-zero if any step fails, so propagate via pipefail
           set -o pipefail
           node "$GITHUB_WORKSPACE/packages/cli/dist/cli.js" \
             run --workflow .github/workflows/test.yml 2>&1 | tee /tmp/docker-buildx.out
 
-      - name: Dump agent-ci step logs
+      - name: Dump local-ci step logs
         if: always()
         run: |
-          # agent-ci writes per-run log artifacts under AGENT_CI_LOG_DIR (set above);
-          # its tmp working dir under /tmp/agent-ci or <project>/.agent-ci still
+          # local-ci writes per-run log artifacts under LOCAL_CI_LOG_DIR (set above);
+          # its tmp working dir under /tmp/local-ci or <project>/.local-ci still
           # holds runtime state (no logs since #312).
           roots=()
-          [ -d /tmp/agent-ci-buildx-logs ] && roots+=(/tmp/agent-ci-buildx-logs)
-          [ -d /tmp/agent-ci ] && roots+=(/tmp/agent-ci)
-          [ -d "$GITHUB_WORKSPACE/packages/cli/.agent-ci" ] && roots+=("$GITHUB_WORKSPACE/packages/cli/.agent-ci")
-          echo "::group::agent-ci runs dir"
-          if [ "${#roots[@]}" -eq 0 ]; then echo "no agent-ci log roots found"; fi
+          [ -d /tmp/local-ci-buildx-logs ] && roots+=(/tmp/local-ci-buildx-logs)
+          [ -d /tmp/local-ci ] && roots+=(/tmp/local-ci)
+          [ -d "$GITHUB_WORKSPACE/packages/cli/.local-ci" ] && roots+=("$GITHUB_WORKSPACE/packages/cli/.local-ci")
+          echo "::group::local-ci runs dir"
+          if [ "${#roots[@]}" -eq 0 ]; then echo "no local-ci log roots found"; fi
           for r in "${roots[@]}"; do
             ls -la "$r/" 2>/dev/null || true
             find "$r" -maxdepth 6 -type d 2>/dev/null | head -50
@@ -119,28 +119,28 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Upload agent-ci logs
+      - name: Upload local-ci logs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: agent-ci-logs
+          name: local-ci-logs
           path: |
-            /tmp/agent-ci-buildx-logs/**
-            /tmp/agent-ci/**/logs/**
-            ${{ github.workspace }}/packages/cli/.agent-ci/**/logs/**
+            /tmp/local-ci-buildx-logs/**
+            /tmp/local-ci/**/logs/**
+            ${{ github.workspace }}/packages/cli/.local-ci/**/logs/**
           if-no-files-found: warn
 
-      - name: Assert `docker buildx` is usable inside agent-ci
+      - name: Assert `docker buildx` is usable inside local-ci
         run: |
-          # agent-ci runs in quiet/AI-agent mode and doesn't stream per-step
+          # local-ci runs in quiet/AI-agent mode and doesn't stream per-step
           # stdout to its top-level output. The "Verify buildx" step's output
           # lives in the per-step log file. Check it there.
           roots=()
-          [ -d /tmp/agent-ci-buildx-logs ] && roots+=(/tmp/agent-ci-buildx-logs)
-          [ -d /tmp/agent-ci ] && roots+=(/tmp/agent-ci)
-          [ -d "$GITHUB_WORKSPACE/packages/cli/.agent-ci" ] && roots+=("$GITHUB_WORKSPACE/packages/cli/.agent-ci")
+          [ -d /tmp/local-ci-buildx-logs ] && roots+=(/tmp/local-ci-buildx-logs)
+          [ -d /tmp/local-ci ] && roots+=(/tmp/local-ci)
+          [ -d "$GITHUB_WORKSPACE/packages/cli/.local-ci" ] && roots+=("$GITHUB_WORKSPACE/packages/cli/.local-ci")
           if [ "${#roots[@]}" -eq 0 ]; then
-            echo "::error::no agent-ci log roots found — the nested run never produced logs."
+            echo "::error::no local-ci log roots found — the nested run never produced logs."
             exit 1
           fi
           # Post-#312 layout: <logsDir>/<run-name>/steps/Verify-buildx.log.

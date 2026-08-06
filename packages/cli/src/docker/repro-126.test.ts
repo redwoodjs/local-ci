@@ -1,7 +1,7 @@
 /**
- * Reproduction for https://github.com/redwoodjs/agent-ci/issues/126
+ * Reproduction for https://github.com/redwoodjs/local-ci/issues/126
  *
- * When running inside Docker (via agent-ci), AGENT_CI_DTU_HOST is set in the
+ * When running inside Docker (via local-ci), LOCAL_CI_DTU_HOST is set in the
  * container environment. The resolveDtuHost tests delete it, but this test
  * verifies the mock and env var interaction actually works in that scenario.
  */
@@ -13,33 +13,33 @@ afterEach(() => {
 });
 
 describe("issue-126 reproduction: resolveDtuHost inside Docker", () => {
-  const originalBridgeGateway = process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY;
-  const originalDtuHost = process.env.AGENT_CI_DTU_HOST;
+  const originalBridgeGateway = process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY;
+  const originalDtuHost = process.env.LOCAL_CI_DTU_HOST;
 
   beforeEach(() => {
-    delete process.env.AGENT_CI_DTU_HOST;
+    delete process.env.LOCAL_CI_DTU_HOST;
   });
 
   afterEach(() => {
     if (originalBridgeGateway === undefined) {
-      delete process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY;
+      delete process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY;
     } else {
-      process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY = originalBridgeGateway;
+      process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY = originalBridgeGateway;
     }
     if (originalDtuHost === undefined) {
-      delete process.env.AGENT_CI_DTU_HOST;
+      delete process.env.LOCAL_CI_DTU_HOST;
     } else {
-      process.env.AGENT_CI_DTU_HOST = originalDtuHost;
+      process.env.LOCAL_CI_DTU_HOST = originalDtuHost;
     }
   });
 
   it("reports environment state", async () => {
     console.log("--- issue-126 repro diagnostics ---");
     console.log("/.dockerenv exists:", fs.existsSync("/.dockerenv"));
-    console.log("AGENT_CI_DTU_HOST:", process.env.AGENT_CI_DTU_HOST ?? "(unset)");
+    console.log("LOCAL_CI_DTU_HOST:", process.env.LOCAL_CI_DTU_HOST ?? "(unset)");
     console.log(
-      "AGENT_CI_DOCKER_BRIDGE_GATEWAY:",
-      process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY ?? "(unset)",
+      "LOCAL_CI_DOCKER_BRIDGE_GATEWAY:",
+      process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY ?? "(unset)",
     );
     expect(true).toBe(true);
   });
@@ -62,8 +62,8 @@ describe("issue-126 reproduction: resolveDtuHost inside Docker", () => {
   });
 
   it("resolveDtuHost uses bridge gateway when mock is active (the failing test)", async () => {
-    // Simulate agent-ci Docker env: AGENT_CI_DTU_HOST was set but we deleted it
-    delete process.env.AGENT_CI_DTU_HOST;
+    // Simulate local-ci Docker env: LOCAL_CI_DTU_HOST was set but we deleted it
+    delete process.env.LOCAL_CI_DTU_HOST;
 
     const { resolveDtuHost } = await import("./container-config.ts");
 
@@ -74,7 +74,7 @@ describe("issue-126 reproduction: resolveDtuHost inside Docker", () => {
       }
       return originalExistsSync(filePath);
     });
-    process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY = "10.10.0.1";
+    process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY = "10.10.0.1";
 
     // This is the assertion that was failing: expected '10.10.0.1' but got 'host.docker.internal'
     const result = await resolveDtuHost();

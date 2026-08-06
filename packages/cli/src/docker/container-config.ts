@@ -2,7 +2,7 @@
  * Parse the `options` string from `jobs.<id>.container.options` into a subset
  * of Docker CLI flags our runner can map to dockerode createContainer fields.
  * Only `--env`/`-e` and `--label`/`-l` are recognized today; anything else
- * is silently ignored to avoid accidentally clashing with agent-ci's own
+ * is silently ignored to avoid accidentally clashing with local-ci's own
  * container orchestration (volumes, networks, pids, etc). Extend the match
  * list below as additional flags are proven safe via smoke coverage.
  */
@@ -98,6 +98,10 @@ export function buildContainerEnv(opts: ContainerEnvOpts): string[] {
     `GITHUB_API_URL=${dockerApiUrl}`,
     `GITHUB_SERVER_URL=${repoUrl}`,
     `GITHUB_REPOSITORY=${githubRepo}`,
+    `LOCAL_CI_LOCAL=true`,
+    `LOCAL_CI_LOCAL_SYNC=true`,
+    `LOCAL_CI_HEAD_SHA=${headSha || "HEAD"}`,
+    `LOCAL_CI_DTU_HOST=${dtuHost}`,
     `AGENT_CI_LOCAL=true`,
     `AGENT_CI_LOCAL_SYNC=true`,
     `AGENT_CI_HEAD_SHA=${headSha || "HEAD"}`,
@@ -144,9 +148,9 @@ export function buildContainerBinds(opts: ContainerBindsOpts): string[] {
     ...(useDirectContainer ? [`${h(hostRunnerDir)}:/home/runner`] : []),
     `${h(hostWorkDir)}:/home/runner/_work`,
     `${dockerSocketPath}:/var/run/docker.sock`,
-    `${h(shimsDir)}:/tmp/agent-ci-shims`,
+    `${h(shimsDir)}:/tmp/local-ci-shims`,
     // Pause-on-failure IPC: signal files (paused, retry, abort)
-    ...(signalsDir ? [`${h(signalsDir)}:/tmp/agent-ci-signals`] : []),
+    ...(signalsDir ? [`${h(signalsDir)}:/tmp/local-ci-signals`] : []),
     `${h(diagDir)}:/home/runner/_diag`,
     `${h(toolCacheDir)}:/opt/hostedtoolcache`,
     // Package manager caches (persist across runs, only for detected PM)
@@ -179,13 +183,13 @@ export function buildContainerCmd(opts: ContainerCmdOpts): string[] {
 
   // Timing helper: date +%s%3N gives epoch milliseconds
   const T = (label: string) =>
-    `T1=$(date +%s%3N); echo "[agent-ci:boot] ${label}: $((T1-T0))ms"; T0=$T1`;
+    `T1=$(date +%s%3N); echo "[local-ci:boot] ${label}: $((T1-T0))ms"; T0=$T1`;
 
   const cmdScript = [
     `MAYBE_SUDO() { if command -v sudo >/dev/null 2>&1; then sudo -n "$@"; else "$@"; fi; }`,
     `BOOT_T0=$(date +%s%3N); T0=$BOOT_T0`,
     // chmod is done host-side in workspacePrepPromise — skip it here
-    `if [ -f /usr/bin/git ]; then MAYBE_SUDO mv /usr/bin/git /usr/bin/git.real 2>/dev/null; MAYBE_SUDO cp -p /tmp/agent-ci-shims/git /usr/bin/git 2>/dev/null; MAYBE_SUDO chmod +x /usr/bin/git 2>/dev/null; fi`,
+    `if [ -f /usr/bin/git ]; then MAYBE_SUDO mv /usr/bin/git /usr/bin/git.real 2>/dev/null; MAYBE_SUDO cp -p /tmp/local-ci-shims/git /usr/bin/git 2>/dev/null; MAYBE_SUDO chmod +x /usr/bin/git 2>/dev/null; fi`,
     T("git-shim"),
     // The bind-mounted /var/run/docker.sock inherits host ownership (root:docker,
     // 0660 on native Linux Docker). The runner user inside the container is
@@ -215,8 +219,8 @@ export function buildContainerCmd(opts: ContainerCmdOpts): string[] {
     `WORKSPACE_PATH=/home/runner/_work/$REPO_NAME/$REPO_NAME`,
     `mkdir -p $WORKSPACE_PATH`,
     T("workspace-setup"),
-    `echo "[agent-ci:boot] total: $(($(date +%s%3N)-BOOT_T0))ms"`,
-    `echo "[agent-ci:boot] starting run.sh --once"`,
+    `echo "[local-ci:boot] total: $(($(date +%s%3N)-BOOT_T0))ms"`,
+    `echo "[local-ci:boot] starting run.sh --once"`,
     `./run.sh --once`,
   ].join(" && ");
 
@@ -247,12 +251,12 @@ function parseCsvEnv(value: string): string[] {
 export async function resolveDtuHost(): Promise<string> {
   const isInsideDocker = fs.existsSync("/.dockerenv");
 
-  // When running inside a container (nested agent-ci), ignore the inherited
-  // AGENT_CI_DTU_HOST — it points to the parent's DTU host (e.g.
+  // When running inside a container (nested local-ci), ignore the inherited
+  // LOCAL_CI_DTU_HOST — it points to the parent's DTU host (e.g.
   // "host.docker.internal") which isn't reachable from sibling containers.
   // Instead, resolve this container's own IP so the inner container can
   // connect back to our DTU.
-  const configuredHost = process.env.AGENT_CI_DTU_HOST?.trim();
+  const configuredHost = process.env.LOCAL_CI_DTU_HOST?.trim();
   if (configuredHost && !isInsideDocker) {
     return configuredHost;
   }
@@ -269,10 +273,10 @@ export async function resolveDtuHost(): Promise<string> {
       debugRunner(`Failed to resolve Docker bridge IP via hostname -I: ${String(error)}`);
     }
 
-    return process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY?.trim() || DEFAULT_DOCKER_BRIDGE_GATEWAY;
+    return process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY?.trim() || DEFAULT_DOCKER_BRIDGE_GATEWAY;
   }
 
-  const configuredGateway = process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY?.trim();
+  const configuredGateway = process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY?.trim();
   if (configuredGateway) {
     debugRunner(
       `Using configured bridge gateway '${configuredGateway}' for DTU host outside Docker`,
@@ -284,13 +288,13 @@ export async function resolveDtuHost(): Promise<string> {
 }
 
 export function resolveDockerExtraHosts(dtuHost: string): string[] | undefined {
-  const configuredExtraHosts = process.env.AGENT_CI_DOCKER_EXTRA_HOSTS;
+  const configuredExtraHosts = process.env.LOCAL_CI_DOCKER_EXTRA_HOSTS;
   if (configuredExtraHosts !== undefined) {
     const parsed = parseCsvEnv(configuredExtraHosts);
     return parsed.length > 0 ? parsed : undefined;
   }
 
-  if (process.env.AGENT_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS === "1") {
+  if (process.env.LOCAL_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS === "1") {
     return undefined;
   }
 
@@ -298,7 +302,7 @@ export function resolveDockerExtraHosts(dtuHost: string): string[] | undefined {
     return undefined;
   }
 
-  const gateway = process.env.AGENT_CI_DOCKER_HOST_GATEWAY?.trim() || DEFAULT_DOCKER_HOST_GATEWAY;
+  const gateway = process.env.LOCAL_CI_DOCKER_HOST_GATEWAY?.trim() || DEFAULT_DOCKER_HOST_GATEWAY;
   return [`${DEFAULT_DTU_HOST_ALIAS}:${gateway}`];
 }
 

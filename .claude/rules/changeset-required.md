@@ -6,7 +6,7 @@ Every pull request that changes code in `packages/` **must** include a changeset
 
 ```markdown
 ---
-"@redwoodjs/agent-ci": patch
+"local-ci": patch
 "dtu-github-actions": patch
 ---
 

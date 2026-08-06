@@ -1,6 +1,6 @@
 name: "Smoke: bun project cache + bind-mount fix (#212)"
 
-# Regression coverage for #212 / #219. Two distinct bugs in agent-ci broke
+# Regression coverage for #212 / #219. Two distinct bugs in local-ci broke
 # bun projects, and we exercise both here without depending on the
 # oven-sh/setup-bun action or the GitHub-releases CDN (which made the
 # original smoke flake — see the "pre-fetch" note below):
@@ -24,7 +24,7 @@ name: "Smoke: bun project cache + bind-mount fix (#212)"
 # github.com/oven-sh/bun/releases on every run with no per-request
 # timeout or retry. The download stalls intermittently inside nested
 # runner containers, which made the smoke flake without revealing
-# anything about agent-ci. Fetching the binary once on the outer host
+# anything about local-ci. Fetching the binary once on the outer host
 # (with `curl --retry`) and feeding it into the inner workflow as a
 # fixture removes that flake while keeping the two real failure modes
 # above under test.
@@ -56,8 +56,8 @@ jobs:
 
       - run: pnpm install
 
-      - name: Build agent-ci
-        run: pnpm --filter @redwoodjs/agent-ci... -r build
+      - name: Build local-ci
+        run: pnpm --filter run-local-ci... -r build
 
       - name: Pre-fetch bun binary (avoid GitHub-releases CDN flake)
         run: |
@@ -93,7 +93,7 @@ jobs:
           { "name": "bun-repro", "private": true }
           PKG
 
-          # Inner workflow — runs inside the nested agent-ci runner.
+          # Inner workflow — runs inside the nested local-ci runner.
           # Tests both #212 failure modes without pulling bun over the
           # network: actions/cache@v4 against a `bun-…` key (must miss),
           # then a manual install at $HOME/.bun/bin from the fixture.
@@ -127,14 +127,14 @@ jobs:
                     echo "bun is working"
           WF
 
-          # agent-ci needs a git repo with a remote to resolve the repo slug
+          # local-ci needs a git repo with a remote to resolve the repo slug
           cd /tmp/bun-repro
           git init
           git remote add origin https://github.com/test-org/bun-repro.git
           git add -A
           git -c user.name="test" -c user.email="test@test.com" commit -m "init"
 
-      - name: Run agent-ci against bun project
+      - name: Run local-ci against bun project
         working-directory: /tmp/bun-repro
         run: |
           node "$GITHUB_WORKSPACE/packages/cli/dist/cli.js" \

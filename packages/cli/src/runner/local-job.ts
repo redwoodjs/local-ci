@@ -108,7 +108,7 @@ export function getDocker(): Docker {
       });
     } else {
       // Let dockerode/docker-modem parse non-unix, non-ssh host URIs from the
-      // environment. cli.ts forwards AGENT_CI_DOCKER_HOST → DOCKER_HOST at
+      // environment. cli.ts forwards LOCAL_CI_DOCKER_HOST → DOCKER_HOST at
       // bootstrap so dockerode's default client still picks up tcp:// URIs.
       _docker = new Docker();
     }
@@ -275,7 +275,7 @@ async function seedRunnerBinaryToHost(docker: Docker, hostRunnerSeedDir: string)
     } else {
       debugRunner(`Extracting runner binary to host (one-time)...`);
     }
-    const tmpName = `agent-ci-seed-runner-${Date.now()}`;
+    const tmpName = `local-ci-seed-runner-${Date.now()}`;
     const seedContainer = await docker.createContainer({
       Image: SEED_IMAGE,
       name: tmpName,
@@ -592,18 +592,18 @@ export async function executeLocalJob(
   }
 
   // ── Prepare directories ───────────────────────────────────────────────────
-  // When running nested (another agent-ci is our parent), include a short
+  // When running nested (another local-ci is our parent), include a short
   // hostname suffix in the prefix so sibling container names don't collide
   // with a concurrent nested run inside a different parent container. Some
   // runner images do not expose /.dockerenv, so also trust the env that our
   // outer runner injects into job containers.
   const isNestedContainer =
     fs.existsSync("/.dockerenv") ||
-    process.env.AGENT_CI_LOCAL === "true" ||
-    process.env.AGENT_CI_LOCAL_SYNC === "true";
+    process.env.LOCAL_CI_LOCAL === "true" ||
+    process.env.LOCAL_CI_LOCAL_SYNC === "true";
   const nestedHost = isNestedContainer ? process.env.HOSTNAME?.slice(0, 12) : "";
   const nestedNetworkName = await resolveNestedContainerNetworkName(nestedHost);
-  const prefix = nestedHost ? `agent-ci-${nestedHost}` : "agent-ci";
+  const prefix = nestedHost ? `local-ci-${nestedHost}` : "local-ci";
   const preferredContainerName = nestedHost ? `${prefix}-${job.runnerName}` : job.runnerName;
   const {
     name: containerName,
@@ -667,7 +667,7 @@ export async function executeLocalJob(
   });
   debugRunner(`Detected package manager: ${dirs.detectedPM ?? "none (mounting all PM caches)"}`);
 
-  // Drop the detached-worker marker so `agent-ci retry --name X` (running in
+  // Drop the detached-worker marker so `local-ci retry --name X` (running in
   // a separate process) can find this worker's log and tail it after sending
   // the retry signal. No-op outside detached mode. See issue #315.
   writeDetachedMarker(runDir);
@@ -854,8 +854,8 @@ export async function executeLocalJob(
     const useDirectContainer = !!job.container;
 
     // Resolve the runner image for default mode (no `container:` directive).
-    // Checks AGENT_CI_RUNNER_IMAGE env var, then .github/agent-ci/Dockerfile,
-    // then .github/agent-ci.Dockerfile, then falls back to the upstream image.
+    // Checks LOCAL_CI_RUNNER_IMAGE env var, then .github/local-ci/Dockerfile,
+    // then .github/local-ci.Dockerfile, then falls back to the upstream image.
     // In direct-container mode this is unused at runtime — the user's image
     // wins — but we still need SEED_IMAGE pulled for the runner binary seed.
     let resolvedRunnerImage: ResolvedRunnerImage;
@@ -935,7 +935,7 @@ export async function executeLocalJob(
       Image: containerImage,
       name: containerName,
       Labels: {
-        "agent-ci.pid": String(process.pid),
+        "local-ci.pid": String(process.pid),
         ...extraContainerOpts.labels,
       },
       Env: [...containerEnv, ...extraContainerOpts.env],

@@ -62,7 +62,7 @@ describe("ensureImagePulled auth and cache behavior", () => {
 
   it("uses Docker's canonical registry address for Docker Hub images", () => {
     expect(registryServerAddress("ubuntu:latest")).toBe("https://index.docker.io/v1/");
-    expect(registryServerAddress("redwoodjs/agent-ci:latest")).toBe("https://index.docker.io/v1/");
+    expect(registryServerAddress("redwoodjs/local-ci:latest")).toBe("https://index.docker.io/v1/");
     expect(registryServerAddress("localhost:5000/team/image:latest")).toBe("localhost:5000");
   });
 });
@@ -101,9 +101,9 @@ describe("ensureImagePulled", () => {
     { timeout: 30_000 },
     async () => {
       await expect(
-        ensureImagePulled(docker, "ghcr.io/redwoodjs/agent-ci-does-not-exist:latest"),
+        ensureImagePulled(docker, "ghcr.io/redwoodjs/local-ci-does-not-exist:latest"),
       ).rejects.toThrow(
-        "Failed to pull Docker image 'ghcr.io/redwoodjs/agent-ci-does-not-exist:latest'",
+        "Failed to pull Docker image 'ghcr.io/redwoodjs/local-ci-does-not-exist:latest'",
       );
     },
   );

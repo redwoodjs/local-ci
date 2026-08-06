@@ -8,13 +8,13 @@ Implemented — companion to [rust-native-binary-rewrite.md](./rust-native-binar
 
 The native Rust implementation (~16k LOC) mirrors the TypeScript CLI without a shared contract layer. Parity is enforced by smoke workflows and a thin golden CLI check, but logic drift is still likely (`--all` orchestration, default job limits, plan shapes, NDJSON events).
 
-The single `agent-ci` crate also mixes pure planning (workflow parse, schedule, expr) with IO-heavy runtime code (docker, dtu, macos_vm), slowing compile/test loops and making boundaries easy to violate.
+The single `local-ci` crate also mixes pure planning (workflow parse, schedule, expr) with IO-heavy runtime code (docker, dtu, macos_vm), slowing compile/test loops and making boundaries easy to violate.
 
 ## Goals
 
 1. Split the workspace into **pure core** vs **runtime** vs **thin CLI bin**.
 2. Introduce **fixture-driven contracts** both Rust and TypeScript must pass before Phase 9 (default switch).
-3. Keep the public `agent-ci` command unchanged.
+3. Keep the public `local-ci` command unchanged.
 
 ## Non-goals
 
@@ -26,7 +26,7 @@ The single `agent-ci` crate also mixes pure planning (workflow parse, schedule, 
 
 ```
 crates/
-  agent-ci-core/          # pure domain — no std::process, no TcpListener
+  local-ci-core/          # pure domain — no std::process, no TcpListener
     workflow/
     expr/
     matrix/
@@ -35,7 +35,7 @@ crates/
     events/               # NDJSON event types + serialization
     state/                # run-result.json types
 
-  agent-ci-runtime/       # IO + traits
+  local-ci-runtime/       # IO + traits
     docker/
     dtu/
     runner/
@@ -43,21 +43,21 @@ crates/
     workspace/
     wave/                 # ConcurrentJobPool + default concurrency limits
 
-  agent-ci/               # binary + lib re-exports for tests
+  local-ci/               # binary + lib re-exports for tests
     main.rs               # exit codes, stdio only
     cli/                  # clap (future), env bootstrap
 
-  agent-ci-fixtures/      # optional test-only crate: load + assert fixtures
+  local-ci-fixtures/      # optional test-only crate: load + assert fixtures
 ```
 
-Dependency direction: `agent-ci` → `agent-ci-runtime` → `agent-ci-core`. Nothing in `core` depends on `runtime`.
+Dependency direction: `local-ci` → `local-ci-runtime` → `local-ci-core`. Nothing in `core` depends on `runtime`.
 
 ### Migration phases
 
 | Phase | Work                                                    | Gate                          | Status |
 | ----- | ------------------------------------------------------- | ----------------------------- | ------ |
-| RCS-1 | Extract `agent-ci-core` with workflow/expr/plan modules | `cargo test -p agent-ci-core` | Done   |
-| RCS-2 | Move docker/dtu/runner/macos_vm to `agent-ci-runtime`   | existing `cargo test` green   | Done   |
+| RCS-1 | Extract `local-ci-core` with workflow/expr/plan modules | `cargo test -p local-ci-core` | Done   |
+| RCS-2 | Move docker/dtu/runner/macos_vm to `local-ci-runtime`   | existing `cargo test` green   | Done   |
 | RCS-3 | Thin bin crate; `lib.rs` loses USAGE string             | `golden:cli`                  | Done   |
 | RCS-4 | Fixture contract CI (below)                             | TS + Rust both pass           | Done   |
 
@@ -68,7 +68,7 @@ Each phase is a mergeable PR. No big-bang split.
 ### Directory layout
 
 ```
-crates/agent-ci/fixtures/
+crates/local-ci/fixtures/
   README.md
   workflows/              # input YAML
   plans/                  # expected RunPlan JSON (stable subset)
@@ -94,8 +94,8 @@ crates/agent-ci/fixtures/
 ```yaml
 - name: Check fixture contracts
   run: |
-    cargo test -p agent-ci-core fixture
-    cargo test -p agent-ci-runtime docker_socket_fixture_contracts_match_snapshots
+    cargo test -p local-ci-core fixture
+    cargo test -p local-ci-runtime docker_socket_fixture_contracts_match_snapshots
     pnpm fixtures:check
 ```
 
@@ -116,7 +116,7 @@ Initial typed boundary coverage is in place for Docker socket resolution (`Docke
 pub enum Error { ... }
 ```
 
-Convert to user strings in `agent-ci` bin only. Prioritize `plan`, `docker`, `wave` modules first.
+Convert to user strings in `local-ci` bin only. Prioritize `plan`, `docker`, `wave` modules first.
 
 ## DTU typing (follow-up hardening)
 
@@ -135,11 +135,11 @@ Single `Mutex<DtuStateInner>`. Serialize to JSON at HTTP handlers only.
 
 ## CLI (follow-up hardening)
 
-The CLI parser/help now lives in `agent-ci/src/cli.rs`; `lib.rs` only exposes modules and re-exports. A later ergonomics-only change can replace the hand-written usage string with `clap` derive while keeping `golden:cli` as the compatibility gate.
+The CLI parser/help now lives in `local-ci/src/cli.rs`; `lib.rs` only exposes modules and re-exports. A later ergonomics-only change can replace the hand-written usage string with `clap` derive while keeping `golden:cli` as the compatibility gate.
 
 ## Wave executor
 
-`agent-ci-runtime/src/wave.rs` owns the generic concurrent worker pool, while `run_command/wave.rs` keeps Agent CI-specific job dispatch:
+`local-ci-runtime/src/wave.rs` owns the generic concurrent worker pool, while `run_command/wave.rs` keeps Local CI-specific job dispatch:
 
 - `SharedExecutionContext` behind `Arc` (no per-worker clone).
 - `run_concurrent_workers` — testable concurrency primitive with unit tests for `max_jobs`.
@@ -147,14 +147,14 @@ The CLI parser/help now lives in `agent-ci/src/cli.rs`; `lib.rs` only exposes mo
 
 ## Success criteria
 
-- `cargo test -p agent-ci-core` completes in &lt;5s on CI.
+- `cargo test -p local-ci-core` completes in &lt;5s on CI.
 - At least 10 plan fixtures cover matrix, needs, reusable, macOS route, skip-if.
-- No file in `agent-ci-core` imports `std::process::Command`.
+- No file in `local-ci-core` imports `std::process::Command`.
 - TS and Rust both pass fixture CI before RXP-090.
 
 ## Decisions
 
-1. Fixtures live in-repo under `crates/agent-ci/fixtures` so Rust and TypeScript checks share one committed contract source.
+1. Fixtures live in-repo under `crates/local-ci/fixtures` so Rust and TypeScript checks share one committed contract source.
 2. Snapshots are committed JSON, not `insta`, to keep TS consumption simple.
 3. TS `workflow-parser.ts` stays until the native path is the default and RXP-090 follow-ups decide the deletion point.
 

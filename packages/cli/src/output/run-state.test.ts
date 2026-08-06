@@ -30,20 +30,20 @@ describe("RunStateStore", () => {
 
   it("addJob creates a workflow entry and adds a job", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
     const state = store.getState();
     expect(state.workflows).toHaveLength(1);
     expect(state.workflows[0].id).toBe("ci.yml");
     expect(state.workflows[0].jobs).toHaveLength(1);
     expect(state.workflows[0].jobs[0].id).toBe("test");
-    expect(state.workflows[0].jobs[0].runnerId).toBe("agent-ci-1");
+    expect(state.workflows[0].jobs[0].runnerId).toBe("local-ci-1");
     expect(state.workflows[0].jobs[0].status).toBe("queued");
   });
 
   it("addJob appends to an existing workflow", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "lint", "agent-ci-1-j1");
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1-j2");
+    store.addJob("/repo/.github/workflows/ci.yml", "lint", "local-ci-1-j1");
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1-j2");
     const wf = store.getState().workflows[0];
     expect(wf.jobs).toHaveLength(2);
     expect(wf.jobs[0].id).toBe("lint");
@@ -52,15 +52,15 @@ describe("RunStateStore", () => {
 
   it("addJob ignores duplicate runnerId when no metadata changes", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
     expect(store.getState().workflows[0].jobs).toHaveLength(1);
   });
 
   it("addJob merges metadata for duplicate runnerId", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1", {
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1", {
       logDir: "/tmp/logs",
       classification: "degraded",
       classificationSummary: "summary",
@@ -77,8 +77,8 @@ describe("RunStateStore", () => {
 
   it("updateJob updates the correct job", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
-    store.updateJob("agent-ci-1", { status: "booting", startedAt: "2024-01-01T00:00:00Z" });
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
+    store.updateJob("local-ci-1", { status: "booting", startedAt: "2024-01-01T00:00:00Z" });
     const job = store.getState().workflows[0].jobs[0];
     expect(job.status).toBe("booting");
     expect(job.startedAt).toBe("2024-01-01T00:00:00Z");
@@ -86,33 +86,33 @@ describe("RunStateStore", () => {
 
   it("updateJob syncs workflow status to running when a job boots", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
-    store.updateJob("agent-ci-1", { status: "booting" });
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
+    store.updateJob("local-ci-1", { status: "booting" });
     expect(store.getState().workflows[0].status).toBe("running");
   });
 
   it("updateJob syncs workflow status to completed when all jobs complete", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "lint", "agent-ci-1-j1");
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1-j2");
-    store.updateJob("agent-ci-1-j1", { status: "completed" });
-    store.updateJob("agent-ci-1-j2", { status: "completed" });
+    store.addJob("/repo/.github/workflows/ci.yml", "lint", "local-ci-1-j1");
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1-j2");
+    store.updateJob("local-ci-1-j1", { status: "completed" });
+    store.updateJob("local-ci-1-j2", { status: "completed" });
     expect(store.getState().workflows[0].status).toBe("completed");
   });
 
   it("updateJob syncs workflow status to failed when any job fails", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "lint", "agent-ci-1-j1");
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1-j2");
-    store.updateJob("agent-ci-1-j1", { status: "failed" });
-    store.updateJob("agent-ci-1-j2", { status: "completed" });
+    store.addJob("/repo/.github/workflows/ci.yml", "lint", "local-ci-1-j1");
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1-j2");
+    store.updateJob("local-ci-1-j1", { status: "failed" });
+    store.updateJob("local-ci-1-j2", { status: "completed" });
     expect(store.getState().workflows[0].status).toBe("failed");
   });
 
   it("updateJob handles pause state", () => {
     const store = makeStore();
-    store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
-    store.updateJob("agent-ci-1", {
+    store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
+    store.updateJob("local-ci-1", {
       status: "paused",
       pausedAtStep: "Run tests",
       pausedAtMs: "2024-01-01T00:01:00Z",
@@ -143,7 +143,7 @@ describe("RunStateStore", () => {
   describe("atomic persistence", () => {
     it("save writes a valid JSON file", async () => {
       const store = makeStore("persist-test");
-      store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
+      store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
       await store.save();
 
       const filePath = path.join(tmpDir, "persist-test", "run-state.json");
@@ -155,8 +155,8 @@ describe("RunStateStore", () => {
 
     it("load round-trips the state from disk", async () => {
       const store = makeStore("roundtrip");
-      store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
-      store.updateJob("agent-ci-1", { status: "running" });
+      store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
+      store.updateJob("local-ci-1", { status: "running" });
       await store.save();
 
       const filePath = path.join(tmpDir, "roundtrip", "run-state.json");
@@ -177,10 +177,10 @@ describe("RunStateStore", () => {
   describe("matrix jobs", () => {
     it("supports multiple matrix combinations under one workflow", () => {
       const store = makeStore();
-      store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1-j1-m1", {
+      store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1-j1-m1", {
         matrixValues: { node: "18" },
       });
-      store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1-j1-m2", {
+      store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1-j1-m2", {
         matrixValues: { node: "20" },
       });
       const wf = store.getState().workflows[0];
@@ -193,8 +193,8 @@ describe("RunStateStore", () => {
   describe("step state", () => {
     it("can update job with steps array", () => {
       const store = makeStore();
-      store.addJob("/repo/.github/workflows/ci.yml", "test", "agent-ci-1");
-      store.updateJob("agent-ci-1", {
+      store.addJob("/repo/.github/workflows/ci.yml", "test", "local-ci-1");
+      store.updateJob("local-ci-1", {
         steps: [
           { name: "Set up job", index: 1, status: "completed", durationMs: 1000 },
           { name: "Run tests", index: 2, status: "running", startedAt: new Date().toISOString() },

@@ -1,5 +1,5 @@
 {
-  "name": "agent-ci-monorepo",
+  "name": "local-ci-monorepo",
   "private": true,
   "type": "module",
   "scripts": {
@@ -25,8 +25,8 @@
     "rust:perf": "node scripts/rust-performance.mjs",
     "smoke:bench": "node scripts/smoke-benchmark.mjs",
     "native:stage-packages": "node scripts/stage-native-package-bins.mjs",
-    "agent-ci": "cd packages/dtu-github-actions && pnpm run build && cd ../cli && node src/cli.ts",
-    "agent-ci-dev": "./scripts/agent-ci-dev.sh",
+    "local-ci": "cd packages/dtu-github-actions && pnpm run build && cd ../cli && node src/cli.ts",
+    "local-ci-dev": "./scripts/local-ci-dev.sh",
     "demo": "bash .docs/marketing/demo-recording/demo.sh",
     "parse:diff": "node scripts/diff-parse.ts",
     "ts-runner": "node packages/ts-runner/src/cli.ts",
@@ -34,7 +34,9 @@
     "prepare": "husky || true",
     "changeset": "changeset",
     "version": "node scripts/release-closes.mjs capture && changeset version && oxfmt",
-    "release": "pnpm -r build && changeset publish"
+    "release": "pnpm -r build && changeset publish",
+    "agent-ci": "cd packages/dtu-github-actions && pnpm run build && cd ../cli && node src/cli.ts",
+    "agent-ci-dev": "./scripts/local-ci-dev.sh"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

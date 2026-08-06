@@ -1,8 +1,8 @@
 # Docker socket setup
 
-agent-ci launches GitHub Actions runners in Docker containers and bind-mounts the host's Docker socket into each runner so `docker build` / `docker run` steps work. For that bind-mount to survive Docker's mount layer (especially on macOS, where Docker runs inside a VM), agent-ci needs **a working Docker socket at `/var/run/docker.sock`**.
+local-ci launches GitHub Actions runners in Docker containers and bind-mounts the host's Docker socket into each runner so `docker build` / `docker run` steps work. For that bind-mount to survive Docker's mount layer (especially on macOS, where Docker runs inside a VM), local-ci needs **a working Docker socket at `/var/run/docker.sock`**.
 
-If you see an error like `agent-ci couldn't use a Docker socket at /var/run/docker.sock`, use the recipe below that matches your Docker provider.
+If you see an error like `local-ci couldn't use a Docker socket at /var/run/docker.sock`, use the recipe below that matches your Docker provider.
 
 ## Why `/var/run/docker.sock` specifically?
 
@@ -24,7 +24,7 @@ Docker Desktop 4.x ships with the default Docker socket disabled. Even with Dock
 2. Tick **"Allow the default Docker socket to be used (requires password)"**.
 3. Click **Apply & Restart** — Docker Desktop will prompt for your admin password to install the privileged helper that creates the symlink.
 
-After the restart, `/var/run/docker.sock` is a symlink to `~/.docker/run/docker.sock` and agent-ci can use it.
+After the restart, `/var/run/docker.sock` is a symlink to `~/.docker/run/docker.sock` and local-ci can use it.
 
 If you previously had this toggle on but `/var/run/docker.sock` is missing again after a Docker Desktop upgrade, toggle it off and back on to re-install the helper.
 
@@ -47,29 +47,29 @@ Why the top-level `~/.colima/docker.sock` and not `~/.colima/<profile>/docker.so
 
 ### Native Linux (dockerd)
 
-`/var/run/docker.sock` should already exist — that's where dockerd creates it. If it's missing, check that the Docker daemon is running (`systemctl status docker`). If it exists but you can't R/W it, add yourself to the `docker` group (`sudo usermod -aG docker $USER` and re-login) — agent-ci handles the "exists but not readable by our UID" case by reading the socket path from `docker context inspect` and still using `/var/run/docker.sock` as the bind-mount source.
+`/var/run/docker.sock` should already exist — that's where dockerd creates it. If it's missing, check that the Docker daemon is running (`systemctl status docker`). If it exists but you can't R/W it, add yourself to the `docker` group (`sudo usermod -aG docker $USER` and re-login) — local-ci handles the "exists but not readable by our UID" case by reading the socket path from `docker context inspect` and still using `/var/run/docker.sock` as the bind-mount source.
 
 ### Rootless Docker / custom locations
 
-If your daemon's socket lives somewhere else (e.g. `/run/user/1000/docker.sock` for rootless), set `AGENT_CI_DOCKER_HOST` explicitly:
+If your daemon's socket lives somewhere else (e.g. `/run/user/1000/docker.sock` for rootless), set `LOCAL_CI_DOCKER_HOST` explicitly:
 
 ```sh
-export AGENT_CI_DOCKER_HOST=unix:///run/user/1000/docker.sock
+export LOCAL_CI_DOCKER_HOST=unix:///run/user/1000/docker.sock
 ```
 
-Or, persistently, add it to `.env.agent-ci` at the repo root:
+Or, persistently, add it to `.env.local-ci` at the repo root:
 
 ```
-AGENT_CI_DOCKER_HOST=unix:///run/user/1000/docker.sock
+LOCAL_CI_DOCKER_HOST=unix:///run/user/1000/docker.sock
 ```
 
-agent-ci honours `AGENT_CI_DOCKER_HOST` ahead of `/var/run/docker.sock` and uses your explicit path for both the API client and the container bind-mount.
+local-ci honours `LOCAL_CI_DOCKER_HOST` ahead of `/var/run/docker.sock` and uses your explicit path for both the API client and the container bind-mount.
 
-> **Note:** the standard `DOCKER_HOST` env var is **not** honoured by agent-ci. If you have it set in your shell for the regular Docker CLI, agent-ci will exit with an error asking you to rename to `AGENT_CI_DOCKER_HOST`. This avoids collisions between "what agent-ci should target" (often a Lima/OrbStack VM) and "what the shell's Docker CLI targets".
+> **Note:** the standard `DOCKER_HOST` env var is **not** honoured by local-ci. If you have it set in your shell for the regular Docker CLI, local-ci will exit with an error asking you to rename to `LOCAL_CI_DOCKER_HOST`. This avoids collisions between "what local-ci should target" (often a Lima/OrbStack VM) and "what the shell's Docker CLI targets".
 
 ## Diagnosing "but it's right there"
 
-If `/var/run/docker.sock` seems to exist but agent-ci still errors:
+If `/var/run/docker.sock` seems to exist but local-ci still errors:
 
 ```sh
 ls -la /var/run/docker.sock        # is it a regular socket, or a dangling symlink?

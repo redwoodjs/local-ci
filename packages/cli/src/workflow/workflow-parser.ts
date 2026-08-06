@@ -23,7 +23,7 @@ export type RunnerContext = {
 /**
  * Derive a `RunnerContext` from a job's `runs-on:` labels. Defaults to
  * Linux/X64 for unknown labels so existing self-hosted configurations keep
- * working. macOS is mapped to ARM64 because agent-ci's macOS backend (tart)
+ * working. macOS is mapped to ARM64 because local-ci's macOS backend (tart)
  * only runs Apple Silicon VMs.
  */
 export function runnerContextFromRunsOn(labels: string[]): RunnerContext {
@@ -798,7 +798,7 @@ function wrapScriptForShell(script: string, shell: string): string {
     return script;
   }
   // Use a delimiter that is extremely unlikely to appear in real scripts.
-  const delimiter = "__AGENT_CI_SHELL_WRAP_EOF__";
+  const delimiter = "__LOCAL_CI_SHELL_WRAP_EOF__";
   return `${invocation} <<'${delimiter}'\n${script}\n${delimiter}`;
 }
 
@@ -1488,7 +1488,7 @@ export function isWorkflowRelevant(
   // 4. workflow_dispatch-only workflows are local fixtures (e.g.
   // smoke-resource-mismatch.yml uses an unsatisfiable runner label and is
   // never expected to run on real GitHub Actions). Include them in --all so
-  // agent-ci can still exercise them locally. Only opt in when
+  // local-ci can still exercise them locally. Only opt in when
   // workflow_dispatch is the sole event — if the workflow also lists
   // pull_request / push, those checks already had their say above and the
   // user's path/branch filters should be honored.
@@ -1549,7 +1549,7 @@ export function validateSecrets(
     return;
   }
   throw new Error(
-    `[Agent CI] Missing secrets required by workflow job "${taskName}".\n` +
+    `[Local CI] Missing secrets required by workflow job "${taskName}".\n` +
       `Add the following to ${secretsFilePath} or set them as environment variables:\n\n` +
       missing.map((n) => `${n}=`).join("\n") +
       "\n",
@@ -1600,7 +1600,7 @@ export function validateVars(
     return;
   }
   throw new Error(
-    `[Agent CI] Missing vars required by workflow job "${taskName}".\n` +
+    `[Local CI] Missing vars required by workflow job "${taskName}".\n` +
       `Pass them via --var NAME=value (one flag per variable) or --var-file <path>:\n\n` +
       missing.map((n) => `  --var ${n}=<value>`).join("\n") +
       "\n",

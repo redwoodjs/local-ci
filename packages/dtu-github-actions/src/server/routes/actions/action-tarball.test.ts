@@ -420,16 +420,16 @@ describe("Step output group filtering", () => {
     expect(log).not.toContain("\uFEFF");
   });
 
-  it("should parse and persist agent-ci-output lines", async () => {
+  it("should parse and persist local-ci-output lines", async () => {
     await postFeed([
       "normal output",
-      "::agent-ci-output::result=success",
-      "::agent-ci-output::version=1.2.3",
+      "::local-ci-output::result=success",
+      "::local-ci-output::version=1.2.3",
     ]);
 
     const log = readStepLog();
     expect(log).toContain("normal output");
-    expect(log).not.toContain("agent-ci-output");
+    expect(log).not.toContain("local-ci-output");
 
     // Check outputs.json was written
     const outputsPath = path.join(logDir, "outputs.json");

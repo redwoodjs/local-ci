@@ -20,9 +20,9 @@ describe("tart argv builders", () => {
   });
 
   it("tartCloneArgs", () => {
-    expect(tartCloneArgs("base", "agent-ci-xyz")).toEqual([
+    expect(tartCloneArgs("base", "local-ci-xyz")).toEqual([
       "tart",
-      ["clone", "base", "agent-ci-xyz"],
+      ["clone", "base", "local-ci-xyz"],
     ]);
   });
 

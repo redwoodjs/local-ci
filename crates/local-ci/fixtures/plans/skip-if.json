@@ -1,0 +1,19 @@
+{
+  "workflow": "skip-if.yml",
+  "plan": {
+    "jobs": [
+      {
+        "id": "build",
+        "runnerName": "local-ci-1-j1",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": "${{ false }}",
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      }
+    ],
+    "schedule": [["build"]]
+  }
+}

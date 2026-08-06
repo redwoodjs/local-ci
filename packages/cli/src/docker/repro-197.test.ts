@@ -1,8 +1,8 @@
 /**
- * Reproduction for https://github.com/redwoodjs/agent-ci/issues/197
+ * Reproduction for https://github.com/redwoodjs/local-ci/issues/197
  *
  * On macOS with Docker Desktop, /var/run/docker.sock is a symlink that resolves
- * to ~/.docker/run/docker.sock. When agent-ci passed the resolved path as the
+ * to ~/.docker/run/docker.sock. When local-ci passed the resolved path as the
  * container bind-mount source, Docker Desktop's VM tried to create directories at
  * /host_mnt/Users/.../.docker/run/docker.sock and failed with:
  *
@@ -19,7 +19,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { resolveDockerSocket, type DockerSocketDeps } from "./docker-socket.ts";
 
 afterEach(() => {
-  delete process.env.AGENT_CI_DOCKER_HOST;
+  delete process.env.LOCAL_CI_DOCKER_HOST;
 });
 
 function dockerDesktopDeps(): DockerSocketDeps {
@@ -37,7 +37,7 @@ function dockerDesktopDeps(): DockerSocketDeps {
 
 describe("issue-197 reproduction: Docker Desktop bind mount path", () => {
   it("resolves to the real path for API client but keeps the symlink path for bind mounts", () => {
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
     // Simulate Docker Desktop: /var/run/docker.sock → ~/.docker/run/docker.sock
     const socket = resolveDockerSocket(dockerDesktopDeps());
 
@@ -50,7 +50,7 @@ describe("issue-197 reproduction: Docker Desktop bind mount path", () => {
   });
 
   it("container bind string uses /var/run/docker.sock, not the resolved path (the failing case)", async () => {
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DOCKER_HOST;
 
     const { buildContainerBinds } = await import("./container-config.ts");
 
@@ -78,8 +78,8 @@ describe("issue-197 reproduction: Docker Desktop bind mount path", () => {
     expect(binds).not.toContain("/Users/test/.docker/run/docker.sock:/var/run/docker.sock");
   });
 
-  it("AGENT_CI_DOCKER_HOST unix socket keeps the original path for bind mounts even if it resolves elsewhere", () => {
-    process.env.AGENT_CI_DOCKER_HOST = "unix:///var/run/docker.sock";
+  it("LOCAL_CI_DOCKER_HOST unix socket keeps the original path for bind mounts even if it resolves elsewhere", () => {
+    process.env.LOCAL_CI_DOCKER_HOST = "unix:///var/run/docker.sock";
 
     const socket = resolveDockerSocket({
       realpathSync: () => "/Users/test/.docker/run/docker.sock",

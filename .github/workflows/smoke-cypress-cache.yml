@@ -41,8 +41,8 @@ jobs:
 
       - run: pnpm install
 
-      - name: Build agent-ci
-        run: pnpm --filter @redwoodjs/agent-ci... -r build
+      - name: Build local-ci
+        run: pnpm --filter run-local-ci... -r build
 
       - name: Create temp npm project
         run: |
@@ -90,7 +90,7 @@ jobs:
           git add -A
           git -c user.name="test" -c user.email="test@test.com" commit -m "init"
 
-      - name: Run agent-ci against npm project
+      - name: Run local-ci against npm project
         working-directory: /tmp/cypress-repro
         run: |
           node "$GITHUB_WORKSPACE/packages/cli/dist/cli.js" \

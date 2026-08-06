@@ -7,7 +7,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@redwoodjs/agent-ci": "file:./fake-agent-ci"
+    "local-ci": "file:./fake-local-ci"
   },
   "devDependencies": {
     "eslint": "^9.0.0"

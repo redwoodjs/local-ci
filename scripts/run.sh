@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Unified run command for agent-ci.
+# Unified run command for local-ci.
 #
 # Usage:
 #   ./scripts/run.sh                          # Headless: run all workflows via CLI
@@ -34,5 +34,5 @@ else
     PASSTHROUGH_ARGS=("--all")
   fi
   cd "$REPO_ROOT/packages/cli"
-  exec pnpm run agent-ci run "${PASSTHROUGH_ARGS[@]}"
+  exec pnpm run local-ci run "${PASSTHROUGH_ARGS[@]}"
 fi

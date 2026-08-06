@@ -3,6 +3,6 @@
   "private": true,
   "scripts": {
     "test": "node --test value.test.mjs",
-    "agent-ci": "pnpm --dir ../../../packages/dtu-github-actions run build && node ../../../packages/cli/src/cli.ts"
+    "local-ci": "pnpm --dir ../../../packages/dtu-github-actions run build && node ../../../packages/cli/src/cli.ts"
   }
 }

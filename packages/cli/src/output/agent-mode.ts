@@ -19,5 +19,5 @@ export function setJsonMode(value: boolean): void {
  * side-channel, and so existing `-q` users don't suddenly see JSON on stdout.
  */
 export function isJsonMode(): boolean {
-  return jsonFlag || process.env.AGENT_CI_JSON === "1";
+  return jsonFlag || process.env.LOCAL_CI_JSON === "1";
 }

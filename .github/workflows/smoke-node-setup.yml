@@ -3,7 +3,7 @@ name: "Smoke: actions/setup-node manifest fetch"
 # Reproduces #249 — actions/setup-node@v5 printed "Bad credentials" and fell
 # back to downloading Node directly from nodejs.org because @actions/tool-cache
 # hardcodes https://api.github.com and escapes our DTU. This smoke creates a
-# throwaway project, runs agent-ci against a workflow that uses setup-node,
+# throwaway project, runs local-ci against a workflow that uses setup-node,
 # and fails if the step logs the fallback path.
 
 on:
@@ -33,8 +33,8 @@ jobs:
 
       - run: pnpm install
 
-      - name: Build agent-ci
-        run: pnpm --filter @redwoodjs/agent-ci... -r build
+      - name: Build local-ci
+        run: pnpm --filter run-local-ci... -r build
 
       - name: Create temp node-setup project
         run: |
@@ -66,7 +66,7 @@ jobs:
           git add -A
           git -c user.name="test" -c user.email="test@test.com" commit -m "init"
 
-      - name: Run agent-ci against node-setup project
+      - name: Run local-ci against node-setup project
         id: run
         working-directory: /tmp/node-setup-repro
         run: |

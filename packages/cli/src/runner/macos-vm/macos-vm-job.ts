@@ -41,7 +41,7 @@ import { resolveMacosVmImage } from "./image-mapping.ts";
 // Apple's Virtualization.framework tops out at 2 concurrent VMs per host, and
 // pushing that limit has a real memory cost. Default low; raise via env when
 // running on a dedicated CI mac.
-const MACOS_VM_CONCURRENCY = parseInt(process.env.AGENT_CI_MACOS_VM_CONCURRENCY || "2", 10);
+const MACOS_VM_CONCURRENCY = parseInt(process.env.LOCAL_CI_MACOS_VM_CONCURRENCY || "2", 10);
 const semaphore = createSemaphore(
   Number.isFinite(MACOS_VM_CONCURRENCY) && MACOS_VM_CONCURRENCY >= 1 ? MACOS_VM_CONCURRENCY : 2,
 );
@@ -49,17 +49,17 @@ const semaphore = createSemaphore(
 // cirruslabs images default to admin/admin with passwordless sudo. If a user
 // ever builds a custom tart image with different creds they can override here.
 const SSH_CREDS: SshCreds = {
-  user: process.env.AGENT_CI_MACOS_VM_USER || "admin",
-  password: process.env.AGENT_CI_MACOS_VM_PASSWORD || "admin",
+  user: process.env.LOCAL_CI_MACOS_VM_USER || "admin",
+  password: process.env.LOCAL_CI_MACOS_VM_PASSWORD || "admin",
 };
 
 // The VM reaches the host at the tart bridge gateway. This is the default for
 // tart's softnet-less NAT; override if the user has a custom network setup.
-const VM_HOST_IP = process.env.AGENT_CI_MACOS_VM_HOST_IP || "192.168.64.1";
+const VM_HOST_IP = process.env.LOCAL_CI_MACOS_VM_HOST_IP || "192.168.64.1";
 
 // Remote filesystem layout inside the VM. The actions-runner creates `_work/`
 // as a sibling of `run.sh`, so the runner's workspace lives under VM_RUNNER_DIR.
-const VM_RUNNER_DIR = "/Users/admin/agent-ci-runner";
+const VM_RUNNER_DIR = "/Users/admin/local-ci-runner";
 const VM_RUNNER_WORK_DIR = `${VM_RUNNER_DIR}/_work`;
 
 // ─── Entrypoint ───────────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ export async function executeMacosVmJob(job: Job): Promise<JobResult> {
   const release = await semaphore.acquire();
   const startTime = Date.now();
 
-  const { name, logDir, debugLogPath } = createLogContext("agent-ci-macos", job.runnerName);
+  const { name, logDir, debugLogPath } = createLogContext("local-ci-macos", job.runnerName);
   job.runnerName = name;
   writeJobMetadata({ logDir, containerName: name, job });
   const debugStream = fs.createWriteStream(debugLogPath);
@@ -103,7 +103,7 @@ export async function executeMacosVmJob(job: Job): Promise<JobResult> {
   if (!exact) {
     process.stderr.write(
       `\nwarning: could not map runs-on ${JSON.stringify(labels)} to a known macOS image.\n` +
-        `         Falling back to ${image}. Override with AGENT_CI_MACOS_VM_IMAGE if needed.\n\n`,
+        `         Falling back to ${image}. Override with LOCAL_CI_MACOS_VM_IMAGE if needed.\n\n`,
     );
   }
 
@@ -121,7 +121,7 @@ export async function executeMacosVmJob(job: Job): Promise<JobResult> {
 
   let vmName: string | null = null;
   let vmProc: ChildProcess | null = null;
-  const tmpRunnerCredsDir = await fsp.mkdtemp(path.join(os.tmpdir(), "agent-ci-macos-creds-"));
+  const tmpRunnerCredsDir = await fsp.mkdtemp(path.join(os.tmpdir(), "local-ci-macos-creds-"));
 
   const signalCleanup = () => {
     if (vmName) {
@@ -201,7 +201,7 @@ export async function executeMacosVmJob(job: Job): Promise<JobResult> {
       t0 = bt("tart-pull", t0);
     }
 
-    vmName = `agent-ci-macos-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    vmName = `local-ci-macos-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     await clone(image, vmName);
     t0 = bt("tart-clone", t0);
 

@@ -25,7 +25,7 @@ export interface StepState {
 export interface JobState {
   /** Task name, e.g. "test", "lint" */
   id: string;
-  /** Container name, e.g. "agent-ci-5-j1" */
+  /** Container name, e.g. "local-ci-5-j1" */
   runnerId: string;
   status: JobStatus;
   startedAt?: string;

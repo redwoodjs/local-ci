@@ -1,6 +1,6 @@
-# Running agent-ci inside RivetKit Agent OS
+# Running local-ci inside RivetKit Agent OS
 
-Research document exploring how agent-ci could integrate with [RivetKit Agent OS](https://rivet.dev/docs/agent-os/) by replacing the official GitHub Actions runner with a TypeScript implementation.
+Research document exploring how local-ci could integrate with [RivetKit Agent OS](https://rivet.dev/docs/agent-os/) by replacing the official GitHub Actions runner with a TypeScript implementation.
 
 > **Status**: Research / exploration. No code yet.
 
@@ -8,10 +8,10 @@ Research document exploring how agent-ci could integrate with [RivetKit Agent OS
 
 ## The Idea
 
-Today, agent-ci works like this:
+Today, local-ci works like this:
 
 ```
-agent-ci (orchestrator)
+local-ci (orchestrator)
   → Docker container (ubuntu image)
     → Official GitHub Actions runner binary (C#/.NET)
       → Executes steps, evaluates expressions, downloads actions
@@ -49,7 +49,7 @@ And gains:
 
 ## What the Official Runner Does (and what we'd reimplement)
 
-Based on analysis of how agent-ci seeds jobs and what the runner binary receives:
+Based on analysis of how local-ci seeds jobs and what the runner binary receives:
 
 ### 1. Expression Evaluation
 
@@ -62,11 +62,11 @@ The runner evaluates `${{ }}` expressions at step execution time using a `Contex
 | `github.*`          | Constructed from repo metadata       | Low — static values                 |
 | `env.*`             | Merged from workflow/job/step `env:` | Low                                 |
 | `secrets.*`         | Passed in at run time                | Low                                 |
-| `matrix.*`          | From matrix expansion                | Low — agent-ci already does this    |
+| `matrix.*`          | From matrix expansion                | Low — local-ci already does this    |
 | `runner.*`          | `os`, `arch`, `temp`, `tool_cache`   | Low — hardcoded values              |
 | `steps.*.outputs.*` | From `$GITHUB_OUTPUT` file writes    | Medium                              |
-| `needs.*.outputs.*` | From upstream job results            | Medium — agent-ci already does this |
-| `needs.*.result`    | success/failure/skipped              | Low — agent-ci already does this    |
+| `needs.*.outputs.*` | From upstream job results            | Medium — local-ci already does this |
+| `needs.*.result`    | success/failure/skipped              | Low — local-ci already does this    |
 | `job.*`             | Container info, status               | Low                                 |
 | `inputs.*`          | Workflow dispatch inputs             | Low                                 |
 
@@ -80,7 +80,7 @@ The runner evaluates `${{ }}` expressions at step execution time using a `Contex
 | `format(fmt, ...args)`                              | Low                                    |
 | `join(array, sep)`                                  | Low                                    |
 | `toJSON(value)` / `fromJSON(str)`                   | Low                                    |
-| `hashFiles(patterns...)`                            | Low — agent-ci already implements this |
+| `hashFiles(patterns...)`                            | Low — local-ci already implements this |
 
 **Operators:** `==`, `!=`, `&&`, `||`, `!`, comparisons — need a small expression parser.
 
@@ -386,7 +386,7 @@ const ciActor = actor({
 | Runner updates          | GitHub changes runner behavior         | We control our own behavior — feature, not bug |
 | `ACTIONS_RUNTIME_TOKEN` | Some actions use internal APIs         | Mock or skip — most don't need this            |
 
-**The big win:** For agent-ci's use case (running CI locally for AI agents), Docker actions and service containers are rarely needed. Most workflows are `run:` steps + `actions/checkout` + `actions/setup-node` + `actions/cache`. A TS runner covering these handles 90%+ of real-world usage.
+**The big win:** For local-ci's use case (running CI locally for AI agents), Docker actions and service containers are rarely needed. Most workflows are `run:` steps + `actions/checkout` + `actions/setup-node` + `actions/cache`. A TS runner covering these handles 90%+ of real-world usage.
 
 ---
 
@@ -395,7 +395,7 @@ const ciActor = actor({
 ### Today (with Docker + official runner)
 
 ```
-agent-ci CLI
+local-ci CLI
 ├── Workflow parser (TS) ─── @actions/workflow-parser
 ├── Job scheduler (TS) ──── toposort, concurrency limiter
 ├── Docker manager (TS) ─── dockerode, container lifecycle
@@ -437,9 +437,9 @@ Agent OS Actor
 
 3. **Node.js version management?** JS actions specify `runs.using: node20`. The VM needs the right Node version. Agent OS likely has Node available, but version management may be needed.
 
-4. **Can this work without Agent OS?** The TS runner could be valuable standalone — replace Docker in agent-ci even without Agent OS. This de-risks the project: build the runner first, integrate with Agent OS second.
+4. **Can this work without Agent OS?** The TS runner could be valuable standalone — replace Docker in local-ci even without Agent OS. This de-risks the project: build the runner first, integrate with Agent OS second.
 
-5. **Testing strategy?** Run both the official runner and the TS runner against the same workflows, diff the results. agent-ci's existing test workflows become the test suite.
+5. **Testing strategy?** Run both the official runner and the TS runner against the same workflows, diff the results. local-ci's existing test workflows become the test suite.
 
 ---
 

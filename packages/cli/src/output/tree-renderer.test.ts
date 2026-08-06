@@ -14,12 +14,12 @@ describe("renderTree", () => {
         children: [
           {
             label: "[job] test",
-            children: [{ label: "[run] agent-ci-5" }],
+            children: [{ label: "[run] local-ci-5" }],
           },
         ],
       },
     ];
-    const expected = [" [*] tests.yml", " └── [job] test", "     └── [run] agent-ci-5"].join("\n");
+    const expected = [" [*] tests.yml", " └── [job] test", "     └── [run] local-ci-5"].join("\n");
     expect(renderTree(tree)).toBe(expected);
   });
 
@@ -32,7 +32,7 @@ describe("renderTree", () => {
             label: "[job] test",
             children: [
               {
-                label: "[run] agent-ci-5",
+                label: "[run] local-ci-5",
                 children: [
                   { label: "[+] Set up job (1s)" },
                   { label: "[+] actions/checkout@v4 (2s)" },
@@ -48,7 +48,7 @@ describe("renderTree", () => {
     const expected = [
       " [*] tests.yml",
       " └── [job] test",
-      "     └── [run] agent-ci-5",
+      "     └── [run] local-ci-5",
       "         ├── [+] Set up job (1s)",
       "         ├── [+] actions/checkout@v4 (2s)",
       "         ├── [>] Run pnpm check (12s...)",
@@ -72,7 +72,7 @@ describe("renderTree", () => {
             label: "[job] test",
             children: [
               {
-                label: "[run] agent-ci-5",
+                label: "[run] local-ci-5",
                 children: [
                   { label: "[+] Set up job (1s)" },
                   {
@@ -90,7 +90,7 @@ describe("renderTree", () => {
     const expected = [
       " [*] tests.yml",
       " └── [job] test",
-      "     └── [run] agent-ci-5",
+      "     └── [run] local-ci-5",
       "         ├── [+] Set up job (1s)",
       "         ├── [>] Run pnpm check (12s...)",
       "         │   └── [output] Checking 142 files...",

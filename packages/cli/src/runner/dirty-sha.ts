@@ -26,7 +26,7 @@ export async function computeDirtySha(repoRoot: string): Promise<string | undefi
 
     const gitDir = await git(undefined, "rev-parse", "--git-dir");
     const absoluteGitDir = path.isAbsolute(gitDir) ? gitDir : path.join(repoRoot, gitDir);
-    const tmpIndex = path.join(absoluteGitDir, `index-agent-ci-${Date.now()}`);
+    const tmpIndex = path.join(absoluteGitDir, `index-local-ci-${Date.now()}`);
 
     try {
       // Seed the temp index from the real one so we start from the current staging area.
@@ -48,7 +48,7 @@ export async function computeDirtySha(repoRoot: string): Promise<string | undefi
         "-p",
         "HEAD",
         "-m",
-        "agent-ci: dirty working tree",
+        "local-ci: dirty working tree",
       );
     } finally {
       try {

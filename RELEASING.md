@@ -1,6 +1,6 @@
 # Releasing
 
-Agent CI uses [Changesets](https://github.com/changesets/changesets) to manage versioning and publishing. The CLI (`agent-ci`) and DTU (`dtu-github-actions`) are always released together at the same version.
+Local CI uses [Changesets](https://github.com/changesets/changesets) to manage versioning and publishing. The canonical CLI package (`run-local-ci`), legacy compatibility package (`@redwoodjs/agent-ci`), and DTU (`dtu-github-actions`) are always released together at the same version.
 
 ## Making a Release
 
@@ -61,7 +61,7 @@ The GitHub repo needs an `NPM_TOKEN` secret with publish access.
 | `pnpm release`   | Build all packages and publish to npm          |
 | `pnpm -r build`  | Build all packages without publishing          |
 
-## Releasing the Website (agent-ci.dev)
+## Releasing the Website (local-ci.dev)
 
 The marketing site at `apps/website/` is deployed to Cloudflare Workers on the
 **RedwoodJS** Cloudflare account. It is not part of the npm release flow above
@@ -82,7 +82,7 @@ Notes:
   regenerates `public/.well-known/agent-skills/index.json`, so the site never
   drifts from `packages/cli/*.md`.
 - After deploying, smoke-test with
-  `curl -I https://agent-ci.dev/robots.txt` and
-  `curl https://agent-ci.dev/sitemap.xml`.
+  `curl -I https://local-ci.dev/robots.txt` and
+  `curl https://local-ci.dev/sitemap.xml`.
 - You need to be logged in to Wrangler on an account with write access to the
   RedwoodJS Cloudflare org: `pnpm dlx wrangler login`.

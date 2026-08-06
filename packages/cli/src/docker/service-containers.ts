@@ -102,7 +102,7 @@ export async function startServiceContainers(
   runnerName: string,
   emit?: (line: string) => void,
 ): Promise<ServiceContext> {
-  const networkName = `agent-ci-net-${runnerName}`;
+  const networkName = `local-ci-net-${runnerName}`;
   const containerIds: string[] = [];
   const portForwards: string[] = [];
 
@@ -148,7 +148,7 @@ export async function startServiceContainers(
       Image: svc.image,
       name: containerName,
       Labels: {
-        "agent-ci.pid": String(process.pid),
+        "local-ci.pid": String(process.pid),
       },
       Env: envArr,
       ExposedPorts: exposedPorts,

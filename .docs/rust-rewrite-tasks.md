@@ -1,6 +1,6 @@
 # Rust Native Binary Rewrite Tasks
 
-This is the working checklist for moving Agent CI from a Node/TypeScript CLI to a native Rust binary while keeping npm install support and adding direct binary distribution.
+This is the working checklist for moving Local CI from a Node/TypeScript CLI to a native Rust binary while keeping npm install support and adding direct binary distribution.
 
 ## Phase 0 — Planning
 
@@ -13,7 +13,7 @@ This is the working checklist for moving Agent CI from a Node/TypeScript CLI to 
 
 - [x] **RUST-001: Rust workspace scaffold**
   - [x] Add a Cargo workspace.
-  - [x] Add the native `agent-ci` binary crate.
+  - [x] Add the native `local-ci` binary crate.
   - [x] Add `cargo fmt`, `cargo check`, `cargo clippy`, and test scripts.
   - [x] Add initial CI checks for the Rust workspace.
   - Test: `cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
@@ -21,19 +21,19 @@ This is the working checklist for moving Agent CI from a Node/TypeScript CLI to 
 ## Phase 1 — CLI Parity Foundation
 
 - [x] **RUST-010: CLI argument parser**
-  - [x] Implement `agent-ci --help`.
+  - [x] Implement `local-ci --help`.
   - [x] Define commands: `run`, `retry`, `abort`, and `clean`.
   - [x] Match the existing usage text closely enough for golden tests.
   - Test: `cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
-  - Test: `diff -u <(node packages/cli/src/cli.ts --help) <(cargo run --quiet -p agent-ci -- --help)`
+  - Test: `diff -u <(node packages/cli/src/cli.ts --help) <(cargo run --quiet -p local-ci -- --help)`
 
 - [x] **RUST-011: Config/env loading**
-  - [x] Port `.env.agent-ci` loading.
-  - [x] Support `AGENT_CI_*` environment variables.
+  - [x] Port `.env.local-ci` loading.
+  - [x] Support `LOCAL_CI_*` environment variables.
   - [x] Preserve shell environment precedence.
   - [x] Preserve `DOCKER_HOST` rejection behavior.
   - Test: `cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
-  - Test: `DOCKER_HOST=unix:///bad.sock cargo run --quiet -p agent-ci -- --help` exits 1 with the rename error
+  - Test: `DOCKER_HOST=unix:///bad.sock cargo run --quiet -p local-ci -- --help` exits 1 with the rename error
 
 - [x] **RUST-012: Log/state directory handling**
   - [x] Port the current log directory layout.
@@ -140,7 +140,7 @@ This is the working checklist for moving Agent CI from a Node/TypeScript CLI to 
 
 - [x] **RUST-052: Runner image handling**
   - [x] Pull the default runner image.
-  - [x] Build custom runner images from `.github/agent-ci.Dockerfile`.
+  - [x] Build custom runner images from `.github/local-ci.Dockerfile`.
   - [x] Preserve image hash/tag behavior.
   - [x] Preserve missing-tool hints.
   - Test: `cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
@@ -208,30 +208,30 @@ This is the working checklist for moving Agent CI from a Node/TypeScript CLI to 
   - Test: `node --input-type=module -e "import fs from 'node:fs'; import YAML from 'yaml'; const doc = YAML.parse(fs.readFileSync('.github/workflows/native-binaries.yml','utf8')); if (!doc.jobs?.build?.strategy?.matrix?.include || doc.jobs.build.strategy.matrix.include.length !== 4) throw new Error('native matrix missing targets')" && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
 
 - [x] **RUST-071: npm native binary packages**
-  - [x] Keep `npm install @redwoodjs/agent-ci` working.
+  - [x] Keep `npm install local-ci` working.
   - [x] Add platform-specific optional packages.
   - [x] Add a small JS launcher that resolves the native binary.
-  - [x] Preserve `npx @redwoodjs/agent-ci` behavior.
-  - Test: `pnpm --filter @redwoodjs/agent-ci test && pnpm --filter @redwoodjs/agent-ci typecheck && pnpm check && pnpm --filter @redwoodjs/agent-ci build && AGENT_CI_FORCE_TYPESCRIPT=1 node packages/cli/dist/native-launcher.js --help && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
+  - [x] Preserve `npx run-local-ci` behavior.
+  - Test: `pnpm --filter run-local-ci test && pnpm --filter run-local-ci typecheck && pnpm check && pnpm --filter run-local-ci build && LOCAL_CI_FORCE_TYPESCRIPT=1 node packages/cli/dist/native-launcher.js --help && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
 
 - [x] **RUST-072: GitHub Release assets**
   - [x] Publish downloadable binaries.
   - [x] Publish checksums.
   - [x] Document direct download usage.
-  - Test: `node --input-type=module -e "import fs from 'node:fs'; import YAML from 'yaml'; const doc = YAML.parse(fs.readFileSync('.github/workflows/native-binaries.yml','utf8')); if (doc.permissions.contents !== 'write') throw new Error('release upload needs contents write'); const steps = doc.jobs.build.steps.map(s => s.name).filter(Boolean); if (!steps.includes('Publish GitHub Release assets')) throw new Error('missing release upload step')" && pnpm --filter @redwoodjs/agent-ci test && pnpm check && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
+  - Test: `node --input-type=module -e "import fs from 'node:fs'; import YAML from 'yaml'; const doc = YAML.parse(fs.readFileSync('.github/workflows/native-binaries.yml','utf8')); if (doc.permissions.contents !== 'write') throw new Error('release upload needs contents write'); const steps = doc.jobs.build.steps.map(s => s.name).filter(Boolean); if (!steps.includes('Publish GitHub Release assets')) throw new Error('missing release upload step')" && pnpm --filter run-local-ci test && pnpm check && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
 
 - [x] **RUST-073: Homebrew formula**
   - [x] Create or update a Homebrew tap.
   - [x] Install the native binary.
   - [x] Add a smoke test to the formula.
-  - Test: `node scripts/render-homebrew-formula.mjs v0.16.1 <checksums-dir> <out-file> && grep -q 'bin.install "agent-ci"' <out-file> && grep -q 'agent-ci --help' <out-file> && pnpm check && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
+  - Test: `node scripts/render-homebrew-formula.mjs v0.16.1 <checksums-dir> <out-file> && grep -q 'bin.install "local-ci"' <out-file> && grep -q 'local-ci --help' <out-file> && pnpm check && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
 
 - [x] **RUST-074: Shell installer**
   - [x] Add optional `curl | sh` installer.
   - [x] Detect OS and architecture.
   - [x] Verify checksums.
   - [x] Install into a user-selected prefix.
-  - Test: `AGENT_CI_BASE_URL=file://<tmp>/releases AGENT_CI_OS=linux AGENT_CI_ARCH=x64 ./install.sh --version v0.0.0 --prefix <tmp>/install && <tmp>/install/bin/agent-ci && pnpm check && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
+  - Test: `LOCAL_CI_BASE_URL=file://<tmp>/releases LOCAL_CI_OS=linux LOCAL_CI_ARCH=x64 ./install.sh --version v0.0.0 --prefix <tmp>/install && <tmp>/install/bin/local-ci && pnpm check && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
 
 ## Phase 8 — Validation and Migration
 
@@ -255,7 +255,7 @@ This is the working checklist for moving Agent CI from a Node/TypeScript CLI to 
   - Test: `pnpm rust:perf && pnpm check && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`
 
 - [x] **RUST-083: Default binary switch**
-  - [x] Make the Rust implementation the default `agent-ci` binary.
+  - [x] Make the Rust implementation the default `local-ci` binary.
   - [x] Keep TypeScript fallback temporarily if needed.
   - [x] Document rollback instructions.
   - Test: `pnpm golden:cli && pnpm check && cargo fmt --all && cargo check --workspace --all-targets && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace --all-targets`

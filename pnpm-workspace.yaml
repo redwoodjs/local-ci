@@ -1,5 +1,6 @@
 packages:
-  - "packages/agent-ci-*"
+  - "packages/local-ci-*"
+  - "packages/agent-ci-compat"
   - "packages/cli"
   - "packages/dtu-github-actions"
   - "packages/ts-runner"

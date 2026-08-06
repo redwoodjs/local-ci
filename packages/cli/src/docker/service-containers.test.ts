@@ -121,44 +121,44 @@ describe("startServiceContainers", () => {
     ports: ["6379:6379"],
   };
 
-  it("creates a Docker network with agent-ci-net- prefix", async () => {
+  it("creates a Docker network with local-ci-net- prefix", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    await startServiceContainers(docker, [REDIS_SERVICE], "agent-ci-42");
+    await startServiceContainers(docker, [REDIS_SERVICE], "local-ci-42");
 
     expect(docker.createNetwork).toHaveBeenCalledWith({
-      Name: "agent-ci-net-agent-ci-42",
+      Name: "local-ci-net-local-ci-42",
       Driver: "bridge",
     });
   });
 
   it("creates containers for each service on the shared network", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "agent-ci-42");
+    await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "local-ci-42");
 
     expect(docker.createContainer).toHaveBeenCalledTimes(2);
 
     const mysqlCall = docker.createContainer.mock.calls[0][0];
     expect(mysqlCall.Image).toBe("mysql:8.0");
-    expect(mysqlCall.name).toBe("agent-ci-42-svc-mysql");
+    expect(mysqlCall.name).toBe("local-ci-42-svc-mysql");
     expect(mysqlCall.Env).toContain("MYSQL_ROOT_PASSWORD=root");
     expect(mysqlCall.Env).toContain("MYSQL_DATABASE=test_db");
-    expect(mysqlCall.HostConfig.NetworkMode).toBe("agent-ci-net-agent-ci-42");
+    expect(mysqlCall.HostConfig.NetworkMode).toBe("local-ci-net-local-ci-42");
     expect(mysqlCall.HostConfig.PortBindings).toEqual({ "3306/tcp": [{ HostPort: "3306" }] });
     expect(
-      mysqlCall.NetworkingConfig.EndpointsConfig["agent-ci-net-agent-ci-42"].Aliases,
+      mysqlCall.NetworkingConfig.EndpointsConfig["local-ci-net-local-ci-42"].Aliases,
     ).toContain("mysql");
 
     const redisCall = docker.createContainer.mock.calls[1][0];
     expect(redisCall.Image).toBe("redis:7");
-    expect(redisCall.name).toBe("agent-ci-42-svc-redis");
+    expect(redisCall.name).toBe("local-ci-42-svc-redis");
     expect(
-      redisCall.NetworkingConfig.EndpointsConfig["agent-ci-net-agent-ci-42"].Aliases,
+      redisCall.NetworkingConfig.EndpointsConfig["local-ci-net-local-ci-42"].Aliases,
     ).toContain("redis");
   });
 
   it("starts all created containers", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "agent-ci-42");
+    await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "local-ci-42");
 
     for (const [, container] of docker._containers) {
       expect(container.start).toHaveBeenCalledTimes(1);
@@ -167,9 +167,9 @@ describe("startServiceContainers", () => {
 
   it("returns the correct ServiceContext", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    const ctx = await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "agent-ci-42");
+    const ctx = await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "local-ci-42");
 
-    expect(ctx.networkName).toBe("agent-ci-net-agent-ci-42");
+    expect(ctx.networkName).toBe("local-ci-net-local-ci-42");
     expect(ctx.containerIds).toHaveLength(2);
     expect(ctx.containerIds[0]).toBe("container-1");
     expect(ctx.containerIds[1]).toBe("container-2");
@@ -177,18 +177,18 @@ describe("startServiceContainers", () => {
 
   it("generates port-forward commands for each port mapping", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    const ctx = await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "agent-ci-42");
+    const ctx = await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "local-ci-42");
 
     expect(ctx.portForwards).toHaveLength(2);
-    expect(ctx.portForwards[0]).toContain("agent-ci-42-svc-mysql");
+    expect(ctx.portForwards[0]).toContain("local-ci-42-svc-mysql");
     expect(ctx.portForwards[0]).toContain("3306");
-    expect(ctx.portForwards[1]).toContain("agent-ci-42-svc-redis");
+    expect(ctx.portForwards[1]).toContain("local-ci-42-svc-redis");
     expect(ctx.portForwards[1]).toContain("6379");
   });
 
   it("applies health-check config from options string", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    await startServiceContainers(docker, [MYSQL_SERVICE], "agent-ci-42");
+    await startServiceContainers(docker, [MYSQL_SERVICE], "local-ci-42");
 
     const call = docker.createContainer.mock.calls[0][0];
     expect(call.Healthcheck).toBeDefined();
@@ -196,19 +196,19 @@ describe("startServiceContainers", () => {
     expect(call.Healthcheck.Retries).toBe(10);
   });
 
-  it("labels service containers with agent-ci.pid for orphan cleanup", async () => {
+  it("labels service containers with local-ci.pid for orphan cleanup", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "agent-ci-42");
+    await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "local-ci-42");
 
     for (const call of docker.createContainer.mock.calls) {
       expect(call[0].Labels).toBeDefined();
-      expect(call[0].Labels["agent-ci.pid"]).toBe(String(process.pid));
+      expect(call[0].Labels["local-ci.pid"]).toBe(String(process.pid));
     }
   });
 
   it("does not set Healthcheck when options are absent", async () => {
     const docker = makeMockDocker();
-    await startServiceContainers(docker, [REDIS_SERVICE], "agent-ci-42");
+    await startServiceContainers(docker, [REDIS_SERVICE], "local-ci-42");
 
     const call = docker.createContainer.mock.calls[0][0];
     expect(call.Healthcheck).toBeUndefined();
@@ -217,7 +217,7 @@ describe("startServiceContainers", () => {
   it("handles service with no ports (no port forwards generated)", async () => {
     const docker = makeMockDocker();
     const svc: WorkflowService = { name: "memcached", image: "memcached:latest" };
-    const ctx = await startServiceContainers(docker, [svc], "agent-ci-42");
+    const ctx = await startServiceContainers(docker, [svc], "local-ci-42");
 
     expect(ctx.portForwards).toHaveLength(0);
   });
@@ -230,7 +230,7 @@ describe("startServiceContainers", () => {
       credentials: { username: "ci-user", password: "secret-token" },
     };
 
-    await startServiceContainers(docker, [service], "agent-ci-42");
+    await startServiceContainers(docker, [service], "local-ci-42");
 
     expect(docker.pull).toHaveBeenCalledWith(
       service.image,
@@ -247,15 +247,15 @@ describe("startServiceContainers", () => {
 
   it("pre-cleans stale containers with the same name", async () => {
     const docker = makeMockDocker();
-    await startServiceContainers(docker, [REDIS_SERVICE], "agent-ci-42");
+    await startServiceContainers(docker, [REDIS_SERVICE], "local-ci-42");
 
-    expect(docker.getContainer).toHaveBeenCalledWith("agent-ci-42-svc-redis");
+    expect(docker.getContainer).toHaveBeenCalledWith("local-ci-42-svc-redis");
   });
 
   it("calls emit with progress messages", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
     const lines: string[] = [];
-    await startServiceContainers(docker, [MYSQL_SERVICE], "agent-ci-42", (l) => lines.push(l));
+    await startServiceContainers(docker, [MYSQL_SERVICE], "local-ci-42", (l) => lines.push(l));
 
     expect(lines.some((l) => l.includes("Created network"))).toBe(true);
     expect(lines.some((l) => l.includes("Starting service: mysql"))).toBe(true);
@@ -265,24 +265,24 @@ describe("startServiceContainers", () => {
   });
 
   it("sets short service name as a Docker network alias so DB_HOST=mysql resolves", async () => {
-    // Regression: container was named agent-ci-N-svc-mysql but DB_HOST=mysql couldn't resolve.
+    // Regression: container was named local-ci-N-svc-mysql but DB_HOST=mysql couldn't resolve.
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    await startServiceContainers(docker, [MYSQL_SERVICE], "agent-ci-99");
+    await startServiceContainers(docker, [MYSQL_SERVICE], "local-ci-99");
 
     const call = docker.createContainer.mock.calls[0][0];
-    const networkName = "agent-ci-net-agent-ci-99";
+    const networkName = "local-ci-net-local-ci-99";
 
     expect(call.NetworkingConfig.EndpointsConfig[networkName]).toBeDefined();
     const aliases: string[] = call.NetworkingConfig.EndpointsConfig[networkName].Aliases;
     expect(aliases).toContain("mysql");
-    expect(aliases).not.toContain("agent-ci-99-svc-mysql"); // full name is NOT the alias
+    expect(aliases).not.toContain("local-ci-99-svc-mysql"); // full name is NOT the alias
   });
 
   it("aliases differ per service", async () => {
     const docker = makeMockDocker({ healthStatus: "healthy" });
-    await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "agent-ci-42");
+    await startServiceContainers(docker, [MYSQL_SERVICE, REDIS_SERVICE], "local-ci-42");
 
-    const networkName = "agent-ci-net-agent-ci-42";
+    const networkName = "local-ci-net-local-ci-42";
     const mysqlAliases =
       docker.createContainer.mock.calls[0][0].NetworkingConfig.EndpointsConfig[networkName].Aliases;
     const redisAliases =
@@ -301,7 +301,7 @@ describe("cleanupServiceContainers", () => {
   it("stops and removes all containers, then removes the network", async () => {
     const docker = makeMockDocker();
     const ctx = {
-      networkName: "agent-ci-net-test",
+      networkName: "local-ci-net-test",
       containerIds: ["c1", "c2"],
       portForwards: [],
     };
@@ -310,13 +310,13 @@ describe("cleanupServiceContainers", () => {
 
     expect(docker.getContainer).toHaveBeenCalledWith("c1");
     expect(docker.getContainer).toHaveBeenCalledWith("c2");
-    expect(docker.getNetwork).toHaveBeenCalledWith("agent-ci-net-test");
+    expect(docker.getNetwork).toHaveBeenCalledWith("local-ci-net-test");
   });
 
   it("doesn't throw if containers are already gone", async () => {
     const docker = makeMockDocker();
     const ctx = {
-      networkName: "agent-ci-net-gone",
+      networkName: "local-ci-net-gone",
       containerIds: ["nonexistent"],
       portForwards: [],
     };
@@ -325,12 +325,12 @@ describe("cleanupServiceContainers", () => {
 
   it("emits cleanup message", async () => {
     const docker = makeMockDocker();
-    const ctx = { networkName: "agent-ci-net-test", containerIds: [], portForwards: [] };
+    const ctx = { networkName: "local-ci-net-test", containerIds: [], portForwards: [] };
     const lines: string[] = [];
 
     await cleanupServiceContainers(docker, ctx, (l) => lines.push(l));
 
     expect(lines.some((l) => l.includes("Cleaned up"))).toBe(true);
-    expect(lines.some((l) => l.includes("agent-ci-net-test"))).toBe(true);
+    expect(lines.some((l) => l.includes("local-ci-net-test"))).toBe(true);
   });
 });

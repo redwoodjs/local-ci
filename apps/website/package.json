@@ -1,8 +1,8 @@
 {
-  "name": "@redwoodjs/agent-ci-website",
+  "name": "@redwoodjs/local-ci-website",
   "version": "1.0.0",
   "private": true,
-  "description": "agent-ci.dev marketing site",
+  "description": "local-ci.dev marketing site",
   "keywords": [],
   "license": "MIT",
   "author": "",

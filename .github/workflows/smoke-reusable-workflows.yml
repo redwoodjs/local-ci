@@ -5,7 +5,7 @@ on:
     types: [opened, labeled, synchronize]
 
 jobs:
-  # Calls a local reusable workflow — verifies agent-ci inlines it correctly
+  # Calls a local reusable workflow — verifies local-ci inlines it correctly
   reusable-lint:
     if: '!github.event.pull_request.draft && (contains(fromJSON(''["MEMBER", "OWNER", "COLLABORATOR"]''), github.event.pull_request.author_association) || contains(github.event.pull_request.labels.*.name, ''safe-to-run''))'
     uses: ./.github/workflows/smoke-reusable-lint.yml

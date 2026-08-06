@@ -19,16 +19,16 @@ describe("macosRunnerTarballUrl", () => {
 });
 
 describe("resolveMacosRunnerVersion", () => {
-  const ORIG = process.env.AGENT_CI_MACOS_RUNNER_VERSION;
+  const ORIG = process.env.LOCAL_CI_MACOS_RUNNER_VERSION;
 
   beforeEach(() => {
-    delete process.env.AGENT_CI_MACOS_RUNNER_VERSION;
+    delete process.env.LOCAL_CI_MACOS_RUNNER_VERSION;
   });
   afterEach(() => {
     if (ORIG === undefined) {
-      delete process.env.AGENT_CI_MACOS_RUNNER_VERSION;
+      delete process.env.LOCAL_CI_MACOS_RUNNER_VERSION;
     } else {
-      process.env.AGENT_CI_MACOS_RUNNER_VERSION = ORIG;
+      process.env.LOCAL_CI_MACOS_RUNNER_VERSION = ORIG;
     }
   });
 
@@ -36,13 +36,13 @@ describe("resolveMacosRunnerVersion", () => {
     expect(resolveMacosRunnerVersion()).toBe(DEFAULT_MACOS_RUNNER_VERSION);
   });
 
-  it("honors AGENT_CI_MACOS_RUNNER_VERSION", () => {
-    process.env.AGENT_CI_MACOS_RUNNER_VERSION = "2.400.0";
+  it("honors LOCAL_CI_MACOS_RUNNER_VERSION", () => {
+    process.env.LOCAL_CI_MACOS_RUNNER_VERSION = "2.400.0";
     expect(resolveMacosRunnerVersion()).toBe("2.400.0");
   });
 
   it("trims whitespace from the override", () => {
-    process.env.AGENT_CI_MACOS_RUNNER_VERSION = "  2.400.0  ";
+    process.env.LOCAL_CI_MACOS_RUNNER_VERSION = "  2.400.0  ";
     expect(resolveMacosRunnerVersion()).toBe("2.400.0");
   });
 });

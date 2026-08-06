@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { resolveMacosVmImage, DEFAULT_MACOS_IMAGE } from "./image-mapping.ts";
 
-const ORIG = process.env.AGENT_CI_MACOS_VM_IMAGE;
+const ORIG = process.env.LOCAL_CI_MACOS_VM_IMAGE;
 
 beforeEach(() => {
-  delete process.env.AGENT_CI_MACOS_VM_IMAGE;
+  delete process.env.LOCAL_CI_MACOS_VM_IMAGE;
 });
 afterEach(() => {
   if (ORIG === undefined) {
-    delete process.env.AGENT_CI_MACOS_VM_IMAGE;
+    delete process.env.LOCAL_CI_MACOS_VM_IMAGE;
   } else {
-    process.env.AGENT_CI_MACOS_VM_IMAGE = ORIG;
+    process.env.LOCAL_CI_MACOS_VM_IMAGE = ORIG;
   }
 });
 
@@ -44,8 +44,8 @@ describe("resolveMacosVmImage", () => {
     expect(r.image).toBe(DEFAULT_MACOS_IMAGE);
   });
 
-  it("honors AGENT_CI_MACOS_VM_IMAGE override", () => {
-    process.env.AGENT_CI_MACOS_VM_IMAGE = "ghcr.io/example/custom:1.2.3";
+  it("honors LOCAL_CI_MACOS_VM_IMAGE override", () => {
+    process.env.LOCAL_CI_MACOS_VM_IMAGE = "ghcr.io/example/custom:1.2.3";
     const r = resolveMacosVmImage(["macos-14"]);
     expect(r.image).toBe("ghcr.io/example/custom:1.2.3");
     expect(r.exact).toBe(true);

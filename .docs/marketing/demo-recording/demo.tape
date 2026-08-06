@@ -1,4 +1,4 @@
-# Agent CI Demo — VHS Tape
+# Local CI Demo — VHS Tape
 # Records a terminal demo showing: pause-on-failure, fix, retry, pass.
 #
 # Prerequisites:
@@ -63,9 +63,9 @@ Type "cat value.txt"
 Enter
 Sleep 2s
 
-# === ACT 2: Run agent-ci — it starts instantly (0ms cold cache) ===
+# === ACT 2: Run local-ci — it starts instantly (0ms cold cache) ===
 
-Type "pnpm run agent-ci run --workflow .github/workflows/ci.yml --pause-on-failure"
+Type "pnpm run local-ci run --workflow .github/workflows/ci.yml --pause-on-failure"
 Enter
 
 # Wait for the runner to start and the test to fail (up to 2 minutes)

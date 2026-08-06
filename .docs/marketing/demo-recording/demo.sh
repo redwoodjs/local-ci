@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Live demo of agent-ci's pause/retry loop.
+# Live demo of local-ci's pause/retry loop.
 # Run:  bash .docs/marketing/demo-recording/demo.sh
 
 set -euo pipefail
 
 DEMO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$DEMO_DIR/../../.." && pwd)"
-SESSION="agent-ci-demo"
+SESSION="local-ci-demo"
 
 command -v tmux >/dev/null || { echo "tmux is required (brew install tmux)"; exit 1; }
 
@@ -21,7 +21,7 @@ echo "    done."
 echo
 
 cat <<'EOF'
-┌─ DEMO — agent-ci pause / retry loop ──────────────────────────┐
+┌─ DEMO — local-ci pause / retry loop ──────────────────────────┐
 │                                                               │
 │  Layout       [ left = runner ]   [ right = your shell ]      │
 │                                                               │
@@ -44,7 +44,7 @@ read -r -p "Press [Enter] to start the demo..."
 
 tmux -L demo kill-session -t "$SESSION" 2>/dev/null || true
 
-RUNNER_CMD="cd '$DEMO_DIR' && '$REPO_ROOT/scripts/agent-ci-dev.sh' run --workflow .github/workflows/ci.yml -p; echo; read -r -p 'Demo finished. Press [Enter] to close...'"
+RUNNER_CMD="cd '$DEMO_DIR' && '$REPO_ROOT/scripts/local-ci-dev.sh' run --workflow .github/workflows/ci.yml -p; echo; read -r -p 'Demo finished. Press [Enter] to close...'"
 
 LEFT=$(tmux -L demo new-session -d -s "$SESSION" -x 200 -y 50 -c "$DEMO_DIR" \
   -P -F '#{pane_id}' -- bash -c "$RUNNER_CMD")

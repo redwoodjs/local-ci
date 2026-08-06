@@ -47,19 +47,19 @@ jobs:
           pnpm rust:test
       - name: Check fixture contracts
         run: |
-          cargo test -p agent-ci-core fixture
-          cargo test -p agent-ci-runtime docker_socket_fixture_contracts_match_snapshots
+          cargo test -p local-ci-core fixture
+          cargo test -p local-ci-runtime docker_socket_fixture_contracts_match_snapshots
           pnpm fixtures:check
       - name: Check native CLI golden output
         run: pnpm golden:cli
       - name: Check Rust smoke parity
         run: |
-          if [ "${AGENT_CI_LOCAL:-}" = "true" ]; then
-            echo "Skipping nested Rust smoke parity inside agent-ci local validation."
+          if [ "${LOCAL_CI_LOCAL:-}" = "true" ]; then
+            echo "Skipping nested Rust smoke parity inside local-ci local validation."
             exit 0
           fi
           pnpm rust:smoke:parity
       - name: Test DTU
         run: pnpm --filter dtu-github-actions test
       - name: Test CLI
-        run: pnpm --filter agent-ci test
+        run: pnpm --filter run-local-ci test

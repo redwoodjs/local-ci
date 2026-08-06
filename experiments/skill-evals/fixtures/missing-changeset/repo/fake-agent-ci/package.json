@@ -1,9 +1,0 @@
-{
-  "name": "@redwoodjs/agent-ci",
-  "version": "0.0.0-fixture",
-  "private": true,
-  "type": "module",
-  "bin": {
-    "agent-ci": "./bin/agent-ci.mjs"
-  }
-}

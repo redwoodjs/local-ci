@@ -1,21 +1,23 @@
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { getWorkingDirectory } from "../output/working-directory.ts";
+import { getWorkingDirectory, LEGACY_WORKING_DIR } from "../output/working-directory.ts";
 import { syncWorkspaceForRetry } from "../runner/sync.ts";
 import { readDetachedMarker, tailRetryUntilOutcome } from "../launcher.ts";
 
 function findSignalsDir(runnerName: string): string | null {
-  const workDir = getWorkingDirectory();
-  const runsDir = path.resolve(workDir, "runs");
-  if (!fs.existsSync(runsDir)) {
-    return null;
-  }
-  for (const entry of fs.readdirSync(runsDir)) {
-    if (entry === runnerName || entry.endsWith(runnerName)) {
-      const signalsDir = path.join(runsDir, entry, "signals");
-      if (fs.existsSync(signalsDir)) {
-        return signalsDir;
+  const workDirs = [getWorkingDirectory(), LEGACY_WORKING_DIR];
+  for (const workDir of new Set(workDirs)) {
+    const runsDir = path.resolve(workDir, "runs");
+    if (!fs.existsSync(runsDir)) {
+      continue;
+    }
+    for (const entry of fs.readdirSync(runsDir)) {
+      if (entry === runnerName || entry.endsWith(runnerName)) {
+        const signalsDir = path.join(runsDir, entry, "signals");
+        if (fs.existsSync(signalsDir)) {
+          return signalsDir;
+        }
       }
     }
   }
@@ -40,23 +42,23 @@ export default async function retryAbort(
     }
   }
   if (!runnerName) {
-    console.error(`[Agent CI] Error: --name <name> is required for '${command}'`);
+    console.error(`[Local CI] Error: --name <name> is required for '${command}'`);
     process.exit(1);
   }
   if (fromStep && fromStep !== "*" && (isNaN(Number(fromStep)) || Number(fromStep) < 1)) {
-    console.error(`[Agent CI] Error: --from-step must be a positive step number`);
+    console.error(`[Local CI] Error: --from-step must be a positive step number`);
     process.exit(1);
   }
   const signalsDir = findSignalsDir(runnerName);
   if (!signalsDir) {
-    console.error(`[Agent CI] Error: No runner '${runnerName}' found. It may have already exited.`);
+    console.error(`[Local CI] Error: No runner '${runnerName}' found. It may have already exited.`);
     process.exit(1);
   }
   const pausedFile = path.join(signalsDir, "paused");
   if (!fs.existsSync(pausedFile)) {
     fs.rmSync(signalsDir, { recursive: true, force: true });
     console.error(
-      `[Agent CI] Error: Runner '${runnerName}' is not currently paused. It may have already exited.`,
+      `[Local CI] Error: Runner '${runnerName}' is not currently paused. It may have already exited.`,
     );
     process.exit(1);
   }
@@ -69,7 +71,7 @@ export default async function retryAbort(
     }
   } catch {
     fs.rmSync(signalsDir, { recursive: true, force: true });
-    console.error(`[Agent CI] Error: Runner '${runnerName}' is no longer running.`);
+    console.error(`[Local CI] Error: Runner '${runnerName}' is no longer running.`);
     process.exit(1);
   }
   if (command === "retry") {
@@ -98,7 +100,7 @@ export default async function retryAbort(
   }
   fs.writeFileSync(path.join(signalsDir, command), "");
   const extra = fromStep ? ` (from step ${fromStep === "*" ? "1" : fromStep})` : "";
-  console.log(`[Agent CI] Sent '${command}' signal to ${runnerName}${extra}`);
+  console.log(`[Local CI] Sent '${command}' signal to ${runnerName}${extra}`);
   if (marker && command === "retry") {
     const result = await tailRetryUntilOutcome(marker, tailStartOffset);
     process.exit(result.exitCode);

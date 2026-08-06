@@ -3,7 +3,7 @@ name: "Smoke: shell defaults (workflow / job / step)"
 # Covers `defaults.run.shell` at workflow and job level plus step-level
 # `shell:` override. Detection trick: bash sets $BASH_VERSION, sh (dash on
 # the runner image) does not. If the shell override is honored the
-# assertion passes; if agent-ci silently runs bash regardless, it fails.
+# assertion passes; if local-ci silently runs bash regardless, it fails.
 
 on:
   pull_request_target:

@@ -5,9 +5,9 @@
 // its own stdout and exits 77 the moment the worker emits a `run.paused`
 // event — at which point the worker is disowned and keeps running in the
 // background, holding the container + DTU + signals dir alive so a sibling
-// `agent-ci retry --name X` can resume it.
+// `local-ci retry --name X` can resume it.
 //
-// `agent-ci retry` reuses the same tail loop: it writes the retry signal,
+// `local-ci retry` reuses the same tail loop: it writes the retry signal,
 // then tails the worker's log so a re-failure surfaces as another exit-77 in
 // the retrying shell. Successful completion exits 0; failed completion exits
 // 1; both are signaled by a `run.completed` event the worker emits at the
@@ -24,7 +24,7 @@ import { resolveStateDir } from "./run-result-writer.ts";
 
 export const PAUSED_EXIT_CODE = 77;
 /** Set by the launcher on the worker child. Presence = detached; value = worker log path. */
-export const DETACHED_ENV = "AGENT_CI_DETACHED";
+export const DETACHED_ENV = "LOCAL_CI_DETACHED";
 
 /** Filename written under each run dir so `retry` can locate the worker by runner name. */
 export const DETACHED_MARKER_FILENAME = "detached.json";
@@ -172,7 +172,7 @@ export function parseLogEvent(line: string): LogEvent | null {
 }
 
 /**
- * `AGENT_CI_DETACHED` has two roles distinguished by value:
+ * `LOCAL_CI_DETACHED` has two roles distinguished by value:
  *   - `=1` (or any non-absolute value) → caller-side opt-in: force the
  *     detached launcher even when stdout is a TTY. Useful for testing.
  *   - `=<absolute path>` → set by the launcher on the worker child; the value
@@ -217,7 +217,7 @@ export function getDetachedWorkerLogPath(): string | null {
  * log file, not the harness's pipe — breaking the monitor. Plain non-TTY
  * callers (the issue's actual target) have no monitor and need us to exit.
  *
- * Override: `AGENT_CI_DETACHED=1` forces the launcher path even on a TTY,
+ * Override: `LOCAL_CI_DETACHED=1` forces the launcher path even on a TTY,
  * for manual verification of the pause-then-exit flow.
  */
 export function shouldLaunchDetached(opts: {
@@ -295,7 +295,7 @@ export async function runDetachedLauncher(args: string[]): Promise<LaunchResult>
   fs.writeFileSync(logPath, "");
 
   // Forward execArgv so the worker keeps the same loader (e.g. `--import
-  // tsx/esm` when invoked via `pnpm agent-ci-dev`). Without this, the worker
+  // tsx/esm` when invoked via `pnpm local-ci-dev`). Without this, the worker
   // would be `node cli.ts`, which Node can't resolve without the TS loader.
   const logFd = fs.openSync(logPath, "a");
   const child = spawn(process.execPath, [...process.execArgv, process.argv[1], ...args], {
@@ -375,9 +375,9 @@ function isPidAlive(pid: number): boolean {
 
 function writePauseHint(e: RunPausedEvent, logPath: string): void {
   process.stdout.write(
-    `[Agent CI] Job paused. Worker continues in background.\n` +
+    `[Local CI] Job paused. Worker continues in background.\n` +
       `           Resume with: ${e.retry_cmd}\n` +
-      `           Or abort with: agent-ci abort --name ${e.runner}\n` +
+      `           Or abort with: local-ci abort --name ${e.runner}\n` +
       `           Live log: ${logPath}\n`,
   );
 }

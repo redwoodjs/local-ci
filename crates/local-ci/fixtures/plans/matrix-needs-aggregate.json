@@ -1,0 +1,66 @@
+{
+  "workflow": "matrix-needs-aggregate.yml",
+  "plan": {
+    "jobs": [
+      {
+        "id": "deploy",
+        "runnerName": "local-ci-1-j1",
+        "target": "linux:ubuntu-latest",
+        "needs": ["test"],
+        "if": "${{ always() && needs.test.result != 'success' }}",
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "test",
+        "runnerName": "local-ci-1-j2-m1",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": { "__job_index": "0", "__job_total": "4", "node": "20", "os": "ubuntu" },
+        "outputs": ["seen"],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "test",
+        "runnerName": "local-ci-1-j2-m2",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": { "__job_index": "1", "__job_total": "4", "node": "20", "os": "alpine" },
+        "outputs": ["seen"],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "test",
+        "runnerName": "local-ci-1-j2-m3",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": { "__job_index": "2", "__job_total": "4", "node": "22", "os": "ubuntu" },
+        "outputs": ["seen"],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "test",
+        "runnerName": "local-ci-1-j2-m4",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": { "__job_index": "3", "__job_total": "4", "node": "22", "os": "alpine" },
+        "outputs": ["seen"],
+        "services": [],
+        "container": null
+      }
+    ],
+    "schedule": [
+      ["local-ci-1-j2-m1", "local-ci-1-j2-m2", "local-ci-1-j2-m3", "local-ci-1-j2-m4"],
+      ["deploy"]
+    ]
+  }
+}

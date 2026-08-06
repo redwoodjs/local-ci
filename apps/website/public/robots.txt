@@ -1,8 +1,8 @@
-# agent-ci.dev
+# local-ci.dev
 # Crawl rules for search engines and AI agents.
 # Reference: RFC 9309 (https://www.rfc-editor.org/rfc/rfc9309)
 
-Sitemap: https://agent-ci.dev/sitemap.xml
+Sitemap: https://local-ci.dev/sitemap.xml
 
 # Content Signals declare our preferences for how content may be used.
 # Reference: https://contentsignals.org/

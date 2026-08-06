@@ -15,7 +15,7 @@
     "source=${localEnv:HOME}/.claude.json,target=/root/.claude.json,type=bind",
     "source=${localEnv:HOME}/.claude,target=/root/.claude,type=bind",
     "source=${localEnv:HOME}/.config/gh,target=/root/.config/gh,type=bind",
-    "source=agent-ci-pnpm-store,target=/root/.local/share/pnpm/store,type=volume",
+    "source=local-ci-pnpm-store,target=/root/.local/share/pnpm/store,type=volume",
     "source={{WORKSPACE_DIR}}/.git,target={{WORKSPACE_DIR}}/.git,type=bind"
   ],
 

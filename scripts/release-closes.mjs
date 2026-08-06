@@ -14,7 +14,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CHANGESET_DIR = join(ROOT, ".changeset");
 const CLOSES_FILE = join(ROOT, ".release-closes.json");
 const KEYWORD_RE = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)/gi;
-const REPO = process.env.GITHUB_REPOSITORY || "redwoodjs/agent-ci";
+const REPO = process.env.GITHUB_REPOSITORY || "redwoodjs/local-ci";
 
 function sh(cmd) {
   return execSync(cmd, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();

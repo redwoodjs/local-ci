@@ -35,7 +35,7 @@ export function Blog() {
               Blog
             </a>
             <a
-              href="https://github.com/redwoodjs/agent-ci"
+              href="https://github.com/redwoodjs/local-ci"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#e0eee5] transition-colors"
@@ -52,7 +52,7 @@ export function Blog() {
             <h1 className="text-4xl font-bold text-[#e0eee5] font-serif">Blog</h1>
             <div className="h-px bg-[#2b483e] flex-1"></div>
           </div>
-          <p className="text-[#9bc5b3] text-lg">Articles and updates from the Agent CI team.</p>
+          <p className="text-[#9bc5b3] text-lg">Articles and updates from the Local CI team.</p>
         </div>
 
         <div className="flex flex-col gap-6">

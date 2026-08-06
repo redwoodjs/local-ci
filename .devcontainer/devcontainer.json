@@ -1,5 +1,5 @@
 {
-  "name": "Agent CI",
+  "name": "Local CI",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22",
 
   "features": {
@@ -10,7 +10,7 @@
   "remoteUser": "node",
 
   "mounts": [
-    "source=agent-ci-pnpm-store,target=/home/node/.local/share/pnpm/store,type=volume",
+    "source=local-ci-pnpm-store,target=/home/node/.local/share/pnpm/store,type=volume",
     "source=${localEnv:HOME}/.claude.json,target=/home/node/.claude.json,type=bind",
     "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind"
   ],

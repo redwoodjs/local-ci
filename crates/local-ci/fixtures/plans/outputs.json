@@ -1,0 +1,30 @@
+{
+  "workflow": "outputs.yml",
+  "plan": {
+    "jobs": [
+      {
+        "id": "consume",
+        "runnerName": "local-ci-1-j1",
+        "target": "linux:ubuntu-latest",
+        "needs": ["produce"],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "produce",
+        "runnerName": "local-ci-1-j2",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": null,
+        "outputs": ["artifact"],
+        "services": [],
+        "container": null
+      }
+    ],
+    "schedule": [["produce"], ["consume"]]
+  }
+}

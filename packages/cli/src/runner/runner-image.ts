@@ -22,28 +22,28 @@ export interface ResolvedRunnerImage {
  * Discover which runner image to use for a repo.
  *
  * Resolution order (highest wins):
- *   1. AGENT_CI_RUNNER_IMAGE env var
- *   2. <repoRoot>/.github/agent-ci/Dockerfile — directory form (supports COPY)
- *   3. <repoRoot>/.github/agent-ci.Dockerfile — simple form (empty context)
+ *   1. LOCAL_CI_RUNNER_IMAGE env var
+ *   2. <repoRoot>/.github/local-ci/Dockerfile — directory form (supports COPY)
+ *   3. <repoRoot>/.github/local-ci.Dockerfile — simple form (empty context)
  *   4. Fallback: ghcr.io/actions/actions-runner:latest
  */
 export function discoverRunnerImage(repoRoot: string): ResolvedRunnerImage {
-  const envImage = process.env.AGENT_CI_RUNNER_IMAGE?.trim();
+  const envImage = process.env.LOCAL_CI_RUNNER_IMAGE?.trim();
   if (envImage) {
     return {
       image: envImage,
       source: "env",
-      sourceLabel: "AGENT_CI_RUNNER_IMAGE",
+      sourceLabel: "LOCAL_CI_RUNNER_IMAGE",
       needsBuild: false,
     };
   }
 
-  const dirDockerfile = path.join(repoRoot, ".github", "agent-ci", "Dockerfile");
+  const dirDockerfile = path.join(repoRoot, ".github", "local-ci", "Dockerfile");
   if (fs.existsSync(dirDockerfile)) {
     const contextDir = path.dirname(dirDockerfile);
     const hash = hashDockerfileAndContext(dirDockerfile, contextDir);
     return {
-      image: `agent-ci-runner:${hash}`,
+      image: `local-ci-runner:${hash}`,
       source: "dockerfile-dir",
       sourceLabel: path.relative(repoRoot, dirDockerfile),
       needsBuild: true,
@@ -52,15 +52,41 @@ export function discoverRunnerImage(repoRoot: string): ResolvedRunnerImage {
     };
   }
 
-  const simpleDockerfile = path.join(repoRoot, ".github", "agent-ci.Dockerfile");
+  const simpleDockerfile = path.join(repoRoot, ".github", "local-ci.Dockerfile");
   if (fs.existsSync(simpleDockerfile)) {
     const hash = hashFile(simpleDockerfile);
     return {
-      image: `agent-ci-runner:${hash}`,
+      image: `local-ci-runner:${hash}`,
       source: "dockerfile-file",
       sourceLabel: path.relative(repoRoot, simpleDockerfile),
       needsBuild: true,
       dockerfilePath: simpleDockerfile,
+    };
+  }
+
+  const legacyDirDockerfile = path.join(repoRoot, ".github", "agent-ci", "Dockerfile");
+  if (fs.existsSync(legacyDirDockerfile)) {
+    const contextDir = path.dirname(legacyDirDockerfile);
+    const hash = hashDockerfileAndContext(legacyDirDockerfile, contextDir);
+    return {
+      image: `local-ci-runner:${hash}`,
+      source: "dockerfile-dir",
+      sourceLabel: path.relative(repoRoot, legacyDirDockerfile),
+      needsBuild: true,
+      dockerfilePath: legacyDirDockerfile,
+      contextDir,
+    };
+  }
+
+  const legacySimpleDockerfile = path.join(repoRoot, ".github", "agent-ci.Dockerfile");
+  if (fs.existsSync(legacySimpleDockerfile)) {
+    const hash = hashFile(legacySimpleDockerfile);
+    return {
+      image: `local-ci-runner:${hash}`,
+      source: "dockerfile-file",
+      sourceLabel: path.relative(repoRoot, legacySimpleDockerfile),
+      needsBuild: true,
+      dockerfilePath: legacySimpleDockerfile,
     };
   }
 
@@ -217,16 +243,16 @@ export function detectMissingToolHint(
 
 function formatHint(tool: string): string {
   return [
-    `Hint: \`${tool}\` is not in agent-ci's default runner image.`,
+    `Hint: \`${tool}\` is not in local-ci's default runner image.`,
     ``,
     `The default image (ghcr.io/actions/actions-runner:latest) is a minimal`,
     `container and does not ship system build tools — unlike GitHub's hosted`,
     `ubuntu-latest, which is a full VM image that is not published as a`,
     `container and cannot be pulled.`,
     ``,
-    `To fix this, create a .github/agent-ci.Dockerfile in your repo that`,
+    `To fix this, create a .github/local-ci.Dockerfile in your repo that`,
     `installs the missing tool. See the runner image docs for recipes:`,
-    `https://github.com/redwoodjs/agent-ci/blob/main/packages/cli/runner-image.md`,
+    `https://github.com/redwoodjs/local-ci/blob/main/packages/cli/runner-image.md`,
   ].join("\n");
 }
 

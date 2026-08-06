@@ -26,10 +26,10 @@ export function HeroSection() {
       </div>
 
       <div className="animate-fade-in-scale relative">
-        <Panel title="agent-ci-terminal" glow className="flex flex-col">
+        <Panel title="local-ci-terminal" glow className="flex flex-col">
           <div className="font-mono text-sm text-[#9bc5b3] space-y-2 flex-1 overflow-y-auto">
             <p>
-              <span className="text-[#528b76]">❯</span> npx @redwoodjs/agent-ci run --workflow
+              <span className="text-[#528b76]">❯</span> npx run-local-ci run --workflow
               .github/workflows/ci.yml
             </p>
             <p className="text-[#71a792]">Initializing local runner environment...</p>
@@ -46,7 +46,7 @@ export function HeroSection() {
             <p className="text-yellow-400 font-bold">⚠️ Step failed. Runner paused.</p>
             <p className="text-[#71a792]">Container state preserved. Fix the issue and run:</p>
             <p className="text-[#e0eee5] bg-[#243c34] inline-block px-2 py-1 mt-1">
-              npx @redwoodjs/agent-ci retry --name runner-test-and-build
+              npx run-local-ci retry --name runner-test-and-build
             </p>
             <div className="w-2 h-4 bg-[#528b76] inline-block ml-2 align-middle animate-blink" />
           </div>

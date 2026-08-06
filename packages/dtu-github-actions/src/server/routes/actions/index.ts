@@ -150,7 +150,7 @@ function fetchWithRedirects(
     return;
   }
   const mod = url.startsWith("https") ? https : http;
-  mod.get(url, { headers: { "User-Agent": "agent-ci/1.0", ...extraHeaders } }, (res) => {
+  mod.get(url, { headers: { "User-Agent": "local-ci/1.0", ...extraHeaders } }, (res) => {
     if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
       res.resume();
       return fetchWithRedirects(res.headers.location, callback, redirects + 1, extraHeaders);
@@ -485,7 +485,7 @@ export function registerActionRoutes(app: Polka) {
 
     const response = {
       id: agentId,
-      name: payload?.name || "agent-ci-runner",
+      name: payload?.name || "local-ci-runner",
       version: payload?.version || "2.331.0",
       osDescription: payload?.osDescription || "Linux",
       ephemeral: payload?.ephemeral || true,
@@ -509,7 +509,7 @@ export function registerActionRoutes(app: Polka) {
     console.log(`[DTU] Creating session for pool ${req.params.poolId}`);
     const newSessionId = crypto.randomUUID();
 
-    const ownerName = req.body?.agent?.name || "agent-ci-runner";
+    const ownerName = req.body?.agent?.name || "local-ci-runner";
 
     // Map this session to the runner name, allowing concurrent jobs to find their logs
     state.sessionToRunner.set(newSessionId, ownerName);
@@ -972,7 +972,7 @@ export function registerActionRoutes(app: Polka) {
     let content = "";
     let inGroup = false;
 
-    // Collect agent-ci-output lines for cross-job output passing
+    // Collect local-ci-output lines for cross-job output passing
     const outputEntries: Array<[string, string]> = [];
 
     for (const rawLine of lines) {
@@ -988,9 +988,9 @@ export function registerActionRoutes(app: Polka) {
         .replace(/^\uFEFF?\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*/, "")
         .replace(/^\uFEFF/, "");
 
-      // Parse agent-ci-output lines: ::agent-ci-output::key=value
-      if (stripped.startsWith("::agent-ci-output::")) {
-        const kv = stripped.slice("::agent-ci-output::".length);
+      // Parse local-ci-output lines: ::local-ci-output::key=value
+      if (stripped.startsWith("::local-ci-output::")) {
+        const kv = stripped.slice("::local-ci-output::".length);
         const eqIdx = kv.indexOf("=");
         if (eqIdx > 0) {
           outputEntries.push([kv.slice(0, eqIdx), kv.slice(eqIdx + 1)]);

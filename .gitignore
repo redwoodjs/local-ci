@@ -70,7 +70,7 @@ coverage
 .wrangler
 
 
-.agent-ci
+.local-ci
 temp_runner_source
 tmp-runner-logs
 temp_*

@@ -24,11 +24,11 @@ describe("nestedContainerNetworkName", () => {
         NetworkSettings: {
           Networks: {
             bridge: {},
-            "agent-ci-agent-ci-1-j1": {},
+            "local-ci-local-ci-1-j1": {},
           },
         },
       }),
-    ).toBe("agent-ci-agent-ci-1-j1");
+    ).toBe("local-ci-local-ci-1-j1");
   });
 
   it("falls back to bridge when it is the only network", async () => {

@@ -10,7 +10,7 @@ describe("Signal handler cleanup", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-signal-test-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-signal-test-"));
   });
 
   afterEach(() => {
@@ -19,7 +19,7 @@ describe("Signal handler cleanup", () => {
 
   it("cleanup function removes all temp directories", () => {
     // With the new layout, work/shims/diag are co-located under runs/<runnerName>/
-    const runDir = path.join(tmpDir, "runs", "agent-ci-sig");
+    const runDir = path.join(tmpDir, "runs", "local-ci-sig");
     const dirs = {
       containerWorkDir: path.join(runDir, "work"),
       workspaceDir: path.join(runDir, "work", "workspace"),
@@ -63,7 +63,7 @@ describe("Stale workspace pruning", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-prune-test-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-prune-test-"));
     // pruneStaleWorkspaces scans <workDir>/runs/
     fs.mkdirSync(path.join(tmpDir, "runs"), { recursive: true });
   });
@@ -72,9 +72,9 @@ describe("Stale workspace pruning", () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("removes agent-ci-* dirs older than maxAge", async () => {
+  it("removes local-ci-* dirs older than maxAge", async () => {
     // Create a stale run dir — the entire runDir is removed (includes logs, work, shims, diag)
-    const staleDir = path.join(tmpDir, "runs", "agent-ci-100");
+    const staleDir = path.join(tmpDir, "runs", "local-ci-100");
     fs.mkdirSync(path.join(staleDir, "logs"), { recursive: true });
     fs.writeFileSync(path.join(staleDir, "logs", "output.log"), "stale");
 
@@ -85,13 +85,13 @@ describe("Stale workspace pruning", () => {
     const { pruneStaleWorkspaces } = await import("./shutdown.ts");
     const pruned = pruneStaleWorkspaces(tmpDir, 24 * 60 * 60 * 1000);
 
-    expect(pruned).toContain("agent-ci-100");
+    expect(pruned).toContain("local-ci-100");
     expect(fs.existsSync(staleDir)).toBe(false);
   });
 
-  it("keeps agent-ci-* dirs newer than maxAge", async () => {
+  it("keeps local-ci-* dirs newer than maxAge", async () => {
     // Create a fresh run dir
-    const freshDir = path.join(tmpDir, "runs", "agent-ci-200");
+    const freshDir = path.join(tmpDir, "runs", "local-ci-200");
     fs.mkdirSync(path.join(freshDir, "logs"), { recursive: true });
     fs.writeFileSync(path.join(freshDir, "logs", "output.log"), "fresh");
 
@@ -102,7 +102,7 @@ describe("Stale workspace pruning", () => {
     expect(fs.existsSync(freshDir)).toBe(true);
   });
 
-  it("ignores non-agent-ci dirs", async () => {
+  it("ignores non-local-ci dirs", async () => {
     const otherDir = path.join(tmpDir, "runs", "workspace-12345");
     fs.mkdirSync(otherDir, { recursive: true });
 
@@ -151,7 +151,7 @@ describe("killOrphanedContainers", () => {
   it("kills containers whose parent PID is dead", async () => {
     execSyncMock.mockImplementation((cmd: string) => {
       if (cmd.startsWith("docker ps")) {
-        return "abc123 agent-ci-runner-1 99999\n";
+        return "abc123 local-ci-runner-1 99999\n";
       }
       return "";
     });
@@ -166,7 +166,7 @@ describe("killOrphanedContainers", () => {
     killOrphanedContainers();
 
     const rmCalls = execSyncMock.mock.calls.filter(([cmd]: string[]) =>
-      cmd.includes("docker rm -f agent-ci-runner-1"),
+      cmd.includes("docker rm -f local-ci-runner-1"),
     );
     expect(rmCalls.length).toBeGreaterThan(0);
   });
@@ -175,7 +175,7 @@ describe("killOrphanedContainers", () => {
     const myPid = process.pid;
     execSyncMock.mockImplementation((cmd: string) => {
       if (cmd.startsWith("docker ps")) {
-        return `abc123 agent-ci-runner-2 ${myPid}\n`;
+        return `abc123 local-ci-runner-2 ${myPid}\n`;
       }
       return "";
     });
@@ -199,7 +199,7 @@ describe("killOrphanedContainers", () => {
     execSyncMock.mockImplementation((cmd: string) => {
       if (cmd.startsWith("docker ps")) {
         // Empty pid label — unlabeled container
-        return "abc123 agent-ci-runner-3 \n";
+        return "abc123 local-ci-runner-3 \n";
       }
       return "";
     });
@@ -208,7 +208,7 @@ describe("killOrphanedContainers", () => {
     killOrphanedContainers();
 
     const rmCalls = execSyncMock.mock.calls.filter(([cmd]: string[]) =>
-      cmd.includes("docker rm -f agent-ci-runner-3"),
+      cmd.includes("docker rm -f local-ci-runner-3"),
     );
     expect(rmCalls.length).toBeGreaterThan(0);
   });
@@ -217,7 +217,7 @@ describe("killOrphanedContainers", () => {
     execSyncMock.mockImplementation((cmd: string) => {
       if (cmd.startsWith("docker ps")) {
         // An unlabeled svc container whose runner is already gone
-        return "def456 agent-ci-2307-j2-svc-cache-db \n";
+        return "def456 local-ci-2307-j2-svc-cache-db \n";
       }
       return "";
     });
@@ -227,7 +227,7 @@ describe("killOrphanedContainers", () => {
 
     // Should call killRunnerContainers with the runner name (without -svc-cache-db)
     const rmCalls = execSyncMock.mock.calls.filter(([cmd]: string[]) =>
-      cmd.includes("docker rm -f agent-ci-2307-j2"),
+      cmd.includes("docker rm -f local-ci-2307-j2"),
     );
     expect(rmCalls.length).toBeGreaterThan(0);
   });
@@ -237,7 +237,7 @@ describe("killOrphanedContainers", () => {
       if (cmd.startsWith("docker ps")) {
         // Both runner and its svc container listed, both with dead PID
         return (
-          ["aaa111 agent-ci-500-j1 99999", "bbb222 agent-ci-500-j1-svc-redis 99999"].join("\n") +
+          ["aaa111 local-ci-500-j1 99999", "bbb222 local-ci-500-j1-svc-redis 99999"].join("\n") +
           "\n"
         );
       }
@@ -255,7 +255,7 @@ describe("killOrphanedContainers", () => {
 
     // killRunnerContainers should only be called once for the runner name
     const rmCalls = execSyncMock.mock.calls.filter(([cmd]: string[]) =>
-      cmd.includes("docker rm -f agent-ci-500-j1"),
+      cmd.includes("docker rm -f local-ci-500-j1"),
     );
     // One call for the runner rm, one for the svc filter — but NOT a second
     // full killRunnerContainers pass for the svc container
@@ -276,7 +276,7 @@ describe("containerWorkDir cleanup on exit", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-cleanup-test-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-cleanup-test-"));
   });
 
   afterEach(() => {
@@ -285,7 +285,7 @@ describe("containerWorkDir cleanup on exit", () => {
 
   it("cleans entire runDir on success", () => {
     // New layout: work/shims/diag are all under runs/<runnerName>/
-    const runDir = path.join(tmpDir, "runs", "agent-ci-1");
+    const runDir = path.join(tmpDir, "runs", "local-ci-1");
     const containerWorkDir = path.join(runDir, "work");
     const shimsDir = path.join(runDir, "shims");
     const diagDir = path.join(runDir, "diag");
@@ -311,7 +311,7 @@ describe("containerWorkDir cleanup on exit", () => {
   });
 
   it("retains runDir on failure for debugging", () => {
-    const runDir = path.join(tmpDir, "runs", "agent-ci-2");
+    const runDir = path.join(tmpDir, "runs", "local-ci-2");
     const containerWorkDir = path.join(runDir, "work");
     const shimsDir = path.join(runDir, "shims");
     const diagDir = path.join(runDir, "diag");
@@ -359,8 +359,8 @@ function insideDocker(): boolean {
 describe.skipIf(!dockerAvailable() || insideDocker())(
   "killOrphanedContainers (Docker integration)",
   () => {
-    const containerName = "agent-ci-orphan-smoke-svc-testdb";
-    const runnerName = "agent-ci-orphan-smoke";
+    const containerName = "local-ci-orphan-smoke-svc-testdb";
+    const runnerName = "local-ci-orphan-smoke";
 
     // Import the real function eagerly, outside vitest's mock system.
     // The unit tests above use vi.doMock("node:child_process") which poisons
@@ -382,14 +382,14 @@ describe.skipIf(!dockerAvailable() || insideDocker())(
         // already gone — good
       }
       try {
-        execSync(`docker network rm agent-ci-net-${runnerName}`, { stdio: "pipe" });
+        execSync(`docker network rm local-ci-net-${runnerName}`, { stdio: "pipe" });
       } catch {
         // already gone
       }
     });
 
     it("cleans up an unlabeled service container", () => {
-      // Create a container that mimics a leaked pre-fix service container: no agent-ci.pid label
+      // Create a container that mimics a leaked pre-fix service container: no local-ci.pid label
       execSync(`docker create --name ${containerName} busybox sleep 300`, { stdio: "pipe" });
       execSync(`docker start ${containerName}`, { stdio: "pipe" });
 
@@ -415,7 +415,7 @@ describe.skipIf(!dockerAvailable() || insideDocker())(
       const deadPid = "4194303";
 
       execSync(
-        `docker create --name ${containerName} --label "agent-ci.pid=${deadPid}" busybox sleep 300`,
+        `docker create --name ${containerName} --label "local-ci.pid=${deadPid}" busybox sleep 300`,
         { stdio: "pipe" },
       );
       execSync(`docker start ${containerName}`, { stdio: "pipe" });
@@ -440,7 +440,7 @@ describe.skipIf(!dockerAvailable() || insideDocker())(
       const myPid = String(process.pid);
 
       execSync(
-        `docker create --name ${containerName} --label "agent-ci.pid=${myPid}" busybox sleep 300`,
+        `docker create --name ${containerName} --label "local-ci.pid=${myPid}" busybox sleep 300`,
         { stdio: "pipe" },
       );
       execSync(`docker start ${containerName}`, { stdio: "pipe" });

@@ -9,7 +9,7 @@ import type { JobResult } from "./output/reporter.ts";
 export function postCommitStatus(results: JobResult[], sha?: string, githubToken?: string): void {
   if (!githubToken) {
     console.warn(
-      "[Agent CI] --commit-status requires a GitHub token. Use --github-token or set AGENT_CI_GITHUB_TOKEN.",
+      "[Local CI] --commit-status requires a GitHub token. Use --github-token or set LOCAL_CI_GITHUB_TOKEN.",
     );
     return;
   }
@@ -53,9 +53,9 @@ export function postCommitStatus(results: JobResult[], sha?: string, githubToken
     execSync(
       `gh api repos/${repo}/statuses/${resolvedSha} ` +
         `-f state=${state} ` +
-        `-f context=agent-ci ` +
+        `-f context=local-ci ` +
         `-f description=${JSON.stringify(description)} ` +
-        `-f target_url=https://agent-ci.dev`,
+        `-f target_url=https://local-ci.dev`,
       { stdio: "ignore" },
     );
   } catch {

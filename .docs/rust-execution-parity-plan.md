@@ -1,11 +1,11 @@
 # Rust Execution Parity Plan
 
-This plan covers the remaining work required before Agent CI can remove the TypeScript CLI implementation and run entirely through the native Rust binary.
+This plan covers the remaining work required before Local CI can remove the TypeScript CLI implementation and run entirely through the native Rust binary.
 
 ## Current status
 
 - Rust has broad module coverage for parsing, state, DTU APIs, Docker config, runner images, macOS VM helpers, packaging, and validation scaffolding.
-- Rust `agent-ci run` can execute Docker-backed Linux jobs through the Rust DTU behind the opt-in Rust path.
+- Rust `local-ci run` can execute Docker-backed Linux jobs through the Rust DTU behind the opt-in Rust path.
 - The TypeScript CLI remains the default execution path until the remaining parity phases pass.
 - `RUST-084` is blocked until this plan is complete.
 
@@ -13,24 +13,24 @@ This plan covers the remaining work required before Agent CI can remove the Type
 
 Rust is at full parity when all of the following are true:
 
-- `target/debug/agent-ci run --workflow <workflow>` can execute real jobs end-to-end.
+- `target/debug/local-ci run --workflow <workflow>` can execute real jobs end-to-end.
 - Rust can run Docker-backed Linux jobs with caches, artifacts, services, outputs, and matrix expansion.
 - Rust can pause, retry, and abort failed jobs with the same behavior as TypeScript.
 - Rust can execute or correctly skip/degrade macOS VM jobs with matching messages.
 - `pnpm rust:smoke:parity` expects successful execution instead of the current discovery-only gap.
-- `pnpm agent-ci-dev run --all -q -p --json` passes with the Rust path enabled.
+- `pnpm local-ci-dev run --all -q -p --json` passes with the Rust path enabled.
 - The TypeScript fallback can be removed without losing any documented capability.
 
 ## Phase 0 — Guardrails
 
 - [x] **RXP-000: Keep TypeScript fallback until parity is proven**
-  - [x] Keep `AGENT_CI_FORCE_TYPESCRIPT=1` documented.
+  - [x] Keep `LOCAL_CI_FORCE_TYPESCRIPT=1` documented.
   - [x] Keep npm launcher fallback enabled.
   - [x] Do not remove TypeScript execution code before `RXP-080` passes.
   - Test: `pnpm golden:cli`
 
 - [x] **RXP-001: Add an explicit Rust execution feature flag**
-  - [x] Add `AGENT_CI_FORCE_RUST=1` or equivalent for local parity testing.
+  - [x] Add `LOCAL_CI_FORCE_RUST=1` or equivalent for local parity testing.
   - [x] Make default behavior conservative while Rust execution is incomplete.
   - [x] Ensure unsupported Rust execution falls back or fails with a clear message.
   - Test: launcher unit tests + `pnpm golden:cli`
@@ -200,13 +200,13 @@ Rust is at full parity when all of the following are true:
   - [x] Wait for IP and SSH.
   - [x] Sync workspace and runner binary.
   - [x] Run job and sync logs back.
-  - Test: opt-in macOS integration test on Apple Silicon (`target/debug/agent-ci run --workflow .github/workflows/macos.yml -q --json` on Apple Silicon Tart host).
+  - Test: opt-in macOS integration test on Apple Silicon (`target/debug/local-ci run --workflow .github/workflows/macos.yml -q --json` on Apple Silicon Tart host).
 
 - [x] **RXP-062: macOS skip/degraded parity**
   - [x] Preserve unsupported-host skip reasons.
   - [x] Preserve install hints for Tart and sshpass.
   - [x] Preserve behavior on Linux/Intel hosts.
-  - Test: host capability unit tests and smoke skip checks (`PATH=/usr/bin:/bin target/debug/agent-ci run --workflow .github/workflows/macos.yml -q --json`).
+  - Test: host capability unit tests and smoke skip checks (`PATH=/usr/bin:/bin target/debug/local-ci run --workflow .github/workflows/macos.yml -q --json`).
 
 ## Phase 7 — Result writing and reporting
 
@@ -248,14 +248,14 @@ Rust is at full parity when all of the following are true:
 - [x] **RXP-081b: Port job-wave concurrency**
   - [x] Rust preserves dependency-wave ordering and runs jobs inside each wave concurrently.
   - [x] The native CLI honors `--jobs` as the per-wave concurrency limit.
-  - [x] macOS VM execution is capped independently with `AGENT_CI_MACOS_VM_CONCURRENCY` (default: `2`).
+  - [x] macOS VM execution is capped independently with `LOCAL_CI_MACOS_VM_CONCURRENCY` (default: `2`).
   - Test: Rust CLI parsing tests plus smoke parity/full dev validation exercise the native limiter path.
 
 - [x] **RXP-082: Run all in-repo workflows through Rust**
   - [x] Enable Rust path for the full dev validation.
   - [x] Fix any remaining parity failures.
   - [x] Record unsupported intentional skips.
-  - Test: `AGENT_CI_FORCE_RUST=1 pnpm agent-ci-dev run --all -q -p --json`
+  - Test: `LOCAL_CI_FORCE_RUST=1 pnpm local-ci-dev run --all -q -p --json`
 
 - [x] **RXP-083: Release-mode benchmarks**
   - [x] Benchmark release Rust binary startup.
@@ -272,13 +272,13 @@ See also [rust-crate-split-and-fixtures RFC](rfcs/rust-crate-split-and-fixtures.
   - [ ] Route npm launcher to native Rust binary by default.
   - [ ] Keep TypeScript fallback for one release.
   - [ ] Document fallback/rollback.
-  - Test: full `pnpm agent-ci-dev run --all -q -p --json` with default settings.
+  - Test: full `pnpm local-ci-dev run --all -q -p --json` with default settings.
 
 - [ ] **RXP-091: Remove TypeScript execution fallback**
   - [ ] Remove TypeScript CLI execution modules.
   - [ ] Remove fallback launcher path.
   - [ ] Keep only necessary JS packaging shim if npm still needs it.
-  - Test: full `pnpm agent-ci-dev run --all -q -p --json`.
+  - Test: full `pnpm local-ci-dev run --all -q -p --json`.
 
 - [ ] **RXP-092: Remove unused dependencies**
   - [ ] Remove Docker/runner/workflow TS dependencies no longer used.
@@ -287,7 +287,7 @@ See also [rust-crate-split-and-fixtures RFC](rfcs/rust-crate-split-and-fixtures.
   - Test: `pnpm install --lockfile-only && pnpm check`.
 
 - [ ] **RXP-093: Final docs update**
-  - [ ] Update README to describe native Agent CI.
+  - [ ] Update README to describe native Local CI.
   - [ ] Update release docs.
   - [ ] Update migration/rollback notes.
   - Test: docs links and full dev validation.
@@ -316,5 +316,5 @@ For each checked-off implementation task:
 4. Before reporting the overall work complete, run:
 
    ```bash
-   pnpm agent-ci-dev run --all -q -p --json
+   pnpm local-ci-dev run --all -q -p --json
    ```

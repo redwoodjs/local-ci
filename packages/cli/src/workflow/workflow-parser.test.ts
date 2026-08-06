@@ -198,14 +198,14 @@ describe("parseWorkflowServices", () => {
       matrixContext: { registry_user: "matrix-user" },
       vars: { registry: "ghcr.io", registry_user: "env-service-user" },
       githubContext: {
-        repository: "redwoodjs/agent-ci",
+        repository: "redwoodjs/local-ci",
         repository_owner: "redwoodjs",
         actor: "peterp",
       },
     });
 
     expect(services[0]).toMatchObject({
-      image: "ghcr.io/redwoodjs/agent-ci/cache:latest",
+      image: "ghcr.io/redwoodjs/local-ci/cache:latest",
       credentials: {
         username: "env-service-user-matrix-user",
         password: "service-secret",
@@ -262,7 +262,7 @@ describe("parseWorkflowContainer", () => {
       secrets: { CONTAINER_TOKEN: "container-secret" },
       vars: { registry: "ghcr.io", registry_user: "unused-here" },
       githubContext: {
-        repository: "redwoodjs/agent-ci",
+        repository: "redwoodjs/local-ci",
         repository_owner: "redwoodjs",
         actor: "peterp",
       },
@@ -872,7 +872,7 @@ jobs:
       - run: echo ok
 `);
     expect(() =>
-      validateSecrets(filePath, "run", { MY_TOKEN: "abc123" }, "/repo/.env.agent-ci"),
+      validateSecrets(filePath, "run", { MY_TOKEN: "abc123" }, "/repo/.env.local-ci"),
     ).not.toThrow();
   });
 
@@ -886,7 +886,7 @@ jobs:
     steps:
       - run: echo ok
 `);
-    expect(() => validateSecrets(filePath, "run", {}, "/repo/.env.agent-ci")).not.toThrow();
+    expect(() => validateSecrets(filePath, "run", {}, "/repo/.env.local-ci")).not.toThrow();
   });
 
   it("throws listing missing secrets and the secrets file path", () => {
@@ -902,16 +902,16 @@ jobs:
     steps:
       - run: echo deploy
 `);
-    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.agent-ci")).toThrow(
+    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.local-ci")).toThrow(
       /CLOUDFLARE_ACCOUNT_ID=/,
     );
 
-    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.agent-ci")).toThrow(
+    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.local-ci")).toThrow(
       /CLOUDFLARE_API_TOKEN=/,
     );
 
-    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.agent-ci")).toThrow(
-      /\/home\/user\/repo\/.env.agent-ci/,
+    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.local-ci")).toThrow(
+      /\/home\/user\/repo\/.env.local-ci/,
     );
   });
 
@@ -929,11 +929,11 @@ jobs:
       - run: echo ok
 `);
     expect(() =>
-      validateSecrets(filePath, "run", { PRESENT_SECRET: "value" }, "/repo/.env.agent-ci"),
+      validateSecrets(filePath, "run", { PRESENT_SECRET: "value" }, "/repo/.env.local-ci"),
     ).toThrow(/MISSING_SECRET/);
 
     expect(() =>
-      validateSecrets(filePath, "run", { PRESENT_SECRET: "value" }, "/repo/.env.agent-ci"),
+      validateSecrets(filePath, "run", { PRESENT_SECRET: "value" }, "/repo/.env.local-ci"),
     ).not.toThrow(/PRESENT_SECRET/);
   });
 });

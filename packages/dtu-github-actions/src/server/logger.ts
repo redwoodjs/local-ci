@@ -28,7 +28,7 @@ function isDtuDebugEnabled(): boolean {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-  return patterns.some((p) => minimatch("agent-ci:dtu", p) || minimatch("agent-ci:*", p));
+  return patterns.some((p) => minimatch("local-ci:dtu", p) || minimatch("local-ci:*", p));
 }
 
 export function setupDtuLogging() {

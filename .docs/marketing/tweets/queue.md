@@ -15,7 +15,7 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Hook:** Running CI before you commit is underrated.
 
-**Screenshot needed:** Terminal showing `pnpm agent-ci run --all tests.yml` succeeding on a dirty working tree — with `git status` above it showing uncommitted changes.
+**Screenshot needed:** Terminal showing `pnpm local-ci run --all tests.yml` succeeding on a dirty working tree — with `git status` above it showing uncommitted changes.
 
 **Copy:**
 
@@ -23,11 +23,11 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Reply (post only if traction):**
 
-> agent-ci runs against your working tree directly. No need to commit, no need to push. Just run it.
+> local-ci runs against your working tree directly. No need to commit, no need to push. Just run it.
 >
-> agent-ci.dev
+> local-ci.dev
 
-**Why this works:** The Apr 7 tweet proved that simple "I do X and it feels good" statements outperform explanations. "Before you commit" reframes local CI from "debugging tool" to "quality gate" — something every developer wants but doesn't have. The dirty tree is agent-ci's actual superpower for daily workflow.
+**Why this works:** The Apr 7 tweet proved that simple "I do X and it feels good" statements outperform explanations. "Before you commit" reframes local CI from "debugging tool" to "quality gate" — something every developer wants but doesn't have. The dirty tree is local-ci's actual superpower for daily workflow.
 
 ---
 
@@ -35,7 +35,7 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Hook:** Concrete before/after speed comparison.
 
-**Screenshot needed:** Split-screen or sequential showing: (1) a GitHub Actions run taking 2-4 minutes, (2) the same workflow via agent-ci taking 9 seconds. Or just the agent-ci side with a caption that implies the comparison.
+**Screenshot needed:** Split-screen or sequential showing: (1) a GitHub Actions run taking 2-4 minutes, (2) the same workflow via local-ci taking 9 seconds. Or just the local-ci side with a caption that implies the comparison.
 
 **Copy:**
 
@@ -43,9 +43,9 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Reply (post only if traction):**
 
-> agent-ci runs the official GitHub Actions runner locally. Cache is bind-mounted (~0ms), no upload/download cycles.
+> local-ci runs the official GitHub Actions runner locally. Cache is bind-mounted (~0ms), no upload/download cycles.
 >
-> agent-ci.dev
+> local-ci.dev
 
 **Why this works:** The "9 seconds" in the Apr 7 screenshot was the single most compelling data point. Making the comparison explicit ("instead of 4 minutes") makes it even more visceral. Everyone knows how long their CI takes.
 
@@ -71,11 +71,11 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Hook:** Pre-push hook that actually catches things.
 
-**Screenshot needed:** A `.git/hooks/pre-push` or `package.json` script showing agent-ci wired as a pre-push hook, then a terminal showing it catching a failure before the push goes through.
+**Screenshot needed:** A `.git/hooks/pre-push` or `package.json` script showing local-ci wired as a pre-push hook, then a terminal showing it catching a failure before the push goes through.
 
 **Copy:**
 
-> Added agent-ci to my pre-push hook. Now CI runs in 9 seconds before every push.
+> Added local-ci to my pre-push hook. Now CI runs in 9 seconds before every push.
 >
 > Haven't seen a red CI on GitHub in a week.
 
@@ -87,7 +87,7 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Hook:** Database-dependent tests running locally.
 
-**Screenshot needed:** Terminal showing a workflow with `services: postgres` running locally via agent-ci, with the test step passing.
+**Screenshot needed:** Terminal showing a workflow with `services: postgres` running locally via local-ci, with the test step passing.
 
 **Copy:**
 
@@ -95,9 +95,9 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Reply (post only if traction):**
 
-> agent-ci supports service containers natively. Same `services:` block you already have in your workflow YAML.
+> local-ci supports service containers natively. Same `services:` block you already have in your workflow YAML.
 >
-> agent-ci.dev
+> local-ci.dev
 
 **Why this works:** Service containers are the #1 reason people think "I can't run this locally." Showing it just working removes the biggest mental objection. Concrete timing ("12 seconds") follows the speed-as-proof pattern.
 
@@ -107,11 +107,11 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Hook:** Don't lead with the comparison. Let the result speak.
 
-**Screenshot needed:** Terminal showing agent-ci running a workflow that's known to fail on act — ideally one with `actions/setup-node` or another action that act handles incorrectly.
+**Screenshot needed:** Terminal showing local-ci running a workflow that's known to fail on act — ideally one with `actions/setup-node` or another action that act handles incorrectly.
 
 **Copy:**
 
-> This workflow fails on act. Runs fine on agent-ci.
+> This workflow fails on act. Runs fine on local-ci.
 >
 > Official runner binary. Not a re-implementation.
 
@@ -123,7 +123,7 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 **Hook:** Show what your AI agent actually sees.
 
-**Screenshot needed:** Terminal showing `AI_AGENT=1 pnpm agent-ci run --all tests.yml` with the minimal, token-efficient output. Maybe side-by-side with normal output.
+**Screenshot needed:** Terminal showing `AI_AGENT=1 pnpm local-ci run --all tests.yml` with the minimal, token-efficient output. Maybe side-by-side with normal output.
 
 **Copy:**
 
@@ -133,7 +133,7 @@ Post cadence: ~1 per day, screenshot-first. Reply to your own tweet with context
 
 > Set AI_AGENT=1 for quiet mode. On failure, it outputs just the error and the step name — so your agent knows exactly what to fix.
 >
-> agent-ci.dev
+> local-ci.dev
 
 **Why this works:** This is the one tweet where the AI-agent angle is the primary hook — but it works because the _format_ is still a screenshot, and the hook is about what you _see_ (visual), not what it _does_ (abstract). Test whether the AI-agent audience responds when the delivery format is right.
 

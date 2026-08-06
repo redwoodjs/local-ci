@@ -1,5 +1,5 @@
 /**
- * Reproduction for https://github.com/redwoodjs/agent-ci/issues/329
+ * Reproduction for https://github.com/redwoodjs/local-ci/issues/329
  *
  * On cold boot, `tart ip <name>` hangs until the VM grabs a DHCP lease.
  * runCommand's 5s timeout fires, kills the child, and *rejects* — so getIp's
@@ -47,7 +47,7 @@ describe("issue-329 reproduction: getIp swallows runCommand rejection", () => {
     vi.mocked(childProcess.spawn).mockReturnValue(child as never);
 
     const { getIp } = await import("./tart.ts");
-    const promise = getIp("agent-ci-macos-cold-boot");
+    const promise = getIp("local-ci-macos-cold-boot");
 
     // Same code path runCommand hits when its timer fires and the SIGKILL
     // backstop blows the child away: 'error' propagates as a Promise rejection.

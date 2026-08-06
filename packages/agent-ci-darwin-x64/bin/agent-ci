@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-echo "This platform package was published without a staged native agent-ci binary." >&2
-exit 1

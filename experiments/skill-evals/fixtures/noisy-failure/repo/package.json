@@ -7,6 +7,6 @@
     "typecheck": "echo 'typecheck would run here'"
   },
   "dependencies": {
-    "@redwoodjs/agent-ci": "file:./fake-agent-ci"
+    "local-ci": "file:./fake-local-ci"
   }
 }

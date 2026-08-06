@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reproduce issue #315: `agent-ci run --pause-on-failure` blocks indefinitely
+# Reproduce issue #315: `local-ci run --pause-on-failure` blocks indefinitely
 # when stdout is piped or redirected. With the fix in place, the launcher
 # exits with code 77 the instant the worker pauses, freeing the caller's pipe.
 #
@@ -19,7 +19,7 @@ while [ -L "$SOURCE" ]; do
 done
 SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-AGENT_CI="$REPO_ROOT/scripts/agent-ci-dev.sh"
+LOCAL_CI="$REPO_ROOT/scripts/local-ci-dev.sh"
 
 TMP="$(mktemp -d)"
 RUNNER_NAME=""
@@ -29,7 +29,7 @@ cleanup() {
   # tmp repo. We don't know the runner name until the sentinel arrives, so
   # parse it from the captured output if available.
   if [ -n "$RUNNER_NAME" ]; then
-    "$AGENT_CI" abort --name "$RUNNER_NAME" >/dev/null 2>&1 || true
+    "$LOCAL_CI" abort --name "$RUNNER_NAME" >/dev/null 2>&1 || true
   fi
   rm -rf "$TMP"
 }
@@ -59,10 +59,10 @@ git commit -q -m init
 export GITHUB_REPO=repro/issue-315
 
 OUT="$TMP/out.log"
-echo "▶ agent-ci run -w fail.yml -p (piped through cat, 60s timeout)…"
+echo "▶ local-ci run -w fail.yml -p (piped through cat, 60s timeout)…"
 START=$SECONDS
 set +e
-timeout 60 "$AGENT_CI" run -w fail.yml -p 2>&1 | tee "$OUT" | cat >/dev/null
+timeout 60 "$LOCAL_CI" run -w fail.yml -p 2>&1 | tee "$OUT" | cat >/dev/null
 EC="${PIPESTATUS[0]}"
 set -e
 ELAPSED=$((SECONDS - START))

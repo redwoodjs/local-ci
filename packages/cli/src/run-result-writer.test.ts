@@ -19,32 +19,32 @@ function job(overrides: Partial<JobResult> = {}): JobResult {
     taskId: "task",
     succeeded: true,
     durationMs: 1000,
-    debugLogPath: "/tmp/agent-ci-missing-debug.log",
+    debugLogPath: "/tmp/local-ci-missing-debug.log",
     ...overrides,
   };
 }
 
 describe("resolveStateDir", () => {
-  it("honors AGENT_CI_STATE_DIR verbatim", () => {
-    expect(resolveStateDir({ AGENT_CI_STATE_DIR: "/custom/path" }, "linux")).toBe("/custom/path");
-    expect(resolveStateDir({ AGENT_CI_STATE_DIR: "/custom/path" }, "darwin")).toBe("/custom/path");
+  it("honors LOCAL_CI_STATE_DIR verbatim", () => {
+    expect(resolveStateDir({ LOCAL_CI_STATE_DIR: "/custom/path" }, "linux")).toBe("/custom/path");
+    expect(resolveStateDir({ LOCAL_CI_STATE_DIR: "/custom/path" }, "darwin")).toBe("/custom/path");
   });
 
   it("uses Library/Application Support on macOS", () => {
     expect(resolveStateDir({ HOME: "/Users/alice" }, "darwin")).toBe(
-      "/Users/alice/Library/Application Support/agent-ci",
+      "/Users/alice/Library/Application Support/local-ci",
     );
   });
 
-  it("uses $XDG_STATE_HOME/agent-ci on Linux when set", () => {
+  it("uses $XDG_STATE_HOME/local-ci on Linux when set", () => {
     expect(resolveStateDir({ HOME: "/home/alice", XDG_STATE_HOME: "/state" }, "linux")).toBe(
-      "/state/agent-ci",
+      "/state/local-ci",
     );
   });
 
-  it("falls back to ~/.local/state/agent-ci on Linux", () => {
+  it("falls back to ~/.local/state/local-ci on Linux", () => {
     expect(resolveStateDir({ HOME: "/home/alice" }, "linux")).toBe(
-      "/home/alice/.local/state/agent-ci",
+      "/home/alice/.local/state/local-ci",
     );
   });
 });
@@ -130,7 +130,7 @@ describe("buildRunResultJson", () => {
   });
 
   it("emits steps[] with per-step logPath when the file exists", () => {
-    const logDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-logs-"));
+    const logDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-logs-"));
     try {
       const stepsDir = path.join(logDir, "steps");
       fs.mkdirSync(stepsDir, { recursive: true });
@@ -175,7 +175,7 @@ describe("buildRunResultJson", () => {
   });
 
   it("includes debugLogPath when the file exists", () => {
-    const logDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-logs-"));
+    const logDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-logs-"));
     try {
       const debugLog = path.join(logDir, "debug.log");
       fs.writeFileSync(debugLog, "");
@@ -223,7 +223,7 @@ describe("writeRunResult", () => {
   let stateDir: string;
 
   beforeEach(() => {
-    stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-state-"));
+    stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-state-"));
   });
 
   afterEach(() => {

@@ -5,7 +5,7 @@ using a real [create-rwsdk](https://www.npmjs.com/package/create-rwsdk) project.
 
 ## Why
 
-Agent CI already caches PNPM installs via warm `node_modules` bind-mounts (symlinked into containers).
+Local CI already caches PNPM installs via warm `node_modules` bind-mounts (symlinked into containers).
 This experiment measures whether the same strategy works for other package managers.
 
 ## Run
@@ -30,7 +30,7 @@ bash bench.sh --pm npm,bun
 | 3   | **Warm modules** | `node_modules` already present, incremental install     |
 | 4   | **Symlink only** | Symlink a cached `node_modules` — **no install at all** |
 
-**Scenario 4 is the interesting one** — it's what Agent CI does for PNPM. If it's ≫5× faster
+**Scenario 4 is the interesting one** — it's what Local CI does for PNPM. If it's ≫5× faster
 than cold install, the warm-modules strategy generalises to all package managers.
 
 ## Requirements

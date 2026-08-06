@@ -1,6 +1,6 @@
 name: "Smoke: pause-on-failure exits in pipe (#315)"
 
-# Reproduces issue #315: `agent-ci run --pause-on-failure` must not hang
+# Reproduces issue #315: `local-ci run --pause-on-failure` must not hang
 # forever when stdout is piped or redirected. The launcher should exit 77
 # the moment the worker pauses; without the fix the pipe blocks until
 # `timeout 60` kills the script (exit 124).
@@ -32,5 +32,5 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm --filter dtu-github-actions build
-      - name: agent-ci -p in a pipe must exit 77, not hang
+      - name: local-ci -p in a pipe must exit 77, not hang
         run: ./scripts/repro-315.sh

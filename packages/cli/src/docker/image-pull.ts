@@ -31,7 +31,7 @@ const inflightPulls = new Map<string, Promise<void>>();
  * optional auth config through Docker's standard X-Registry-Auth header, so
  * the Docker daemon can handle each registry's authentication challenge.
  *
- * Reproduces: https://github.com/redwoodjs/agent-ci/issues/203
+ * Reproduces: https://github.com/redwoodjs/local-ci/issues/203
  */
 export async function ensureImagePulled(
   docker: Docker,

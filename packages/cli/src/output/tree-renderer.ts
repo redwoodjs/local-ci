@@ -4,7 +4,7 @@
 // Example output:
 //   [*] tests.yml
 //   └── [job] test
-//       └── [run] agent-ci-5
+//       └── [run] local-ci-5
 //           ├── [+] Set up job (1s)
 //           ├── [>] Run pnpm check (12s...)
 //           └── [ ] Pending...

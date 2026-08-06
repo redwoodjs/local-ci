@@ -5,14 +5,14 @@
   },
   "repository": {
     "id": 123456789,
-    "name": "agent-ci",
-    "full_name": "redwoodjs/agent-ci",
+    "name": "local-ci",
+    "full_name": "redwoodjs/local-ci",
     "private": false,
     "owner": {
       "login": "peterp",
       "id": 123456
     },
-    "html_url": "https://github.com/redwoodjs/agent-ci"
+    "html_url": "https://github.com/redwoodjs/local-ci"
   },
   "sender": {
     "login": "peterp",

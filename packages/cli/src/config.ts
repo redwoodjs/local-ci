@@ -98,23 +98,40 @@ function parseEnvFile(filePath: string): Record<string, string> {
   return result;
 }
 
+export const LOCAL_ENV_FILENAME = ".env.local-ci";
+export const LEGACY_ENV_FILENAME = ".env.agent-ci";
+const LOCAL_ENV_PREFIX = "LOCAL_CI_";
+const LEGACY_ENV_PREFIX = "AGENT_CI_";
+
+/** Prefer the Local CI config file, falling back to Agent CI for compatibility. */
+export function resolveMachineEnvPath(baseDir?: string): string {
+  const root = baseDir ?? PROJECT_ROOT;
+  const localPath = path.join(root, LOCAL_ENV_FILENAME);
+  if (fs.existsSync(localPath)) {
+    return localPath;
+  }
+  return path.join(root, LEGACY_ENV_FILENAME);
+}
+
+function canonicalEnvKey(key: string): string | null {
+  if (key.startsWith(LOCAL_ENV_PREFIX)) {
+    return key;
+  }
+  if (key.startsWith(LEGACY_ENV_PREFIX)) {
+    return `${LOCAL_ENV_PREFIX}${key.slice(LEGACY_ENV_PREFIX.length)}`;
+  }
+  return null;
+}
+
 /**
- * Load machine-local secrets from `.env.agent-ci` at the given base directory.
- * The file uses KEY=VALUE syntax (lines starting with # are ignored).
- *
- * When `envFallbackKeys` is provided, any key in that list that is NOT already
- * present in the file will be filled from `process.env` (shell environment
- * variables act as a fallback for the .env file).
- *
- * Returns an empty object if the file doesn't exist and no env fallbacks match.
+ * Load machine-local secrets from `.env.local-ci`, or legacy `.env.agent-ci`.
+ * Shell environment variables act as fallbacks for workflow secret values.
  */
 export function loadMachineSecrets(
   baseDir?: string,
   envFallbackKeys?: string[],
 ): Record<string, string> {
-  const envMachinePath = path.join(baseDir ?? PROJECT_ROOT, ".env.agent-ci");
-  const secrets = parseEnvFile(envMachinePath);
-  // Fill missing secrets from process.env (shell env vars act as fallback)
+  const secrets = parseEnvFile(resolveMachineEnvPath(baseDir));
   if (envFallbackKeys) {
     for (const key of envFallbackKeys) {
       if (!secrets[key] && process.env[key]) {
@@ -126,22 +143,36 @@ export function loadMachineSecrets(
 }
 
 /**
- * Apply `AGENT_CI_*` entries from `.env.agent-ci` to `process.env`.
- *
- * Shell env wins: a key already present in `process.env` is left untouched.
- * Only `AGENT_CI_*`-prefixed keys are copied — workflow secret values that
- * coexist in this file stay in the file and are read via `loadMachineSecrets`.
+ * Apply Local CI configuration to `process.env` before command modules load.
+ * New `LOCAL_CI_*` names win; legacy `AGENT_CI_*` names remain aliases.
+ * Shell values win over either config file.
  */
-export function applyAgentCiEnv(baseDir?: string): void {
-  const envMachinePath = path.join(baseDir ?? PROJECT_ROOT, ".env.agent-ci");
-  const parsed = parseEnvFile(envMachinePath);
+export function applyLocalCiEnv(baseDir?: string): void {
+  for (const [key, value] of Object.entries(process.env)) {
+    const canonical = canonicalEnvKey(key);
+    if (
+      canonical &&
+      canonical !== key &&
+      process.env[canonical] === undefined &&
+      value !== undefined
+    ) {
+      process.env[canonical] = value;
+    }
+  }
+
+  const parsed = parseEnvFile(resolveMachineEnvPath(baseDir));
+  // Apply canonical file keys before legacy aliases so file order cannot make
+  // AGENT_CI_* override its LOCAL_CI_* replacement.
   for (const [key, value] of Object.entries(parsed)) {
-    if (!key.startsWith("AGENT_CI_")) {
+    if (key.startsWith(LOCAL_ENV_PREFIX) && process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+  for (const [key, value] of Object.entries(parsed)) {
+    const canonical = canonicalEnvKey(key);
+    if (!canonical || process.env[canonical] !== undefined) {
       continue;
     }
-    if (process.env[key] !== undefined) {
-      continue;
-    }
-    process.env[key] = value;
+    process.env[canonical] = value;
   }
 }
