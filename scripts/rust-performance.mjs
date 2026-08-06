@@ -6,7 +6,7 @@ import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const rustBin = path.join(root, "target", "release", "agent-ci");
+const rustBin = path.join(root, "target", "release", "local-ci");
 const tsCli = ["node", "packages/cli/dist/native-launcher.js"];
 
 function runRequired(command, args) {
@@ -45,12 +45,12 @@ function bench(label, command, args, options = {}) {
   return { label, min: times[0], avg, max: times.at(-1) };
 }
 
-runRequired("pnpm", ["--filter", "@redwoodjs/agent-ci", "build"]);
-runRequired("cargo", ["build", "--release", "-p", "agent-ci"]);
+runRequired("pnpm", ["--filter", "run-local-ci", "build"]);
+runRequired("cargo", ["build", "--release", "-p", "local-ci"]);
 
 const rows = [
   bench("startup: TypeScript --help", tsCli[0], [...tsCli.slice(1), "--help"], {
-    env: { AGENT_CI_FORCE_TYPESCRIPT: "1" },
+    env: { LOCAL_CI_FORCE_TYPESCRIPT: "1" },
   }),
   bench("startup: Rust --help", rustBin, ["--help"]),
   bench("workflow parse: TypeScript diff parser", "node", ["scripts/diff-parse.ts"], {
@@ -94,7 +94,7 @@ const lines = [
   "",
   "Notes:",
   "",
-  "- Rust workflow execution parity is validated separately; workflow benchmarks time the release binary path and accept any known Agent CI exit status.",
+  "- Rust workflow execution parity is validated separately; workflow benchmarks time the release binary path and accept any known Local CI exit status.",
   "- The TypeScript workflow-parse comparison uses the existing differential parser script to avoid launching Docker jobs.",
   "- Re-run before switching defaults so release notes include current numbers from the final release build.",
   "",

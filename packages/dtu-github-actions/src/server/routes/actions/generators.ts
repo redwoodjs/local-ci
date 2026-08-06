@@ -150,7 +150,7 @@ export function createJobResponse(
   // the runner actually operates.
   const workspaceRoot =
     payload.runnerWorkDir ||
-    (runnerOs === "macOS" ? "/Users/admin/agent-ci-runner/_work" : "/home/runner/_work");
+    (runnerOs === "macOS" ? "/Users/admin/local-ci-runner/_work" : "/home/runner/_work");
   const runnerTemp = runnerOs === "macOS" ? `${workspaceRoot}/_temp` : "/tmp/runner";
   const runnerToolCache =
     runnerOs === "macOS" ? "/Users/admin/hostedtoolcache" : "/opt/hostedtoolcache";
@@ -198,8 +198,8 @@ export function createJobResponse(
 
   // Merge job-level env: into Variables first, then step-level env: (step wins on conflict).
   // The runner exports every Variable as a process env var for all steps, so this is the
-  // reliable mechanism to get AGENT_CI_LOCAL, DB_HOST, DB_PORT etc. into the step subprocess
-  // and into the runner's expression engine (${{ env.AGENT_CI_LOCAL }}).
+  // reliable mechanism to get LOCAL_CI_LOCAL, DB_HOST, DB_PORT etc. into the step subprocess
+  // and into the runner's expression engine (${{ env.LOCAL_CI_LOCAL }}).
   if (payload.env && typeof payload.env === "object") {
     for (const [key, val] of Object.entries(payload.env)) {
       Variables[key] = { Value: String(val), IsSecret: false };
@@ -264,7 +264,7 @@ export function createJobResponse(
     strategy: { t: 2, d: [] }, // Empty strategy context
     matrix: { t: 2, d: [] }, // Empty matrix context
     // env context: merged from job-level + step-level env: blocks so the runner's expression
-    // engine can substitute ${{ env.AGENT_CI_LOCAL }}, ${{ env.DB_HOST }} etc.
+    // engine can substitute ${{ env.LOCAL_CI_LOCAL }}, ${{ env.DB_HOST }} etc.
     ...(Object.keys(mergedEnv).length > 0 ? { env: toContextData(mergedEnv) } : {}),
   };
 

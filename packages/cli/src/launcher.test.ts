@@ -20,11 +20,11 @@ describe("formatEvent / parseLogEvent — run.paused", () => {
   it("round-trips a paused event", () => {
     const event = {
       event: "run.paused" as const,
-      runner: "agent-ci-1-job",
+      runner: "local-ci-1-job",
       step: "build",
       attempt: 2,
       workflow: "ci.yml",
-      retry_cmd: "agent-ci retry --name agent-ci-1-job",
+      retry_cmd: "local-ci retry --name local-ci-1-job",
     };
     expect(parseLogEvent(formatEvent(event))).toEqual(event);
   });
@@ -32,7 +32,7 @@ describe("formatEvent / parseLogEvent — run.paused", () => {
   it("returns null for plain text log lines", () => {
     expect(parseLogEvent("hello world")).toBeNull();
     expect(parseLogEvent("")).toBeNull();
-    expect(parseLogEvent("[Agent CI] Step failed: build")).toBeNull();
+    expect(parseLogEvent("[Local CI] Step failed: build")).toBeNull();
   });
 
   it("returns null for incidental JSON without an `event` discriminator", () => {
@@ -78,7 +78,7 @@ describe("formatEvent / parseLogEvent — #289 lifecycle events", () => {
       ts: "2026-04-28T00:00:00.000Z",
       schemaVersion: EVENT_SCHEMA_VERSION,
       runId: "run-1",
-      repo: "redwoodjs/agent-ci",
+      repo: "redwoodjs/local-ci",
       branch: "main",
     };
     expect(parseLogEvent(formatEvent(e))).toEqual(e);
@@ -89,14 +89,14 @@ describe("formatEvent / parseLogEvent — #289 lifecycle events", () => {
       event: "job.start" as const,
       ts: "2026-04-28T00:00:01.000Z",
       job: "lint",
-      runner: "agent-ci-1-job",
+      runner: "local-ci-1-job",
       workflow: "ci.yml",
     };
     const finish = {
       event: "job.finish" as const,
       ts: "2026-04-28T00:00:09.000Z",
       job: "lint",
-      runner: "agent-ci-1-job",
+      runner: "local-ci-1-job",
       workflow: "ci.yml",
       status: "passed" as const,
       durationMs: 8000,
@@ -111,7 +111,7 @@ describe("formatEvent / parseLogEvent — #289 lifecycle events", () => {
         event: "step.finish" as const,
         ts: "2026-04-28T00:00:05.000Z",
         job: "lint",
-        runner: "agent-ci-1-job",
+        runner: "local-ci-1-job",
         step: "eslint",
         index: 3,
         status,
@@ -123,7 +123,7 @@ describe("formatEvent / parseLogEvent — #289 lifecycle events", () => {
       event: "step.start" as const,
       ts: "2026-04-28T00:00:04.000Z",
       job: "lint",
-      runner: "agent-ci-1-job",
+      runner: "local-ci-1-job",
       step: "eslint",
       index: 3,
     };
@@ -192,7 +192,7 @@ describe("shouldLaunchDetached", () => {
   });
 });
 
-describe("AGENT_CI_DETACHED — value distinguishes worker from force-launch", () => {
+describe("LOCAL_CI_DETACHED — value distinguishes worker from force-launch", () => {
   let original: string | undefined;
   beforeEach(() => {
     original = process.env[DETACHED_ENV];
@@ -235,7 +235,7 @@ describe("writeDetachedMarker / readDetachedMarker", () => {
   let originalDetached: string | undefined;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-launcher-test-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-launcher-test-"));
     originalDetached = process.env[DETACHED_ENV];
   });
 

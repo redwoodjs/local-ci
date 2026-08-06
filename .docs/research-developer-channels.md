@@ -52,7 +52,7 @@ npm's search algorithm weights: **package name**, **description**, **keywords ar
 
 The `keywords` field in `package.json` governs npm search relevance. The npm registry caps keyword-based search results at 250 packages. Keywords that matter for this space: `github-actions`, `ci`, `cd`, `runner`, `local`, `workflow`, `devtools`.
 
-**Evidence gap:** `@redwoodjs/agent-ci` does not yet appear in public npm search results or any indexed reference, indicating it is either very new or not yet fully published. Being the first scoped package with the right keyword set could capture meaningful search traffic.
+**Evidence gap:** `local-ci` does not yet appear in public npm search results or any indexed reference, indicating it is either very new or not yet fully published. Being the first scoped package with the right keyword set could capture meaningful search traffic.
 
 ### GitHub Topic/Keyword Patterns Used by Top CI Tools
 
@@ -81,7 +81,7 @@ A well-timed HN front-page appearance is the highest-density single-moment ROI f
 - Respond to every comment, including critical ones
 - Avoid marketing language — factual, direct, technical language is mandatory
 
-HN discussions about GitHub Actions frustration are high-traffic recurring events: "I hate GitHub Actions with passion" (`item?id=46614558`) and "The Pain That Is GitHub Actions" (`item?id=43419701`) are active thread types where a contextually appropriate, helpful comment linking to agent-ci would be well-received.
+HN discussions about GitHub Actions frustration are high-traffic recurring events: "I hate GitHub Actions with passion" (`item?id=46614558`) and "The Pain That Is GitHub Actions" (`item?id=43419701`) are active thread types where a contextually appropriate, helpful comment linking to local-ci would be well-received.
 
 ### Reddit: Best for Sustained, Compounding Presence
 
@@ -99,7 +99,7 @@ Reddit drives 41% of traffic for developer tools in some measured cases. Key sub
 
 ### Dev.to / Blog Posts: Long-Tail SEO Compounding
 
-The `act` case makes clear that tutorial content compounds over time. Every "How to run GitHub Actions locally" post that mentions agent-ci is an evergreen discovery node. The most effective pattern:
+The `act` case makes clear that tutorial content compounds over time. Every "How to run GitHub Actions locally" post that mentions local-ci is an evergreen discovery node. The most effective pattern:
 
 1. Write the tutorial yourself ("I built this, here's how to use it")
 2. Guest-post on BetterStack Community, LogRocket Blog, DEV Community — these all rank highly for CI-related searches
@@ -107,7 +107,7 @@ The `act` case makes clear that tutorial content compounds over time. Every "How
 
 ### GitHub CLI Extension Registry
 
-The `gh` CLI extension registry is an underexploited discovery channel. `gh extension install redwoodjs/agent-ci` would appear in `gh extension search` results. With millions of `gh` users, this is a direct pipeline to developers already using GitHub Actions.
+The `gh` CLI extension registry is an underexploited discovery channel. `gh extension install redwoodjs/local-ci` would appear in `gh extension search` results. With millions of `gh` users, this is a direct pipeline to developers already using GitHub Actions.
 
 ---
 
@@ -129,7 +129,7 @@ From HN discussion analysis and blog post aggregation, the most-resonating pain 
 
 **act (nektos):** "Think globally, `act` locally" — pithy, memorable. Secondary hook: two explicit use-cases: (1) fast feedback loop, (2) use GitHub Actions as a Makefile replacement. The second use case dramatically expanded target audience beyond "people debugging workflows."
 
-### Messaging Gaps / Opportunities for agent-ci
+### Messaging Gaps / Opportunities for local-ci
 
 The AI agent angle is currently **unaddressed by any competitor**:
 
@@ -142,7 +142,7 @@ The AI agent angle is currently **unaddressed by any competitor**:
 - "Zero-commit CI. Fix the step that failed, not the commit that broke it."
 - "The CI loop your AI agent actually needs — local, fast, pausable."
 - "Stop polluting git history with `fix: ci` commits."
-- "`act` runs your actions. agent-ci runs them the way GitHub does."
+- "`act` runs your actions. local-ci runs them the way GitHub does."
 
 ---
 
@@ -182,7 +182,7 @@ The most significant emerging opportunity:
 
 - **Spotify Engineering** explicitly documented that CI integration for background coding agents is planned future work: "enabling it to act on CI checks in GitHub pull requests." They have the problem, no solution.
 - **The "overnight agent loop" pattern** is gaining traction — teams are waking to large batches of agent-generated commits across multiple codebases from unattended agents. These agents need a local CI loop that doesn't consume cloud minutes.
-- **IT Revolution's three-loop framework** positions CI in the "outer loop" — agent-ci specifically targets collapsing the inner/outer distinction by making CI local and instant.
+- **IT Revolution's three-loop framework** positions CI in the "outer loop" — local-ci specifically targets collapsing the inner/outer distinction by making CI local and instant.
 - **GitHub Actions reliability is failing** (February 9, 2026 outage [documented by WebProNews](https://www.webpronews.com/developers-ditch-github-actions-over-reliability-and-pricing-issues/)) — developers using AI agents are dependent on an unreliable external service.
 
 The phrase **"the CI loop your AI agent actually needs"** has no incumbent owner as of March 2026.
@@ -193,7 +193,7 @@ The phrase **"the CI loop your AI agent actually needs"** has no incumbent owner
 
 1. **act's original launch post/moment.** No 2019-era Show HN or specific blog post that "went viral" could be located. Growth appears gradual and organic rather than a single launch event.
 2. **Actual npm download counts** for competing packages — npm's website blocked direct fetches.
-3. **Conversion rates from specific channels** for dev tools with agent-ci's profile (scoped npm packages, devDependency install). The HN-vs-Product Hunt comparison comes from a single developer's experience, not a controlled study.
+3. **Conversion rates from specific channels** for dev tools with local-ci's profile (scoped npm packages, devDependency install). The HN-vs-Product Hunt comparison comes from a single developer's experience, not a controlled study.
 4. **r/devops thread-level data** — searches returned summaries but not individual thread content.
 5. **GitHub Marketplace discoverability** for Actions-adjacent tooling — unclear whether listing there drives meaningful discovery for local runner tools vs. cloud-only tooling.
 

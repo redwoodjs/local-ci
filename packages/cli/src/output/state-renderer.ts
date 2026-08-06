@@ -142,7 +142,7 @@ function buildJobNodes(job: JobState, singleJobMode: boolean): TreeNode[] {
       });
     }
     if (job.logDir) {
-      const shortLogDir = job.logDir.replace(/^.*?(agent-ci\/)/, "$1");
+      const shortLogDir = job.logDir.replace(/^.*?(local-ci\/)/, "$1");
       children.push({ label: `${DIM}Logs: ${shortLogDir}${RESET}` });
     }
     if (degradedNode.length > 0) {
@@ -180,7 +180,7 @@ function buildJobNodes(job: JobState, singleJobMode: boolean): TreeNode[] {
   // Retry hint in multi-job paused mode (shown as a child node)
   if (!singleJobMode && job.status === "paused" && job.pausedAtStep) {
     stepNodes.push({
-      label: `${YELLOW}↻ retry: agent-ci retry --runner ${job.runnerId}${RESET}`,
+      label: `${YELLOW}↻ retry: local-ci retry --runner ${job.runnerId}${RESET}`,
     });
   }
 
@@ -360,8 +360,8 @@ export function renderRunState(state: RunState): string {
         }
       }
     }
-    output += `\n\n  ${YELLOW}↻ To retry:  agent-ci retry --runner ${runnerId} [enter]${RESET}`;
-    output += `\n  ${YELLOW}■ To abort:  agent-ci abort --runner ${runnerId}${RESET}`;
+    output += `\n\n  ${YELLOW}↻ To retry:  local-ci retry --runner ${runnerId} [enter]${RESET}`;
+    output += `\n  ${YELLOW}■ To abort:  local-ci abort --runner ${runnerId}${RESET}`;
   }
 
   return output;

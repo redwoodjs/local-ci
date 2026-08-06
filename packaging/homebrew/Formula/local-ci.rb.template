@@ -1,0 +1,24 @@
+class LocalCi < Formula
+  desc "Run GitHub Actions locally with cache, artifacts, and pause-on-failure"
+  homepage "https://github.com/redwoodjs/local-ci"
+  version "{{VERSION}}"
+  license "FSL-1.1-MIT"
+
+  on_macos do
+    if Hardware::CPU.arm?
+      url "https://github.com/redwoodjs/local-ci/releases/download/v#{version}/local-ci-v#{version}-macos-arm64.tar.gz"
+      sha256 "{{MACOS_ARM64_SHA256}}"
+    else
+      url "https://github.com/redwoodjs/local-ci/releases/download/v#{version}/local-ci-v#{version}-macos-x64.tar.gz"
+      sha256 "{{MACOS_X64_SHA256}}"
+    end
+  end
+
+  def install
+    bin.install "local-ci"
+  end
+
+  test do
+    assert_match "Usage: local-ci", shell_output("#{bin}/local-ci --help")
+  end
+end

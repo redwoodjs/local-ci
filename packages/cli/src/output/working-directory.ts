@@ -14,7 +14,7 @@ const isInsideDocker = fs.existsSync("/.dockerenv");
 /**
  * Linux + Docker Desktop: `/tmp` is not in Docker Desktop's default shared-folder
  * list (only `$HOME` is shared). Detect this cell and use XDG cache instead.
- * See https://github.com/redwoodjs/agent-ci/issues/215
+ * See https://github.com/redwoodjs/local-ci/issues/215
  */
 function isLinuxDockerDesktop(): boolean {
   if (process.platform !== "linux") {
@@ -23,19 +23,20 @@ function isLinuxDockerDesktop(): boolean {
   return fs.existsSync(path.join(os.homedir(), ".docker", "desktop", "docker.sock"));
 }
 
-function resolveDefaultWorkingDir(): string {
+function resolveDefaultWorkingDir(namespace: "local-ci" | "agent-ci"): string {
   const projectSlug = path.basename(PROJECT_ROOT);
   if (isInsideDocker) {
-    return path.join(PROJECT_ROOT, ".agent-ci");
+    return path.join(PROJECT_ROOT, `.${namespace}`);
   }
   if (isLinuxDockerDesktop()) {
     const xdgCache = process.env.XDG_CACHE_HOME || path.join(os.homedir(), ".cache");
-    return path.join(xdgCache, "agent-ci", projectSlug);
+    return path.join(xdgCache, namespace, projectSlug);
   }
-  return path.join(os.tmpdir(), "agent-ci", projectSlug);
+  return path.join(os.tmpdir(), namespace, projectSlug);
 }
 
-export const DEFAULT_WORKING_DIR = resolveDefaultWorkingDir();
+export const DEFAULT_WORKING_DIR = resolveDefaultWorkingDir("local-ci");
+export const LEGACY_WORKING_DIR = resolveDefaultWorkingDir("agent-ci");
 
 let workingDirectory = DEFAULT_WORKING_DIR;
 

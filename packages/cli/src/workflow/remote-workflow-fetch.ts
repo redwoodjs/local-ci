@@ -55,11 +55,11 @@ const AUTH_INSTRUCTIONS = [
   "  To authenticate, either:",
   "    - Install and log in with the GitHub CLI, then run:",
   "        gh auth login",
-  "        agent-ci run --github-token",
+  "        local-ci run --github-token",
   "    - Or pass a token value directly:",
-  "        agent-ci run --github-token <token>",
+  "        local-ci run --github-token <token>",
   "    - Or export it:",
-  "        export AGENT_CI_GITHUB_TOKEN=<token>",
+  "        export LOCAL_CI_GITHUB_TOKEN=<token>",
 ].join("\n");
 
 const INSUFFICIENT_TOKEN_HINT =
@@ -144,7 +144,7 @@ export async function prefetchRemoteWorkflows(
         const url = `https://api.github.com/repos/${ref.owner}/${ref.repo}/contents/${ref.path}?ref=${ref.ref}`;
         const headers: Record<string, string> = {
           Accept: "application/vnd.github.v3+json",
-          "User-Agent": "agent-ci/1.0",
+          "User-Agent": "local-ci/1.0",
         };
         if (githubToken) {
           headers["Authorization"] = `token ${githubToken}`;
@@ -176,7 +176,7 @@ export async function prefetchRemoteWorkflows(
   );
 
   if (errors.length > 0) {
-    throw new Error(`[Agent CI] Remote workflow fetch failed:\n  ${errors.join("\n  ")}`);
+    throw new Error(`[Local CI] Remote workflow fetch failed:\n  ${errors.join("\n  ")}`);
   }
 
   return resolved;

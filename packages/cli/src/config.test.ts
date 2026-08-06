@@ -4,7 +4,7 @@ import os from "os";
 import path from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
-  applyAgentCiEnv,
+  applyLocalCiEnv,
   config,
   getFirstRemoteUrl,
   loadMachineSecrets,
@@ -14,16 +14,16 @@ import {
 
 describe("parseRepoSlug", () => {
   it.each([
-    ["https://github.com/redwoodjs/agent-ci.git", "redwoodjs/agent-ci"],
-    ["https://github.com/redwoodjs/agent-ci", "redwoodjs/agent-ci"],
-    ["https://github.com/redwoodjs/agent-ci/", "redwoodjs/agent-ci"],
-    ["git@github.com:redwoodjs/agent-ci.git", "redwoodjs/agent-ci"],
-    ["git@github.com:redwoodjs/agent-ci", "redwoodjs/agent-ci"],
-    ["ssh://git@github.com/redwoodjs/agent-ci.git", "redwoodjs/agent-ci"],
-    ["ssh://git@github.com/redwoodjs/agent-ci", "redwoodjs/agent-ci"],
-    ["ssh://git@github.com:22/redwoodjs/agent-ci.git", "redwoodjs/agent-ci"],
-    ["https://github.example.com/redwoodjs/agent-ci.git", "redwoodjs/agent-ci"],
-    ["git@github.example.com:redwoodjs/agent-ci.git", "redwoodjs/agent-ci"],
+    ["https://github.com/redwoodjs/local-ci.git", "redwoodjs/local-ci"],
+    ["https://github.com/redwoodjs/local-ci", "redwoodjs/local-ci"],
+    ["https://github.com/redwoodjs/local-ci/", "redwoodjs/local-ci"],
+    ["git@github.com:redwoodjs/local-ci.git", "redwoodjs/local-ci"],
+    ["git@github.com:redwoodjs/local-ci", "redwoodjs/local-ci"],
+    ["ssh://git@github.com/redwoodjs/local-ci.git", "redwoodjs/local-ci"],
+    ["ssh://git@github.com/redwoodjs/local-ci", "redwoodjs/local-ci"],
+    ["ssh://git@github.com:22/redwoodjs/local-ci.git", "redwoodjs/local-ci"],
+    ["https://github.example.com/redwoodjs/local-ci.git", "redwoodjs/local-ci"],
+    ["git@github.example.com:redwoodjs/local-ci.git", "redwoodjs/local-ci"],
   ])("parses %s → %s", (url, expected) => {
     expect(parseRepoSlug(url)).toBe(expected);
   });
@@ -218,7 +218,7 @@ describe("loadMachineSecrets", () => {
 
   function writeEnvFile(content: string): string {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "secrets-test-"));
-    fs.writeFileSync(path.join(tmpDir, ".env.agent-ci"), content);
+    fs.writeFileSync(path.join(tmpDir, ".env.local-ci"), content);
     return tmpDir;
   }
 
@@ -227,7 +227,7 @@ describe("loadMachineSecrets", () => {
     return tmpDir;
   }
 
-  it("returns empty object when .env.agent-ci does not exist", () => {
+  it("returns empty object when .env.local-ci does not exist", () => {
     const dir = makeTmpDir();
     expect(loadMachineSecrets(dir)).toEqual({});
   });
@@ -235,6 +235,20 @@ describe("loadMachineSecrets", () => {
   it("parses KEY=VALUE pairs from file", () => {
     const dir = writeEnvFile("FOO=bar\nBAZ=qux\n");
     expect(loadMachineSecrets(dir)).toEqual({ FOO: "bar", BAZ: "qux" });
+  });
+
+  it("falls back to the legacy .env.agent-ci file", () => {
+    const dir = makeTmpDir();
+    fs.writeFileSync(path.join(dir, ".env.agent-ci"), "LEGACY_TOKEN=legacy\n");
+
+    expect(loadMachineSecrets(dir)).toEqual({ LEGACY_TOKEN: "legacy" });
+  });
+
+  it("prefers .env.local-ci when both environment files exist", () => {
+    const dir = writeEnvFile("SOURCE=local\n");
+    fs.writeFileSync(path.join(dir, ".env.agent-ci"), "SOURCE=legacy\n");
+
+    expect(loadMachineSecrets(dir)).toEqual({ SOURCE: "local" });
   });
 
   it("fills missing secrets from process.env when envFallbackKeys provided", () => {
@@ -284,15 +298,22 @@ describe("loadMachineSecrets", () => {
   });
 });
 
-// ─── applyAgentCiEnv ─────────────────────────────────────────────────────────
+// ─── applyLocalCiEnv ─────────────────────────────────────────────────────────
 
-describe("applyAgentCiEnv", () => {
+describe("applyLocalCiEnv", () => {
   let tmpDir: string;
   const savedEnv: Record<string, string | undefined> = {};
 
   function saveEnv(...keys: string[]) {
     for (const k of keys) {
       savedEnv[k] = process.env[k];
+      if (k.startsWith("LOCAL_CI_")) {
+        const legacyKey = `AGENT_CI_${k.slice("LOCAL_CI_".length)}`;
+        if (!(legacyKey in savedEnv)) {
+          savedEnv[legacyKey] = process.env[legacyKey];
+        }
+        delete process.env[legacyKey];
+      }
     }
   }
 
@@ -313,57 +334,84 @@ describe("applyAgentCiEnv", () => {
   });
 
   function writeEnvFile(content: string): string {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-env-"));
-    fs.writeFileSync(path.join(tmpDir, ".env.agent-ci"), content);
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-env-"));
+    fs.writeFileSync(path.join(tmpDir, ".env.local-ci"), content);
     return tmpDir;
   }
 
-  it("does nothing when .env.agent-ci is missing", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-env-"));
+  it("does nothing when .env.local-ci is missing", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-env-"));
     tmpDir = dir;
-    saveEnv("AGENT_CI_DOCKER_HOST");
-    delete process.env.AGENT_CI_DOCKER_HOST;
+    saveEnv("LOCAL_CI_DOCKER_HOST");
+    delete process.env.LOCAL_CI_DOCKER_HOST;
 
-    applyAgentCiEnv(dir);
+    applyLocalCiEnv(dir);
 
-    expect(process.env.AGENT_CI_DOCKER_HOST).toBeUndefined();
+    expect(process.env.LOCAL_CI_DOCKER_HOST).toBeUndefined();
   });
 
-  it("copies AGENT_CI_* keys from file into process.env", () => {
+  it("copies LOCAL_CI_* keys from file into process.env", () => {
     const dir = writeEnvFile(
-      "AGENT_CI_DOCKER_HOST=unix:///tmp/foo.sock\nAGENT_CI_DTU_HOST=10.0.0.1\n",
+      "LOCAL_CI_DOCKER_HOST=unix:///tmp/foo.sock\nLOCAL_CI_DTU_HOST=10.0.0.1\n",
     );
-    saveEnv("AGENT_CI_DOCKER_HOST", "AGENT_CI_DTU_HOST");
-    delete process.env.AGENT_CI_DOCKER_HOST;
-    delete process.env.AGENT_CI_DTU_HOST;
+    saveEnv("LOCAL_CI_DOCKER_HOST", "LOCAL_CI_DTU_HOST");
+    delete process.env.LOCAL_CI_DOCKER_HOST;
+    delete process.env.LOCAL_CI_DTU_HOST;
 
-    applyAgentCiEnv(dir);
+    applyLocalCiEnv(dir);
 
-    expect(process.env.AGENT_CI_DOCKER_HOST).toBe("unix:///tmp/foo.sock");
-    expect(process.env.AGENT_CI_DTU_HOST).toBe("10.0.0.1");
+    expect(process.env.LOCAL_CI_DOCKER_HOST).toBe("unix:///tmp/foo.sock");
+    expect(process.env.LOCAL_CI_DTU_HOST).toBe("10.0.0.1");
   });
 
   it("does not overwrite values already set in process.env", () => {
-    const dir = writeEnvFile("AGENT_CI_DOCKER_HOST=from-file\n");
-    saveEnv("AGENT_CI_DOCKER_HOST");
-    process.env.AGENT_CI_DOCKER_HOST = "from-shell";
+    const dir = writeEnvFile("LOCAL_CI_DOCKER_HOST=from-file\n");
+    saveEnv("LOCAL_CI_DOCKER_HOST");
+    process.env.LOCAL_CI_DOCKER_HOST = "from-shell";
 
-    applyAgentCiEnv(dir);
+    applyLocalCiEnv(dir);
 
-    expect(process.env.AGENT_CI_DOCKER_HOST).toBe("from-shell");
+    expect(process.env.LOCAL_CI_DOCKER_HOST).toBe("from-shell");
   });
 
-  it("ignores keys that do not start with AGENT_CI_", () => {
-    const dir = writeEnvFile("MY_TOKEN=secret\nFOO=bar\nAGENT_CI_X=y\n");
-    saveEnv("MY_TOKEN", "FOO", "AGENT_CI_X");
+  it("maps legacy AGENT_CI_* values to LOCAL_CI_*", () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-env-"));
+    fs.writeFileSync(
+      path.join(tmpDir, ".env.agent-ci"),
+      "AGENT_CI_DOCKER_HOST=unix:///tmp/legacy.sock\n",
+    );
+    saveEnv("LOCAL_CI_DOCKER_HOST", "AGENT_CI_DOCKER_HOST");
+    delete process.env.LOCAL_CI_DOCKER_HOST;
+    delete process.env.AGENT_CI_DOCKER_HOST;
+
+    applyLocalCiEnv(tmpDir);
+
+    expect(process.env.LOCAL_CI_DOCKER_HOST).toBe("unix:///tmp/legacy.sock");
+    expect(process.env.AGENT_CI_DOCKER_HOST).toBeUndefined();
+  });
+
+  it("prefers a LOCAL_CI_* value over its AGENT_CI_* alias", () => {
+    const dir = writeEnvFile("AGENT_CI_DOCKER_HOST=legacy\nLOCAL_CI_DOCKER_HOST=canonical\n");
+    saveEnv("LOCAL_CI_DOCKER_HOST", "AGENT_CI_DOCKER_HOST");
+    delete process.env.LOCAL_CI_DOCKER_HOST;
+    delete process.env.AGENT_CI_DOCKER_HOST;
+
+    applyLocalCiEnv(dir);
+
+    expect(process.env.LOCAL_CI_DOCKER_HOST).toBe("canonical");
+  });
+
+  it("ignores keys that do not start with LOCAL_CI_", () => {
+    const dir = writeEnvFile("MY_TOKEN=secret\nFOO=bar\nLOCAL_CI_X=y\n");
+    saveEnv("MY_TOKEN", "FOO", "LOCAL_CI_X");
     delete process.env.MY_TOKEN;
     delete process.env.FOO;
-    delete process.env.AGENT_CI_X;
+    delete process.env.LOCAL_CI_X;
 
-    applyAgentCiEnv(dir);
+    applyLocalCiEnv(dir);
 
     expect(process.env.MY_TOKEN).toBeUndefined();
     expect(process.env.FOO).toBeUndefined();
-    expect(process.env.AGENT_CI_X).toBe("y");
+    expect(process.env.LOCAL_CI_X).toBe("y");
   });
 });

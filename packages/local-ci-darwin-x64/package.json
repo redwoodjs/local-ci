@@ -1,0 +1,25 @@
+{
+  "name": "@redwoodjs/local-ci-darwin-x64",
+  "version": "0.16.1",
+  "private": true,
+  "description": "macOS x64 native binary for local-ci.",
+  "license": "FSL-1.1-MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/redwoodjs/local-ci.git",
+    "directory": "packages/local-ci-darwin-x64"
+  },
+  "bin": {
+    "local-ci": "bin/local-ci"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ]
+}

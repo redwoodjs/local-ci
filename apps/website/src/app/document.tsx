@@ -5,7 +5,7 @@ export const Document: React.FC<{ children: React.ReactNode }> = ({ children }) 
     <head>
       <meta charSet="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Agent CI — Run GitHub Actions Locally</title>
+      <title>Local CI — Run GitHub Actions Locally</title>
       <link rel="stylesheet" href={styles} />
       <link rel="modulepreload" href="/src/client.tsx" />
     </head>

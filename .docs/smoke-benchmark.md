@@ -13,7 +13,7 @@ pnpm smoke:bench --iterations 3 --output .docs/generated-smoke-benchmark.md
 pnpm smoke:bench --workflow .github/workflows/smoke-matrix.yml --no-build
 ```
 
-The suite builds `packages/cli/dist/cli.js` and `target/release/agent-ci`, then runs each selected workflow through both implementations with isolated `AGENT_CI_WORKING_DIR` roots and the same `--jobs` limit.
+The suite builds `packages/cli/dist/cli.js` and `target/release/local-ci`, then runs each selected workflow through both implementations with isolated `LOCAL_CI_WORKING_DIR` roots and the same `--jobs` limit.
 
 Metrics are collected with `/usr/bin/time`:
 
@@ -23,4 +23,4 @@ Metrics are collected with `/usr/bin/time`:
 - approximate CPU percent
 - maximum resident set size
 
-These numbers measure the host Agent CI process tree. Docker daemon and job-container CPU/memory are not included, so use the suite to compare orchestration overhead rather than total machine load.
+These numbers measure the host Local CI process tree. Docker daemon and job-container CPU/memory are not included, so use the suite to compare orchestration overhead rather than total machine load.

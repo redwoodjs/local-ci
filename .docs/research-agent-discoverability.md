@@ -35,7 +35,7 @@ Sources: [BuiltWith LLMS Text tracking](https://trends.builtwith.com/robots/LLMS
 - AI **coding assistants** — specifically Cursor, Claude Code, and VS Code Copilot — **do** actively use `llms.txt` when an agent encounters a new API or library in a user's codebase. They parse it to build context rather than scraping raw HTML.
 - Efficiency argument: an HTML page that costs 5,000 tokens may cost only 800 tokens as clean Markdown — enabling 6x more documentation in the same context window.
 
-**For agent-ci specifically:** Having `llms.txt` is valuable because the relevant consumers (Cursor, Claude Code) are exactly the agents agent-ci targets. If a developer has agent-ci installed and asks their coding agent for help with CI failures, the agent can surface agent-ci documentation efficiently.
+**For local-ci specifically:** Having `llms.txt` is valuable because the relevant consumers (Cursor, Claude Code) are exactly the agents local-ci targets. If a developer has local-ci installed and asks their coding agent for help with CI failures, the agent can surface local-ci documentation efficiently.
 
 Sources: [llmstxt.org](https://llmstxt.org), [Mintlify llms.txt docs](https://www.mintlify.com/docs/ai/llmstxt), [Bluehost 2026 guide](https://www.bluehost.com/blog/what-is-llms-txt/)
 
@@ -64,7 +64,7 @@ The npm ecosystem breaks down as:
 
 LLMs readily recommend packages from the Dormant Majority because they appear in training text alongside usage patterns. An LLM "understands" statistical probability, not maintenance health.
 
-**Implication for agent-ci:** Low npm download counts or GitHub stars will not prevent an LLM from recommending agent-ci if there is sufficient training text describing it in context of CI/agent workflows. The tool needs _textual co-occurrence_ with the problem it solves.
+**Implication for local-ci:** Low npm download counts or GitHub stars will not prevent an LLM from recommending local-ci if there is sufficient training text describing it in context of CI/agent workflows. The tool needs _textual co-occurrence_ with the problem it solves.
 
 Source: [Snyk: LLMs Resurrecting the Dormant Majority](https://snyk.io/blog/llms-resurrecting-open-source-dormant-majority/)
 
@@ -84,7 +84,7 @@ Sources: [arXiv:2403.12958](https://arxiv.org/abs/2403.12958), [Knowledge Cutoff
 
 The three major coding agents use distinct retrieval strategies:
 
-**Claude Code:** Uses agentic (iterative) lexical search — not RAG, not vector embeddings. It issues sequential grep/file-read tool calls, refining queries based on results. Does not pre-index codebases. **If agent-ci is installed in `node_modules`, Claude Code can discover it by searching `package.json` files and `node_modules/.bin/`.** If a `CLAUDE.md` or `.claude/rules/` file references agent-ci, it will read those at session start.
+**Claude Code:** Uses agentic (iterative) lexical search — not RAG, not vector embeddings. It issues sequential grep/file-read tool calls, refining queries based on results. Does not pre-index codebases. **If local-ci is installed in `node_modules`, Claude Code can discover it by searching `package.json` files and `node_modules/.bin/`.** If a `CLAUDE.md` or `.claude/rules/` file references local-ci, it will read those at session start.
 
 **Cursor:** Uses a RAG-like hybrid — semantic vector search on pre-indexed code plus lexical grep. Reads `.cursorrules` project files.
 
@@ -136,18 +136,18 @@ Source: [ReadMe.LLM paper (arXiv:2504.09798)](https://arxiv.org/html/2504.09798v
 
 Research on MCP servers shows performance collapses past ~30 tools, with a hard cliff at 107 tools where all models fail. GitHub cut their MCP server from 40 tools to 13 and saw improvements. Block rebuilt their Linear integration going from 30+ tools to 2.
 
-**For agent-ci:** Specialization beats feature breadth. One focused capability with an accurate, specific description beats a multi-tool suite with vague marketing language.
+**For local-ci:** Specialization beats feature breadth. One focused capability with an accurate, specific description beats a multi-tool suite with vague marketing language.
 
 Source: [icme.io: Getting Found by Agents 2026](https://blog.icme.io/getting-found-by-agents-a-builders-guide-to-tool-discovery-in-2026/)
 
-### Current agent-ci npm Metadata Gaps
+### Current local-ci npm Metadata Gaps
 
 Current state (evidence from package.json):
 
 - `"description": "Local GitHub Actions runner"` — accurate but minimal; differentiator missing
 - `"keywords": []` — **empty** — significant discoverability gap
 
-Agents pattern-matching on keywords like `github-actions`, `ci`, `local-runner`, `ai-agent` would not find agent-ci.
+Agents pattern-matching on keywords like `github-actions`, `ci`, `local-runner`, `ai-agent` would not find local-ci.
 
 ---
 
@@ -196,18 +196,18 @@ GPT plugin/custom GPT actions use OpenAPI-compatible tool schemas. Tools are des
 
 **nektos/act** (60,000+ GitHub stars) is the dominant "run GitHub Actions locally" tool. It is deeply embedded in LLM training data as the default recommendation for local CI.
 
-Key differences from agent-ci:
+Key differences from local-ci:
 
-- Act re-implements the Actions runtime; agent-ci emulates the server-side API and uses the official runner binary
+- Act re-implements the Actions runtime; local-ci emulates the server-side API and uses the official runner binary
 - Act does not pause-on-failure for agent-assisted retry
-- Act installs via Homebrew/binary; agent-ci installs via npm
-- Act targets human developers; agent-ci is positioned for AI-agent-driven development workflows
+- Act installs via Homebrew/binary; local-ci installs via npm
+- Act targets human developers; local-ci is positioned for AI-agent-driven development workflows
 
 **The knowledge cutoff problem is significant:** current LLMs will default to recommending `act` for local CI scenarios because it has years of training data saturation. Agent-ci will not enter LLM recommendations via training data alone in the near term — it requires the RAG/real-time discovery path.
 
 ---
 
-## Signal Hierarchy for agent-ci Discoverability
+## Signal Hierarchy for local-ci Discoverability
 
 From highest to lowest reliability:
 
@@ -220,7 +220,7 @@ From highest to lowest reliability:
 7. **Blog posts, Stack Overflow** — long-term training data contribution
 8. **Training data saturation** — requires years of ecosystem presence; nektos/act already owns this lane
 
-**Most important near-term action:** Create a ready-to-paste CLAUDE.md snippet and document it prominently in the README. Every developer who adds it to their project becomes a guaranteed agent-ci user for that project's lifetime.
+**Most important near-term action:** Create a ready-to-paste CLAUDE.md snippet and document it prominently in the README. Every developer who adds it to their project becomes a guaranteed local-ci user for that project's lifetime.
 
 ---
 

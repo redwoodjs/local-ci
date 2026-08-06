@@ -12,7 +12,7 @@ import path from "node:path";
 import { getDtuLogPath } from "./server/logger.ts";
 
 let PORT: number;
-const TEST_CONTROL_TOKEN = "agent-ci-test-control-token";
+const TEST_CONTROL_TOKEN = "local-ci-test-control-token";
 
 function isControlRequestPath(path: string): boolean {
   const cleanPath = path.split("?", 1)[0];
@@ -77,7 +77,7 @@ async function request(
 }
 
 function createCompareFixtureRepo(): { tmpDir: string; repoDir: string } {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-compare-"));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-compare-"));
   const repoDir = path.join(tmpDir, "repo");
   fs.mkdirSync(repoDir);
   execFileSync("git", ["init"], { cwd: repoDir, stdio: "pipe" });
@@ -217,7 +217,7 @@ describe("DTU Server", () => {
     const res = await request("POST", "/_apis/distributedtask/pools/1/sessions");
     expect(res.status).toBe(200);
     expect(res.body.sessionId).toBeDefined();
-    expect(res.body.agent.name).toBe("agent-ci-runner");
+    expect(res.body.agent.name).toBe("local-ci-runner");
   });
 
   it("should handle long polling for messages", async () => {
@@ -240,13 +240,13 @@ describe("DTU Server", () => {
   });
 
   it("should dispatch a job seeded AFTER polling begins (issue #47 race condition)", async () => {
-    const runnerName = "agent-ci-race-test";
+    const runnerName = "local-ci-race-test";
 
     // 1. Register the runner with the DTU (so sessionToRunner mapping exists)
     await request("POST", "/_dtu/start-runner", {
       runnerName,
-      logDir: "/tmp/agent-ci-race-test-logs",
-      timelineDir: "/tmp/agent-ci-race-test-logs",
+      logDir: "/tmp/local-ci-race-test-logs",
+      timelineDir: "/tmp/local-ci-race-test-logs",
     });
 
     // 2. Create a session as this runner
@@ -290,11 +290,11 @@ describe("DTU Server", () => {
 
     // 1. Register and create sessions for all runners
     for (let i = 0; i < RUNNER_COUNT; i++) {
-      const name = `agent-ci-stress-${i + 1}`;
+      const name = `local-ci-stress-${i + 1}`;
       await request("POST", "/_dtu/start-runner", {
         runnerName: name,
-        logDir: `/tmp/agent-ci-stress-${i + 1}-logs`,
-        timelineDir: `/tmp/agent-ci-stress-${i + 1}-logs`,
+        logDir: `/tmp/local-ci-stress-${i + 1}-logs`,
+        timelineDir: `/tmp/local-ci-stress-${i + 1}-logs`,
       });
       const sessionRes = await request("POST", "/_apis/distributedtask/pools/1/sessions", {
         agent: { name },
@@ -340,19 +340,19 @@ describe("DTU Server", () => {
     // 3. BUG: Runner B falls through to the generic state.jobs pool and steals A's job
     // 4. Runner B's actual job arrives later, but A's real runner never gets its job
 
-    const runnerA = "agent-ci-runner-A";
-    const runnerB = "agent-ci-runner-B";
+    const runnerA = "local-ci-runner-A";
+    const runnerB = "local-ci-runner-B";
 
     // Register both runners
     await request("POST", "/_dtu/start-runner", {
       runnerName: runnerA,
-      logDir: "/tmp/agent-ci-A-logs",
-      timelineDir: "/tmp/agent-ci-A-logs",
+      logDir: "/tmp/local-ci-A-logs",
+      timelineDir: "/tmp/local-ci-A-logs",
     });
     await request("POST", "/_dtu/start-runner", {
       runnerName: runnerB,
-      logDir: "/tmp/agent-ci-B-logs",
-      timelineDir: "/tmp/agent-ci-B-logs",
+      logDir: "/tmp/local-ci-B-logs",
+      timelineDir: "/tmp/local-ci-B-logs",
     });
 
     // Seed runner A's job
@@ -436,7 +436,7 @@ describe("DTU control endpoints hardening", () => {
 
   beforeAll(async () => {
     state.reset();
-    allowedLogRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-control-logs-"));
+    allowedLogRoot = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-control-logs-"));
     const app = await bootstrapAndReturnApp({
       reset: false,
       controlToken,
@@ -540,7 +540,7 @@ describe("DTU control endpoints hardening", () => {
   });
 
   it("should reject runner log paths outside the allowed log root", async () => {
-    const outside = path.join(os.tmpdir(), "agent-ci-outside-logs");
+    const outside = path.join(os.tmpdir(), "local-ci-outside-logs");
     const rejected = await requestToPort(
       port,
       "POST",
@@ -564,7 +564,7 @@ describe("DTU control endpoints hardening", () => {
 
   it("should validate all runner paths before changing state", async () => {
     const logDir = path.join(allowedLogRoot, "atomic-runner");
-    const outside = path.join(os.tmpdir(), "agent-ci-atomic-outside");
+    const outside = path.join(os.tmpdir(), "local-ci-atomic-outside");
     const rejected = await requestToPort(
       port,
       "POST",
@@ -582,7 +582,7 @@ describe("DTU control endpoints hardening", () => {
   it.skipIf(process.platform === "win32")(
     "should reject log paths through symlinks outside the root",
     async () => {
-      const outside = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-symlink-outside-"));
+      const outside = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-symlink-outside-"));
       const link = path.join(allowedLogRoot, "outside-link");
       fs.symlinkSync(outside, link);
 
@@ -802,19 +802,19 @@ describe("Artifact v4 upload/download", () => {
     // concurrent workflow) polls before runner A, it steals the job — causing
     // runner A to hang forever waiting for a job that will never arrive.
 
-    const runnerA = "agent-ci-repro-A";
-    const runnerB = "agent-ci-repro-B";
+    const runnerA = "local-ci-repro-A";
+    const runnerB = "local-ci-repro-B";
 
     // Register both runners
     await request("POST", "/_dtu/start-runner", {
       runnerName: runnerA,
-      logDir: "/tmp/agent-ci-repro-A-logs",
-      timelineDir: "/tmp/agent-ci-repro-A-logs",
+      logDir: "/tmp/local-ci-repro-A-logs",
+      timelineDir: "/tmp/local-ci-repro-A-logs",
     });
     await request("POST", "/_dtu/start-runner", {
       runnerName: runnerB,
-      logDir: "/tmp/agent-ci-repro-B-logs",
-      timelineDir: "/tmp/agent-ci-repro-B-logs",
+      logDir: "/tmp/local-ci-repro-B-logs",
+      timelineDir: "/tmp/local-ci-repro-B-logs",
     });
 
     // Seed a job intended for runner A, but WITHOUT runnerName (the bug).

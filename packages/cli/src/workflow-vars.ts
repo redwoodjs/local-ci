@@ -19,7 +19,7 @@ function valueToString(label: string, key: string, value: unknown): string {
     return "";
   }
   throw new Error(
-    `[Agent CI] Error: ${label} value for variable "${key}" must be a string, number, boolean, or null.`,
+    `[Local CI] Error: ${label} value for variable "${key}" must be a string, number, boolean, or null.`,
   );
 }
 
@@ -35,7 +35,7 @@ export function parseVarFileContent(content: string, label = "--var-file"): Reco
   try {
     parsed = JSON.parse(content);
   } catch (err) {
-    throw new Error(`[Agent CI] Error: Failed to parse ${label} as JSON: ${formatJsonError(err)}`);
+    throw new Error(`[Local CI] Error: Failed to parse ${label} as JSON: ${formatJsonError(err)}`);
   }
 
   const vars: Record<string, string> = {};
@@ -44,17 +44,17 @@ export function parseVarFileContent(content: string, label = "--var-file"): Reco
     for (const [idx, item] of parsed.entries()) {
       if (!isRecord(item)) {
         throw new Error(
-          `[Agent CI] Error: ${label} entry ${idx + 1} must be an object with name and value fields.`,
+          `[Local CI] Error: ${label} entry ${idx + 1} must be an object with name and value fields.`,
         );
       }
       const name = item.name;
       if (typeof name !== "string" || name.trim() === "") {
         throw new Error(
-          `[Agent CI] Error: ${label} entry ${idx + 1} must include a non-empty string name.`,
+          `[Local CI] Error: ${label} entry ${idx + 1} must include a non-empty string name.`,
         );
       }
       if (!("value" in item)) {
-        throw new Error(`[Agent CI] Error: ${label} entry ${idx + 1} must include a value field.`);
+        throw new Error(`[Local CI] Error: ${label} entry ${idx + 1} must include a value field.`);
       }
       vars[name] = valueToString(label, name, item.value);
     }
@@ -64,7 +64,7 @@ export function parseVarFileContent(content: string, label = "--var-file"): Reco
   if (isRecord(parsed)) {
     for (const [key, value] of Object.entries(parsed)) {
       if (key.trim() === "") {
-        throw new Error(`[Agent CI] Error: ${label} contains an empty variable name.`);
+        throw new Error(`[Local CI] Error: ${label} contains an empty variable name.`);
       }
       vars[key] = valueToString(label, key, value);
     }
@@ -72,7 +72,7 @@ export function parseVarFileContent(content: string, label = "--var-file"): Reco
   }
 
   throw new Error(
-    `[Agent CI] Error: ${label} must be a JSON object or an array of {"name","value"} objects.`,
+    `[Local CI] Error: ${label} must be a JSON object or an array of {"name","value"} objects.`,
   );
 }
 
@@ -96,7 +96,7 @@ export function loadVarFiles(varFiles: string[]): Record<string, string> {
       }
     } catch (err) {
       throw new Error(
-        `[Agent CI] Error: Failed to read --var-file ${label}: ${formatJsonError(err)}`,
+        `[Local CI] Error: Failed to read --var-file ${label}: ${formatJsonError(err)}`,
       );
     }
 

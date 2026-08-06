@@ -6,11 +6,11 @@ import { pipeline } from "node:stream/promises";
 
 // Pinned to match the version the DTU pretends to be (see
 // packages/dtu-github-actions/src/server/routes/actions/index.ts). Override
-// with AGENT_CI_MACOS_RUNNER_VERSION if you need to test a newer release.
+// with LOCAL_CI_MACOS_RUNNER_VERSION if you need to test a newer release.
 export const DEFAULT_MACOS_RUNNER_VERSION = "2.331.0";
 
 export function resolveMacosRunnerVersion(): string {
-  return process.env.AGENT_CI_MACOS_RUNNER_VERSION?.trim() || DEFAULT_MACOS_RUNNER_VERSION;
+  return process.env.LOCAL_CI_MACOS_RUNNER_VERSION?.trim() || DEFAULT_MACOS_RUNNER_VERSION;
 }
 
 export function macosRunnerTarballUrl(version: string): string {

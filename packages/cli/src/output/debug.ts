@@ -4,11 +4,11 @@ import { minimatch } from "minimatch";
  * Lightweight debug logger with namespace support.
  *
  * Enable via DEBUG env var with glob patterns:
- *   DEBUG=agent-ci:*        — all namespaces
- *   DEBUG=agent-ci:cli      — CLI only
- *   DEBUG=agent-ci:dtu      — DTU only
- *   DEBUG=agent-ci:runner   — Runner only
- *   DEBUG=agent-ci:cli,agent-ci:dtu — multiple
+ *   DEBUG=local-ci:*        — all namespaces
+ *   DEBUG=local-ci:cli      — CLI only
+ *   DEBUG=local-ci:dtu      — DTU only
+ *   DEBUG=local-ci:runner   — Runner only
+ *   DEBUG=local-ci:cli,local-ci:dtu — multiple
  *
  * Output goes to stderr so stdout stays clean for piping.
  */
@@ -36,7 +36,7 @@ export function createDebug(namespace: string): (...args: unknown[]) => void {
 }
 
 // Pre-configured loggers for each domain
-export const debugCli = createDebug("agent-ci:cli");
-export const debugRunner = createDebug("agent-ci:runner");
-export const debugDtu = createDebug("agent-ci:dtu");
-export const debugBoot = createDebug("agent-ci:boot");
+export const debugCli = createDebug("local-ci:cli");
+export const debugRunner = createDebug("local-ci:runner");
+export const debugDtu = createDebug("local-ci:dtu");
+export const debugBoot = createDebug("local-ci:boot");

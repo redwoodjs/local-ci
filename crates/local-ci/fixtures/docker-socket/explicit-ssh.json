@@ -1,0 +1,17 @@
+{
+  "probe": {
+    "env": {
+      "LOCAL_CI_DOCKER_HOST": "ssh://docker-host"
+    },
+    "existingPaths": [],
+    "accessiblePaths": [],
+    "realpaths": {},
+    "dockerContextHost": null,
+    "home": "/Users/me"
+  },
+  "expected": {
+    "socketPath": "",
+    "uri": "ssh://docker-host",
+    "bindMountPath": ""
+  }
+}

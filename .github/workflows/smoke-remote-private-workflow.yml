@@ -1,6 +1,6 @@
 name: "Smoke: Remote Private Reusable Workflow"
 
-# Proves the fix from #261 end-to-end: agent-ci must be able to resolve a
+# Proves the fix from #261 end-to-end: local-ci must be able to resolve a
 # reusable workflow hosted in a *private* GitHub repository via the Contents
 # API using the caller-provided token.
 #
@@ -17,13 +17,13 @@ name: "Smoke: Remote Private Reusable Workflow"
 #   so this smoke can run across releases.
 #
 # Requirements:
-#   - Running via `agent-ci run` locally (e.g. through `/validate`), or via
+#   - Running via `local-ci run` locally (e.g. through `/validate`), or via
 #     GitHub Actions with a token whose scopes include read access to
 #     peterp/agent-ci-private.
 #   - A local run authenticates via `gh auth token` / `--github-token` /
-#     AGENT_CI_GITHUB_TOKEN — which is exactly the path the PR fixes.
+#     LOCAL_CI_GITHUB_TOKEN — which is exactly the path the PR fixes.
 #
-# Failure mode this regression-guards: if agent-ci ever drops the auth header
+# Failure mode this regression-guards: if local-ci ever drops the auth header
 # on the remote-fetch request, or mis-handles the 200 decode, this smoke will
 # fail at the fetch step with the exact hint chain #261 wired up.
 
@@ -32,7 +32,7 @@ on:
     types: [opened, labeled, synchronize]
 
 jobs:
-  # Calls a reusable workflow in a private repo. Under agent-ci, this goes
+  # Calls a reusable workflow in a private repo. Under local-ci, this goes
   # through prefetchRemoteWorkflows -> GitHub Contents API with the supplied
   # token. A passing run proves: (1) the token was forwarded, (2) the 200
   # response was decoded, (3) the fetched YAML was inlined and executed.

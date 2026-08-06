@@ -1,6 +1,6 @@
 {
   "$schema": "./compatibility.schema.json",
-  "intro": "Agent CI aims to run real GitHub Actions workflows locally. The table below shows current support against the [official workflow syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions).",
+  "intro": "Local CI aims to run real GitHub Actions workflows locally. The table below shows current support against the [official workflow syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions).",
   "legend": {
     "supported": {
       "icon": "✅",
@@ -28,7 +28,7 @@
       "description": "Cannot be supported due to architectural constraints"
     }
   },
-  "proofNote": "`proof` lists workflow files that exercise the feature end-to-end under `pnpm agent-ci-dev run --all`. Internal field — not rendered on the website or in the markdown table. An empty array on a `supported`/`partial` row is a coverage gap.",
+  "proofNote": "`proof` lists workflow files that exercise the feature end-to-end under `pnpm local-ci-dev run --all`. Internal field — not rendered on the website or in the markdown table. An empty array on a `supported`/`partial` row is a coverage gap.",
   "sections": [
     {
       "id": "workflow",
@@ -90,12 +90,12 @@
         {
           "key": "`on` (schedule, workflow_dispatch)",
           "status": "ignored",
-          "notes": "Accepted without error, but Agent CI does not simulate event triggers — workflows must be run manually"
+          "notes": "Accepted without error, but Local CI does not simulate event triggers — workflows must be run manually"
         },
         {
           "key": "`on` (workflow_call)",
           "status": "supported",
-          "notes": "Local reusable workflows (`uses: ./.github/workflows/...`) are inlined into the caller's dependency graph. Remote refs are fetched from GitHub (requires `--github-token` or `AGENT_CI_GITHUB_TOKEN`). `inputs:`/`outputs:` passing and nested reusable workflows are supported",
+          "notes": "Local reusable workflows (`uses: ./.github/workflows/...`) are inlined into the caller's dependency graph. Remote refs are fetched from GitHub (requires `--github-token` or `LOCAL_CI_GITHUB_TOKEN`). `inputs:`/`outputs:` passing and nested reusable workflows are supported",
           "proof": [
             ".github/workflows/smoke-reusable-workflows.yml",
             ".github/workflows/smoke-nested-level-1.yml",
@@ -105,7 +105,7 @@
         {
           "key": "`on` (other events)",
           "status": "ignored",
-          "notes": "Covers every GitHub-Actions webhook event Agent CI does not simulate (`issues`, `issue_comment`, `label`, `pull_request_review`, `release`, `registry_package`, `status`, `deployment`, `deployment_status`, `fork`, `watch`, `star`, `discussion`, `milestone`, `project`, `repository_dispatch`, `check_run`, `check_suite`, `workflow_run`, etc.). The parser accepts the event name but the run is not triggered — the workflow only ever runs when invoked manually via `pnpm agent-ci run`."
+          "notes": "Covers every GitHub-Actions webhook event Local CI does not simulate (`issues`, `issue_comment`, `label`, `pull_request_review`, `release`, `registry_package`, `status`, `deployment`, `deployment_status`, `fork`, `watch`, `star`, `discussion`, `milestone`, `project`, `repository_dispatch`, `check_run`, `check_suite`, `workflow_run`, etc.). The parser accepts the event name but the run is not triggered — the workflow only ever runs when invoked manually via `pnpm local-ci run`."
         },
         {
           "key": "`env`",
@@ -133,7 +133,7 @@
         {
           "key": "`concurrency`",
           "status": "not-planned",
-          "notes": "Concurrency groups are a GitHub-side queuing and cancellation mechanism. Agent CI has no persistent server to track group state across runs, so this cannot be implemented locally"
+          "notes": "Concurrency groups are a GitHub-side queuing and cancellation mechanism. Local CI has no persistent server to track group state across runs, so this cannot be implemented locally"
         }
       ]
     },
@@ -210,12 +210,12 @@
         {
           "key": "`jobs.<id>.timeout-minutes`",
           "status": "unsupported",
-          "notes": "Not implemented. Agent CI's pause-on-failure model is the intended way to handle long-running steps — a hard timeout would destroy the container state that makes local debugging possible"
+          "notes": "Not implemented. Local CI's pause-on-failure model is the intended way to handle long-running steps — a hard timeout would destroy the container state that makes local debugging possible"
         },
         {
           "key": "`jobs.<id>.continue-on-error`",
           "status": "unsupported",
-          "notes": "Not implemented. Agent CI pauses on failure so you can inspect and fix the container in place; `continue-on-error` would skip past failures and discard that debugging opportunity"
+          "notes": "Not implemented. Local CI pauses on failure so you can inspect and fix the container in place; `continue-on-error` would skip past failures and discard that debugging opportunity"
         },
         {
           "key": "`jobs.<id>.concurrency`",
@@ -225,7 +225,7 @@
         {
           "key": "`jobs.<id>.container`",
           "status": "partial",
-          "notes": "Short and long form; `image`, `env`, `ports`, `volumes` honored. Within `options:`, only `--env`/`-e` and `--label`/`-l` are forwarded to the runner container; other Docker flags (`--privileged`, `--user`, `--network`, `--cap-add`, `--workdir`, etc.) are silently ignored because they tend to clash with agent-ci's own container orchestration.",
+          "notes": "Short and long form; `image`, `env`, `ports`, `volumes` honored. Within `options:`, only `--env`/`-e` and `--label`/`-l` are forwarded to the runner container; other Docker flags (`--privileged`, `--user`, `--network`, `--cap-add`, `--workdir`, etc.) are silently ignored because they tend to clash with local-ci's own container orchestration.",
           "proof": [
             ".github/workflows/smoke-artifacts.yml",
             ".github/workflows/smoke-container-options.yml"
@@ -233,8 +233,12 @@
         },
         {
           "key": "`jobs.<id>.container.credentials`",
-          "status": "unsupported",
-          "notes": "Registry `username` / `password` credentials for pulling a private container image are not parsed. Private images fail to pull unless the host's docker already has credentials for the registry (e.g. `docker login` was run out-of-band)."
+          "status": "supported",
+          "notes": "Registry `username` / `password` credentials are expanded from workflow contexts and passed to Docker only when a missing private image must be pulled.",
+          "proof": [
+            "packages/cli/src/workflow/workflow-parser.test.ts",
+            "packages/cli/src/docker/image-pull.test.ts"
+          ]
         },
         {
           "key": "`jobs.<id>.services`",
@@ -244,13 +248,17 @@
         },
         {
           "key": "`jobs.<id>.services.*.credentials`",
-          "status": "unsupported",
-          "notes": "Per-service registry credentials are not parsed — see `jobs.<id>.container.credentials`. Private service images fail to pull unless the host's docker has credentials out-of-band."
+          "status": "supported",
+          "notes": "Each service can provide registry `username` / `password` credentials. Expressions are expanded before Docker pulls a missing image.",
+          "proof": [
+            "packages/cli/src/workflow/workflow-parser.test.ts",
+            "packages/cli/src/docker/service-containers.test.ts"
+          ]
         },
         {
           "key": "`jobs.<id>.uses` (reusable workflows)",
           "status": "supported",
-          "notes": "Local refs (`./`) are expanded inline. Remote refs are fetched from GitHub (requires `--github-token` or `AGENT_CI_GITHUB_TOKEN`; public repos may work without auth). `with:` (inputs) and `secrets:` pass-through are supported",
+          "notes": "Local refs (`./`) are expanded inline. Remote refs are fetched from GitHub (requires `--github-token` or `LOCAL_CI_GITHUB_TOKEN`; public repos may work without auth). `with:` (inputs) and `secrets:` pass-through are supported",
           "proof": [
             ".github/workflows/smoke-reusable-workflows.yml",
             ".github/workflows/smoke-reusable-inputs-outputs.yml",
@@ -260,7 +268,7 @@
         {
           "key": "`jobs.<id>.secrets`",
           "status": "not-planned",
-          "notes": "Agent CI cannot access GitHub's secret storage. Secrets are resolved from a `.env.agent-ci` file at the project root or from shell environment variables as fallback. `--github-token` / `AGENT_CI_GITHUB_TOKEN` auto-populates `secrets.GITHUB_TOKEN`. All are injected as `${{ secrets.* }}` expressions"
+          "notes": "Local CI cannot access GitHub's secret storage. Secrets are resolved from a `.env.local-ci` file at the project root or from shell environment variables as fallback. `--github-token` / `LOCAL_CI_GITHUB_TOKEN` auto-populates `secrets.GITHUB_TOKEN`. All are injected as `${{ secrets.* }}` expressions"
         }
       ]
     },
@@ -294,7 +302,7 @@
         {
           "key": "`strategy.max-parallel`",
           "status": "unsupported",
-          "notes": "Not implemented. Parallelism is controlled by Agent CI's host-level concurrency limiter (based on CPU count), not per-workflow job limits"
+          "notes": "Not implemented. Parallelism is controlled by Local CI's host-level concurrency limiter (based on CPU count), not per-workflow job limits"
         }
       ]
     },
@@ -342,7 +350,7 @@
         {
           "key": "`steps[*].uses` (`docker://…`)",
           "status": "unsupported",
-          "notes": "Docker-image action references (`uses: docker://alpine:3.19`) are not resolved — agent-ci treats every `uses:` as a repository action. The step fails with an action-not-found error rather than running the image."
+          "notes": "Docker-image action references (`uses: docker://alpine:3.19`) are not resolved — local-ci treats every `uses:` as a repository action. The step fails with an action-not-found error rather than running the image."
         },
         {
           "key": "`steps[*].with`",
@@ -412,7 +420,7 @@
         {
           "key": "`secrets.*`",
           "status": "supported",
-          "notes": "Resolved from `.env.agent-ci` at the project root, with shell environment variables as fallback. `--github-token` auto-populates `secrets.GITHUB_TOKEN`",
+          "notes": "Resolved from `.env.local-ci` at the project root, with shell environment variables as fallback. `--github-token` auto-populates `secrets.GITHUB_TOKEN`",
           "proof": [".github/workflows/smoke-secrets-env-file.yml"]
         },
         {
@@ -465,7 +473,7 @@
         {
           "key": "`github.ref`, `github.ref_name`, `github.head_ref`, `github.base_ref`, `github.actor`, `github.run_id`, `github.run_number`, and other `github.*` fields",
           "status": "partial",
-          "notes": "Returned as static defaults: `ref_name` / `head_ref` default to `main`, `base_ref` is empty, `actor` is the repo owner, `run_id` / `run_number` are `1`, `api_url` / `server_url` point at Agent CI's local API emulation. Anything not in this row or one of the ones above resolves to an empty string — that covers `action_path`, `workflow_ref`, `workflow_sha`, `triggering_actor`, `retention_days`, `secret_source`, `token`, `graphql_url`, `job`, `run_attempt`, `ref_protected`, `ref_type`, `env`, `path`, and the rest of the context documented by GitHub.",
+          "notes": "Returned as static defaults: `ref_name` / `head_ref` default to `main`, `base_ref` is empty, `actor` is the repo owner, `run_id` / `run_number` are `1`, `api_url` / `server_url` point at Local CI's local API emulation. Anything not in this row or one of the ones above resolves to an empty string — that covers `action_path`, `workflow_ref`, `workflow_sha`, `triggering_actor`, `retention_days`, `secret_source`, `token`, `graphql_url`, `job`, `run_attempt`, `ref_protected`, `ref_type`, `env`, `path`, and the rest of the context documented by GitHub.",
           "proof": [".github/workflows/smoke-binary.yml"]
         },
         {
@@ -552,7 +560,7 @@
         {
           "key": "`success()`, `failure()`, `always()`, `cancelled()`",
           "status": "partial",
-          "notes": "`success()` / `failure()` / `always()` are evaluated against the accumulated job status in dependency waves. `cancelled()` always returns `false` locally — there is no cancellation signal for Agent CI to observe, so steps gated by `if: cancelled()` never run.",
+          "notes": "`success()` / `failure()` / `always()` are evaluated against the accumulated job status in dependency waves. `cancelled()` always returns `false` locally — there is no cancellation signal for Local CI to observe, so steps gated by `if: cancelled()` never run.",
           "proof": [".github/workflows/smoke-conditions.yml"]
         },
         {
@@ -601,7 +609,7 @@
         {
           "key": "`GITHUB_TOKEN`",
           "status": "partial",
-          "notes": "Not injected automatically. Pass `--github-token` or set `AGENT_CI_GITHUB_TOKEN` to make it available as `secrets.GITHUB_TOKEN`. GitHub API calls from the runner are answered locally by Agent CI's API emulation layer. OIDC ID-token issuance (`permissions.id-token: write` → federated cloud auth) is not implemented — actions that exchange the OIDC token with AWS/GCP/Vault will fail.",
+          "notes": "Not injected automatically. Pass `--github-token` or set `LOCAL_CI_GITHUB_TOKEN` to make it available as `secrets.GITHUB_TOKEN`. GitHub API calls from the runner are answered locally by Local CI's API emulation layer. OIDC ID-token issuance (`permissions.id-token: write` → federated cloud auth) is not implemented — actions that exchange the OIDC token with AWS/GCP/Vault will fail.",
           "proof": [".github/workflows/smoke-remote-private-workflow.yml"]
         },
         {

@@ -4,6 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "@redwoodjs/agent-ci": "file:./fake-agent-ci"
+    "local-ci": "file:./fake-local-ci"
   }
 }

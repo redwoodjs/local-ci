@@ -1,7 +1,7 @@
 name: "Smoke: --var pre-flight"
 
 # Proves that `vars.FOO` references in a workflow are caught up-front:
-#   - Missing vars → agent-ci fails before any container setup, error
+#   - Missing vars → local-ci fails before any container setup, error
 #     message lists every missing var with the --var flag syntax.
 #   - Partial fill → only the still-missing var appears in the error.
 #   - All vars supplied → run proceeds normally.
@@ -33,15 +33,15 @@ jobs:
 
       - run: pnpm install
 
-      - name: Build agent-ci
-        run: pnpm --filter @redwoodjs/agent-ci... -r build
+      - name: Build local-ci
+        run: pnpm --filter run-local-ci... -r build
 
       - name: Create temp project with a vars-using workflow
         run: |
           # Build the `${X}` GHA-expression opener from parts — the literal
           # string `${X}` must never appear in this run: script, because the
           # outer runner's template engine would substitute it before writing
-          # test.yml, stripping the vars.X references the inner agent-ci needs.
+          # test.yml, stripping the vars.X references the inner local-ci needs.
           D='$'
           OPEN="${D}{{"
           CLOSE='}}'

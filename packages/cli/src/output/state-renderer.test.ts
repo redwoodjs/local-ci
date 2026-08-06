@@ -35,7 +35,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "booting",
                 startedAt: "1970-01-01T00:00:00.000Z",
                 steps: [],
@@ -48,7 +48,7 @@ describe("renderRunState", () => {
       const output = renderRunState(state);
       expect(output).toContain("ci.yml");
       expect(output).toContain("⠋");
-      expect(output).toContain("Starting runner agent-ci-5 (0s)");
+      expect(output).toContain("Starting runner local-ci-5 (0s)");
     });
 
     it("renders starting-runner node alongside steps once running", () => {
@@ -61,7 +61,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "running",
                 startedAt: "1970-01-01T00:00:00.000Z",
                 bootDurationMs: 2300,
@@ -82,7 +82,7 @@ describe("renderRunState", () => {
 
       const output = renderRunState(state);
       expect(output).toContain("ci.yml");
-      expect(output).toContain("Starting runner agent-ci-5 (2.3s)");
+      expect(output).toContain("Starting runner local-ci-5 (2.3s)");
       expect(output).toContain("test");
       expect(output).toContain("✓ 1. Set up job (1s)");
       expect(output).toContain("⠋ 2. Run pnpm check (0s...)");
@@ -98,7 +98,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "running",
                 bootDurationMs: 2300,
                 classification: "degraded",
@@ -130,7 +130,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "running",
                 startedAt: "1970-01-01T00:00:00.000Z",
                 bootDurationMs: 2300,
@@ -151,7 +151,7 @@ describe("renderRunState", () => {
 
       expect(renderRunState(state)).toMatchInlineSnapshot(`
         " ci.yml
-         ├── Starting runner agent-ci-5 (2.3s)
+         ├── Starting runner local-ci-5 (2.3s)
          └── test
              ├── ✓ 1. Set up job (1s)
              └── ⠋ 2. Run pnpm check (0s...)"
@@ -168,7 +168,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "completed",
                 bootDurationMs: 2000,
                 steps: [
@@ -198,7 +198,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "failed",
                 failedStep: "Run tests",
                 bootDurationMs: 1000,
@@ -227,7 +227,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "completed",
                 bootDurationMs: 1000,
                 steps: [
@@ -254,7 +254,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "running",
                 bootDurationMs: 1000,
                 steps: [
@@ -281,7 +281,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "paused",
                 bootDurationMs: 1000,
                 pausedAtStep: "Run tests",
@@ -310,9 +310,9 @@ describe("renderRunState", () => {
       expect(output).toContain("Step failed attempt #1");
       // Trailing retry/abort hints (single-job mode)
       expect(output).toContain("↻ To retry:");
-      expect(output).toContain("agent-ci retry --runner agent-ci-5");
+      expect(output).toContain("local-ci retry --runner local-ci-5");
       expect(output).toContain("■ To abort:");
-      expect(output).toContain("agent-ci abort --runner agent-ci-5");
+      expect(output).toContain("local-ci abort --runner local-ci-5");
       // Last output lines
       expect(output).toContain("Last output:");
       expect(output).toContain("Error: assertion failed");
@@ -328,7 +328,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "running",
                 bootDurationMs: 1000,
                 pausedAtStep: "Run tests", // was paused on this step
@@ -365,14 +365,14 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-1-j1",
+                runnerId: "local-ci-1-j1",
                 status: "running",
                 classification: "degraded",
                 steps: [],
               },
               {
                 id: "test",
-                runnerId: "agent-ci-1-j2",
+                runnerId: "local-ci-1-j2",
                 status: "queued",
                 steps: [],
               },
@@ -403,14 +403,14 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
               },
               {
                 id: "test",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "running",
                 bootDurationMs: 1000,
                 steps: [
@@ -430,13 +430,13 @@ describe("renderRunState", () => {
       const output = renderRunState(state);
       // Completed job collapsed (includes runner name)
       expect(output).toContain("✓ lint");
-      expect(output).toContain("agent-ci-5-j1");
+      expect(output).toContain("local-ci-5-j1");
       // Running job shows steps
       expect(output).toContain("test");
-      expect(output).toContain("agent-ci-5-j2");
+      expect(output).toContain("local-ci-5-j2");
       expect(output).toContain("⠋ 1. Run tests (0s...)");
       // Does NOT show "Starting runner" for the running job in multi-job mode
-      expect(output).not.toContain("Starting runner agent-ci-5-j2 (");
+      expect(output).not.toContain("Starting runner local-ci-5-j2 (");
     });
 
     it("shows ✗ icon for failed completed job", () => {
@@ -449,7 +449,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "failed",
                 failedStep: "Run lint",
                 durationMs: 3000,
@@ -457,7 +457,7 @@ describe("renderRunState", () => {
               },
               {
                 id: "test",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
@@ -469,7 +469,7 @@ describe("renderRunState", () => {
 
       const output = renderRunState(state);
       expect(output).toContain("✗ lint");
-      expect(output).toContain("agent-ci-5-j1");
+      expect(output).toContain("local-ci-5-j1");
     });
 
     it("shows retry hint as child node in multi-job paused mode", () => {
@@ -482,14 +482,14 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
               },
               {
                 id: "test",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "paused",
                 pausedAtStep: "Run tests",
                 pausedAtMs: "1970-01-01T00:00:05.000Z",
@@ -511,7 +511,7 @@ describe("renderRunState", () => {
 
       const output = renderRunState(state);
       // Retry hint is a child node in the tree
-      expect(output).toContain("↻ retry: agent-ci retry --runner agent-ci-5-j2");
+      expect(output).toContain("↻ retry: local-ci retry --runner local-ci-5-j2");
       // Trailing "To retry:" / "To abort:" lines also shown in multi-job mode
       expect(output).toContain("↻ To retry:");
       expect(output).toContain("■ To abort:");
@@ -527,14 +527,14 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "build",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
               },
               {
                 id: "test",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "paused",
                 pausedAtStep: "Run tests",
                 pausedAtMs: "1970-01-01T00:00:05.000Z",
@@ -576,7 +576,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 15000,
                 steps: [],
@@ -591,7 +591,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "deploy",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "booting",
                 startedAt: "1970-01-01T00:00:00.000Z",
                 steps: [],
@@ -605,8 +605,8 @@ describe("renderRunState", () => {
       // Completed workflow collapsed to one line
       expect(output).toContain("✓ ci.yml (15s)");
       // No individual job details for either workflow
-      expect(output).not.toContain("agent-ci-5-j1");
-      expect(output).not.toContain("agent-ci-5-j2");
+      expect(output).not.toContain("local-ci-5-j1");
+      expect(output).not.toContain("local-ci-5-j2");
       // Running workflow is a single line with spinner and booting hint
       expect(output).toContain("⠋ deploy.yml");
       expect(output).toContain("booting");
@@ -624,7 +624,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "failed",
                 failedStep: "Run tests",
                 durationMs: 10000,
@@ -641,7 +641,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-6-j1",
+                runnerId: "local-ci-6-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
@@ -656,8 +656,8 @@ describe("renderRunState", () => {
       expect(output).toContain("✗ ci.yml");
       expect(output).toContain("(10s)");
       expect(output).toContain("✓ lint.yml (5s)");
-      expect(output).not.toContain("agent-ci-5-j1");
-      expect(output).not.toContain("agent-ci-6-j1");
+      expect(output).not.toContain("local-ci-5-j1");
+      expect(output).not.toContain("local-ci-6-j1");
     });
 
     it("keeps completed multi-job workflow expanded to show jobs", () => {
@@ -672,14 +672,14 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
               },
               {
                 id: "test",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "completed",
                 durationMs: 15000,
                 steps: [],
@@ -695,7 +695,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-6-j1",
+                runnerId: "local-ci-6-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
@@ -724,19 +724,19 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "install-a",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "queued",
                 steps: [],
               },
               {
                 id: "install-b",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "queued",
                 steps: [],
               },
               {
                 id: "install-c",
-                runnerId: "agent-ci-5-j3",
+                runnerId: "local-ci-5-j3",
                 status: "queued",
                 steps: [],
               },
@@ -749,7 +749,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-6-j1",
+                runnerId: "local-ci-6-j1",
                 status: "running",
                 steps: [
                   {
@@ -784,7 +784,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "running",
                 steps: [
                   {
@@ -823,7 +823,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "paused",
                 pausedAtStep: "Run tests",
                 pausedAtMs: "1970-01-01T00:00:05.000Z",
@@ -849,7 +849,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-6-j1",
+                runnerId: "local-ci-6-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
@@ -880,7 +880,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 85000,
                 steps: [],
@@ -894,7 +894,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-6-j1",
+                runnerId: "local-ci-6-j1",
                 status: "running",
                 steps: [
                   {
@@ -926,7 +926,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 10000,
                 steps: [],
@@ -942,7 +942,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-6-j1",
+                runnerId: "local-ci-6-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
@@ -969,14 +969,14 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
               },
               {
                 id: "test",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "running",
                 steps: [
                   { name: "Checkout", index: 1, status: "completed", durationMs: 500 },
@@ -991,7 +991,7 @@ describe("renderRunState", () => {
               },
               {
                 id: "build",
-                runnerId: "agent-ci-5-j3",
+                runnerId: "local-ci-5-j3",
                 status: "queued",
                 steps: [],
               },
@@ -1027,14 +1027,14 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "lint",
-                runnerId: "agent-ci-5-j1",
+                runnerId: "local-ci-5-j1",
                 status: "completed",
                 durationMs: 5000,
                 steps: [],
               },
               {
                 id: "test",
-                runnerId: "agent-ci-5-j2",
+                runnerId: "local-ci-5-j2",
                 status: "completed",
                 durationMs: 10000,
                 steps: [],
@@ -1048,9 +1048,9 @@ describe("renderRunState", () => {
       // Single workflow — no collapsing, no status icon prefix
       expect(output.split("ci.yml").length).toBe(2); // 1 occurrence → 2 parts
       expect(output).toContain("✓ lint");
-      expect(output).toContain("agent-ci-5-j1");
+      expect(output).toContain("local-ci-5-j1");
       expect(output).toContain("✓ test");
-      expect(output).toContain("agent-ci-5-j2");
+      expect(output).toContain("local-ci-5-j2");
     });
   });
 
@@ -1067,7 +1067,7 @@ describe("renderRunState", () => {
             jobs: [
               {
                 id: "test",
-                runnerId: "agent-ci-5",
+                runnerId: "local-ci-5",
                 status: "booting",
                 startedAt: "1970-01-01T00:00:00.000Z", // epoch
                 steps: [],
@@ -1078,7 +1078,7 @@ describe("renderRunState", () => {
       });
 
       const output = renderRunState(state);
-      expect(output).toContain("Starting runner agent-ci-5 (7s)");
+      expect(output).toContain("Starting runner local-ci-5 (7s)");
     });
   });
 });

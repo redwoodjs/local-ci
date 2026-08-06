@@ -6,8 +6,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const rustBin = path.join(root, "target", "debug", "agent-ci");
-const smokeWorkDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-rust-smoke-"));
+const rustBin = path.join(root, "target", "debug", "local-ci");
+const smokeWorkDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-rust-smoke-"));
 const smokeWorkflowTimeoutMs = Number(
   process.env.RUST_SMOKE_TIMEOUT_MS ?? (process.env.GITHUB_ACTIONS === "true" ? 5 : 20) * 60 * 1000,
 );
@@ -75,10 +75,10 @@ function killChildProcessGroup(child, signal) {
   }
 }
 
-function activeAgentCiContainers() {
+function activeLocalCiContainers() {
   const result = run(
     "docker",
-    ["ps", "-a", "--filter", "name=agent-ci", "--format", "{{.Names}}\t{{.Status}}\t{{.Image}}"],
+    ["ps", "-a", "--filter", "name=local-ci", "--format", "{{.Names}}\t{{.Status}}\t{{.Image}}"],
     { timeout: 30_000 },
   );
   if (result.status !== 0) {
@@ -90,33 +90,33 @@ function activeAgentCiContainers() {
 }
 
 function printActiveContainers(stream = process.stderr) {
-  const containers = activeAgentCiContainers();
+  const containers = activeLocalCiContainers();
   if (containers.length === 0) {
-    stream.write("active agent-ci containers: <none>\n");
+    stream.write("active local-ci containers: <none>\n");
     return;
   }
-  stream.write("active agent-ci containers:\n");
+  stream.write("active local-ci containers:\n");
   for (const line of containers) {
     stream.write(`  ${line}\n`);
   }
 }
 
-function cleanupAgentCiContainers(reason) {
+function cleanupLocalCiContainers(reason) {
   if (!cleanupContainersOnFailure) {
     console.error(`container cleanup disabled after ${reason}`);
     return;
   }
-  const ids = run("docker", ["ps", "-aq", "--filter", "name=agent-ci"], { timeout: 30_000 });
+  const ids = run("docker", ["ps", "-aq", "--filter", "name=local-ci"], { timeout: 30_000 });
   if (ids.status !== 0) {
     console.error(`failed to list containers for cleanup: ${ids.stderr?.trim() || ids.status}`);
     return;
   }
   const containerIds = ids.stdout.trim().split(/\s+/).filter(Boolean);
   if (containerIds.length === 0) {
-    console.error(`no agent-ci containers to clean after ${reason}`);
+    console.error(`no local-ci containers to clean after ${reason}`);
     return;
   }
-  console.error(`cleaning ${containerIds.length} agent-ci container(s) after ${reason}`);
+  console.error(`cleaning ${containerIds.length} local-ci container(s) after ${reason}`);
   run("docker", ["rm", "-f", ...containerIds], { stdio: "inherit", timeout: 60_000 });
 }
 
@@ -125,9 +125,9 @@ function smokeEnvironment(workDir) {
   // all three under their own work directory so the parity suite can delete
   // them before moving to the next workflow instead of filling a CI runner.
   return {
-    AGENT_CI_WORKING_DIR: workDir,
-    AGENT_CI_LOG_DIR: path.join(workDir, "logs"),
-    AGENT_CI_STATE_DIR: path.join(workDir, "state"),
+    LOCAL_CI_WORKING_DIR: workDir,
+    LOCAL_CI_LOG_DIR: path.join(workDir, "logs"),
+    LOCAL_CI_STATE_DIR: path.join(workDir, "state"),
   };
 }
 
@@ -353,7 +353,7 @@ function printFailureDiagnostics(workflowPath, attempt, result) {
     }
   }
 
-  console.error("--- docker agent-ci containers ---");
+  console.error("--- docker local-ci containers ---");
   printActiveContainers(process.stderr);
   console.error("::endgroup::");
 }
@@ -385,7 +385,7 @@ function installSignalHandlers() {
       console.error(`received ${signal}; cleaning nested smoke containers before exit`);
       printStateBuckets();
       printActiveContainers(process.stderr);
-      cleanupAgentCiContainers(`process ${signal}`);
+      cleanupLocalCiContainers(`process ${signal}`);
       process.exit(signal === "SIGINT" ? 130 : 143);
     });
   }
@@ -393,7 +393,7 @@ function installSignalHandlers() {
 
 installSignalHandlers();
 
-const build = run("cargo", ["build", "-p", "agent-ci"], { stdio: "inherit" });
+const build = run("cargo", ["build", "-p", "local-ci"], { stdio: "inherit" });
 if (build.status !== 0) {
   process.exit(build.status ?? 1);
 }
@@ -481,7 +481,7 @@ for (const workflow of workflows) {
       result: resultLabel(result),
     });
     printFailureDiagnostics(workflow.path, attempt, result);
-    cleanupAgentCiContainers(`${workflow.path} attempt ${attempt} ${resultLabel(result)}`);
+    cleanupLocalCiContainers(`${workflow.path} attempt ${attempt} ${resultLabel(result)}`);
     if (attempt < smokeWorkflowAttempts) {
       console.log(`↻ ${workflow.path} retrying after failed attempt ${attempt}`);
     }
@@ -556,7 +556,7 @@ if (skipAllSmoke) {
       result: resultLabel(allResult),
     });
     printFailureDiagnostics("--all smoke", 1, allResult);
-    cleanupAgentCiContainers(`--all smoke ${resultLabel(allResult)}`);
+    cleanupLocalCiContainers(`--all smoke ${resultLabel(allResult)}`);
   }
 }
 

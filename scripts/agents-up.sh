@@ -7,7 +7,7 @@
 #   ./scripts/agents-up.sh <branch> <N>  # Start agent N on <branch>
 #
 # If <branch> doesn't exist it will be created from the current HEAD.
-# Each agent gets an isolated worktree at ../agent-ci-agent-N/ so multiple
+# Each agent gets an isolated worktree at ../local-ci-agent-N/ so multiple
 # agents can work on separate branches simultaneously.
 #
 

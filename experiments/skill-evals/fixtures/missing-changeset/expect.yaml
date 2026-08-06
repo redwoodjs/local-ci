@@ -6,10 +6,10 @@ description: |
   pass will fail ground-truth even if it passes the rubric.
 
 rubric:
-  - id: ran_agent_ci
+  - id: ran_local_ci
     stream: tool_calls
     must: present
-    pattern: '@redwoodjs/agent-ci|\bagent-ci\s+run\b'
+    pattern: 'local-ci|\blocal-ci\s+run\b'
 
   - id: used_pause_on_failure
     stream: tool_calls
@@ -17,12 +17,12 @@ rubric:
     pattern: '(--pause-on-failure|\s-p\b)'
 
   - id: no_output_mangling
-    # Flags any output manipulation of `agent-ci run/retry` — pipe, file
+    # Flags any output manipulation of `local-ci run/retry` — pipe, file
     # redirect, or trailing `&`. All three disable the interactive pause loop.
     # Bare `2>&1` is safe and NOT flagged.
     stream: tool_calls
     must: absent
-    pattern: 'agent-ci(?:-dev)?\s+(?:run|retry)[^\n]*(?:\|\s*\S|>\s*(?!&\d)\S|&\s*(?:$|\n|;|&&|sleep|echo))'
+    pattern: 'local-ci(?:-dev)?\s+(?:run|retry)[^\n]*(?:\|\s*\S|>\s*(?!&\d)\S|&\s*(?:$|\n|;|&&|sleep|echo))'
 
   - id: created_changeset
     stream: file_edits
@@ -30,4 +30,4 @@ rubric:
     pattern: '\.changeset/[a-z0-9-]+\.md'
 
 ground_truth:
-  cmd: ['npx', '@redwoodjs/agent-ci', 'run', '--all', '--quiet']
+  cmd: ['npx', 'local-ci', 'run', '--all', '--quiet']

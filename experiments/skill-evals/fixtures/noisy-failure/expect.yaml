@@ -6,10 +6,10 @@ description: |
   to truncate the output — which is exactly the trap we want to measure.
 
 rubric:
-  - id: ran_agent_ci
+  - id: ran_local_ci
     stream: tool_calls
     must: present
-    pattern: '@redwoodjs/agent-ci|\bagent-ci\s+run\b'
+    pattern: 'local-ci|\blocal-ci\s+run\b'
 
   - id: used_pause_on_failure
     stream: tool_calls
@@ -19,7 +19,7 @@ rubric:
   - id: no_output_mangling
     stream: tool_calls
     must: absent
-    pattern: 'agent-ci(?:-dev)?\s+(?:run|retry)[^\n]*(?:\|\s*\S|>\s*(?!&\d)\S|&\s*(?:$|\n|;|&&|sleep|echo))'
+    pattern: 'local-ci(?:-dev)?\s+(?:run|retry)[^\n]*(?:\|\s*\S|>\s*(?!&\d)\S|&\s*(?:$|\n|;|&&|sleep|echo))'
 
   - id: did_not_suppress
     # Using @ts-ignore / @ts-nocheck / @ts-expect-error to bypass the errors
@@ -30,4 +30,4 @@ rubric:
     pattern: '@ts-(?:ignore|nocheck|expect-error)'
 
 ground_truth:
-  cmd: ['npx', '@redwoodjs/agent-ci', 'run', '--all', '--quiet']
+  cmd: ['npx', 'local-ci', 'run', '--all', '--quiet']

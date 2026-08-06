@@ -1,15 +1,15 @@
 /**
  * Runs-on compatibility classifier.
  *
- * agent-ci today runs every job in a Linux Docker container, regardless of
+ * local-ci today runs every job in a Linux Docker container, regardless of
  * the job's `runs-on:` label. For jobs that explicitly target macOS or
  * Windows runners, silently landing them in a Linux container produces
  * confusing failures — typically "command not found" at the first OS-specific
- * step (see https://github.com/redwoodjs/agent-ci/issues/254).
+ * step (see https://github.com/redwoodjs/local-ci/issues/254).
  *
  * This module classifies a job's `runs-on:` labels so the caller can skip
  * unsupported jobs with a clear warning instead. Real macOS runner support
- * is tracked separately in https://github.com/redwoodjs/agent-ci/issues/258.
+ * is tracked separately in https://github.com/redwoodjs/local-ci/issues/258.
  */
 
 export type RunnerOSKind = "linux" | "macos" | "windows" | "other";
@@ -46,14 +46,14 @@ export function classifyRunsOn(labels: string[]): RunnerOSKind {
   return "other";
 }
 
-/** Is this OS something agent-ci does not yet know how to run? */
+/** Is this OS something local-ci does not yet know how to run? */
 export function isUnsupportedOS(kind: RunnerOSKind): boolean {
   return kind === "macos" || kind === "windows";
 }
 
 /**
  * Format a user-facing warning for a job skipped because its `runs-on:`
- * targets an OS agent-ci can't execute locally. Written for stderr.
+ * targets an OS local-ci can't execute locally. Written for stderr.
  *
  * For macOS, `hostCapability` (from `checkMacosVmHost`) lets us say *why* the
  * host can't run the VM — e.g. "tart not installed" vs "Intel Mac" vs
@@ -72,14 +72,14 @@ export function formatUnsupportedOSWarning(
       ? [
           hostCapability?.reason ?? "This host cannot run macOS VMs.",
           hostCapability?.hint,
-          "Tracking: https://github.com/redwoodjs/agent-ci/issues/258",
+          "Tracking: https://github.com/redwoodjs/local-ci/issues/258",
         ]
       : [
-          "agent-ci currently only runs jobs in a Linux container, so this job",
-          "cannot execute locally. Tracking: https://github.com/redwoodjs/agent-ci/issues/254",
+          "local-ci currently only runs jobs in a Linux container, so this job",
+          "cannot execute locally. Tracking: https://github.com/redwoodjs/local-ci/issues/254",
         ];
   return [
-    `[Agent CI] Skipping job "${taskName}": runs-on targets ${osName} (${labelStr}).`,
+    `[Local CI] Skipping job "${taskName}": runs-on targets ${osName} (${labelStr}).`,
     ...body.filter((l): l is string => Boolean(l)).map((l) => `  ${l}`),
   ].join("\n");
 }

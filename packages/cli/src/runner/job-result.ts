@@ -32,7 +32,7 @@ export function createFailedJobResult(
 ): JobResult {
   const errorMessage = isJobError(error) ? error.message : getErrorMessage(error);
   return {
-    name: `agent-ci-error-${taskName}`,
+    name: `local-ci-error-${taskName}`,
     workflow: path.basename(workflowPath),
     taskId: taskName,
     succeeded: false,

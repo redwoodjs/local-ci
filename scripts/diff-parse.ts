@@ -219,7 +219,7 @@ async function jobLevelEnvFlowsToSteps(
 // Marker emitted by wrapScriptForShell in workflow-parser.ts when wrapping a
 // non-bash shell into a heredoc. Presence of this marker in the parsed script
 // is how we detect that the shell directive was honored.
-const SHELL_WRAP_MARKER = "__AGENT_CI_SHELL_WRAP_EOF__";
+const SHELL_WRAP_MARKER = "__LOCAL_CI_SHELL_WRAP_EOF__";
 
 function shellPreserved(script: string, expected: string): boolean {
   if (expected === "bash") {

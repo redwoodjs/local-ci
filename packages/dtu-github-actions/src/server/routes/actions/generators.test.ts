@@ -12,21 +12,21 @@ describe("createJobResponse", () => {
   it("propagates job-level env into Variables", () => {
     const payload = {
       ...basePayload,
-      env: { AGENT_CI_LOCAL: "true", MY_VAR: "hello" },
+      env: { LOCAL_CI_LOCAL: "true", MY_VAR: "hello" },
     };
 
     const response = createJobResponse("1", payload, "http://localhost:3000", "plan-1");
     const body = JSON.parse(response.Body);
     const vars = body.Variables;
 
-    expect(vars.AGENT_CI_LOCAL).toEqual({ Value: "true", IsSecret: false });
+    expect(vars.LOCAL_CI_LOCAL).toEqual({ Value: "true", IsSecret: false });
     expect(vars.MY_VAR).toEqual({ Value: "hello", IsSecret: false });
   });
 
   it("propagates job-level env into ContextData.env", () => {
     const payload = {
       ...basePayload,
-      env: { AGENT_CI_LOCAL: "true" },
+      env: { LOCAL_CI_LOCAL: "true" },
     };
 
     const response = createJobResponse("1", payload, "http://localhost:3000", "plan-1");
@@ -36,7 +36,7 @@ describe("createJobResponse", () => {
     expect(body.ContextData.env).toBeDefined();
     expect(body.ContextData.env.t).toBe(2);
     const entries = body.ContextData.env.d;
-    const localEntry = entries.find((e: any) => e.k === "AGENT_CI_LOCAL");
+    const localEntry = entries.find((e: any) => e.k === "LOCAL_CI_LOCAL");
     expect(localEntry).toBeDefined();
     expect(localEntry.v).toEqual({ t: 0, s: "true" });
   });
@@ -44,7 +44,7 @@ describe("createJobResponse", () => {
   it("propagates job-level env into EnvironmentVariables", () => {
     const payload = {
       ...basePayload,
-      env: { AGENT_CI_LOCAL: "true" },
+      env: { LOCAL_CI_LOCAL: "true" },
     };
 
     const response = createJobResponse("1", payload, "http://localhost:3000", "plan-1");
@@ -53,7 +53,7 @@ describe("createJobResponse", () => {
     expect(body.EnvironmentVariables).toHaveLength(1);
     const mapping = body.EnvironmentVariables[0];
     expect(mapping.type).toBe(2);
-    const entry = mapping.map.find((e: any) => e.Key === "AGENT_CI_LOCAL");
+    const entry = mapping.map.find((e: any) => e.Key === "LOCAL_CI_LOCAL");
     expect(entry).toBeDefined();
     expect(entry.Value).toBe("true");
   });
@@ -137,10 +137,10 @@ describe("createJobResponse", () => {
 
     expect(vars.RUNNER_OS.Value).toBe("macOS");
     expect(vars.RUNNER_ARCH.Value).toBe("ARM64");
-    expect(vars.RUNNER_TEMP.Value).toBe("/Users/admin/agent-ci-runner/_work/_temp");
+    expect(vars.RUNNER_TEMP.Value).toBe("/Users/admin/local-ci-runner/_work/_temp");
     expect(vars.RUNNER_TOOL_CACHE.Value).toBe("/Users/admin/hostedtoolcache");
-    expect(vars.GITHUB_WORKSPACE.Value).toBe("/Users/admin/agent-ci-runner/_work/repo/repo");
-    expect(body.Workspace.Path).toBe("/Users/admin/agent-ci-runner/_work/repo/repo");
+    expect(vars.GITHUB_WORKSPACE.Value).toBe("/Users/admin/local-ci-runner/_work/repo/repo");
+    expect(body.Workspace.Path).toBe("/Users/admin/local-ci-runner/_work/repo/repo");
   });
 
   it("honors explicit runnerArch override on macOS", () => {

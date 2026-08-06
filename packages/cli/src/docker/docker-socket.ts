@@ -6,7 +6,7 @@ import { debugRunner } from "../output/debug.ts";
 
 const DEFAULT_SOCKET = "/var/run/docker.sock";
 const DOCS_URL =
-  "https://github.com/redwoodjs/agent-ci/blob/main/packages/cli/docs/docker-socket.md";
+  "https://github.com/redwoodjs/local-ci/blob/main/packages/cli/docs/docker-socket.md";
 
 type ExecSync = typeof execSync;
 
@@ -72,7 +72,7 @@ function socketFromDockerContext(deps: ResolvedDockerSocketDeps): string | undef
 export interface DockerSocket {
   /** Filesystem path to the socket (no unix:// prefix), with symlinks resolved. Used for the Docker API client. */
   socketPath: string;
-  /** Full URI suitable for AGENT_CI_DOCKER_HOST (e.g. "unix:///path/to/socket"). */
+  /** Full URI suitable for LOCAL_CI_DOCKER_HOST (e.g. "unix:///path/to/socket"). */
   uri: string;
   /**
    * Path to use as the bind-mount source when mounting the Docker socket into a container.
@@ -95,7 +95,7 @@ export interface DockerSocket {
  *     its shared-mount list. Our process's permissions are irrelevant here —
  *     only path recognition matters.
  *
- * The bind-mount invariant: unless the user has set AGENT_CI_DOCKER_HOST
+ * The bind-mount invariant: unless the user has set LOCAL_CI_DOCKER_HOST
  * explicitly, `/var/run/docker.sock` must exist and be the bind-mount source.
  * Every Docker provider either creates it directly (Docker Desktop, native
  * dockerd) or can be pointed at it via a symlink (OrbStack does this
@@ -104,7 +104,7 @@ export interface DockerSocket {
  * confusing errors (#197, #209, #263).
  *
  * Resolution order:
- *  1. `AGENT_CI_DOCKER_HOST` env var wins outright (local paths validated;
+ *  1. `LOCAL_CI_DOCKER_HOST` env var wins outright (local paths validated;
  *     non-unix schemes returned as-is).
  *  2. `/var/run/docker.sock` must exist. If we can R/W it, its resolved path
  *     is the API `socketPath`; otherwise we look up the active docker context
@@ -114,8 +114,8 @@ export interface DockerSocket {
  */
 export function resolveDockerSocket(deps: DockerSocketDeps = {}): DockerSocket {
   const resolvedDeps = resolveDeps(deps);
-  // 1. Explicit AGENT_CI_DOCKER_HOST wins.
-  const envHost = process.env.AGENT_CI_DOCKER_HOST?.trim();
+  // 1. Explicit LOCAL_CI_DOCKER_HOST wins.
+  const envHost = process.env.LOCAL_CI_DOCKER_HOST?.trim();
   if (envHost) {
     if (!envHost.startsWith("unix://")) {
       // Non-unix scheme (ssh://, tcp://) — container bind-mount is out of scope.
@@ -127,7 +127,7 @@ export function resolveDockerSocket(deps: DockerSocketDeps = {}): DockerSocket {
       return { socketPath: resolved, uri: `unix://${resolved}`, bindMountPath: socketPath };
     }
     throw unusableSocketError(
-      `AGENT_CI_DOCKER_HOST=${envHost} does not resolve to a working socket.`,
+      `LOCAL_CI_DOCKER_HOST=${envHost} does not resolve to a working socket.`,
       resolvedDeps,
     );
   }
@@ -169,10 +169,10 @@ export function resolveDockerSocket(deps: DockerSocketDeps = {}): DockerSocket {
 
 function unusableSocketError(detail: string, deps: ResolvedDockerSocketDeps): Error {
   const lines = [
-    `agent-ci couldn't use a Docker socket at /var/run/docker.sock.`,
+    `local-ci couldn't use a Docker socket at /var/run/docker.sock.`,
     detail,
     ``,
-    `A working Docker socket is required there (or set AGENT_CI_DOCKER_HOST explicitly).`,
+    `A working Docker socket is required there (or set LOCAL_CI_DOCKER_HOST explicitly).`,
   ];
   if (dockerDesktopRunningWithoutDefaultSocket(deps)) {
     lines.push(

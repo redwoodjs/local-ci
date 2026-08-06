@@ -4,7 +4,7 @@ import { getDtuLogPath, setWorkingDirectory, DTU_ROOT } from "./logger.ts";
 import crypto from "node:crypto";
 import path from "node:path";
 
-let workingDir = process.env.AGENT_CI_WORKING_DIR;
+let workingDir = process.env.LOCAL_CI_WORKING_DIR;
 if (workingDir) {
   if (!path.isAbsolute(workingDir)) {
     workingDir = path.resolve(DTU_ROOT, workingDir);
@@ -12,7 +12,7 @@ if (workingDir) {
   setWorkingDirectory(workingDir);
 }
 
-const configuredControlToken = process.env.AGENT_CI_DTU_CONTROL_TOKEN;
+const configuredControlToken = process.env.LOCAL_CI_DTU_CONTROL_TOKEN;
 const controlToken = configuredControlToken || crypto.randomBytes(32).toString("base64url");
 
 bootstrapAndReturnApp({ controlToken })
@@ -24,7 +24,7 @@ bootstrapAndReturnApp({ controlToken })
       console.log(`[DTU] Logging to ${getDtuLogPath()}`);
       if (!configuredControlToken) {
         console.log(
-          "[DTU] Generated an in-process control token for /_dtu/* endpoints. Set AGENT_CI_DTU_CONTROL_TOKEN before starting the server to let external clients call them.",
+          "[DTU] Generated an in-process control token for /_dtu/* endpoints. Set LOCAL_CI_DTU_CONTROL_TOKEN before starting the server to let external clients call them.",
         );
       }
     });

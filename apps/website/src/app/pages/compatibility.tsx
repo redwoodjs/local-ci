@@ -37,7 +37,7 @@ export const Compatibility = () => {
               Blog
             </a>
             <a
-              href="https://github.com/redwoodjs/agent-ci"
+              href="https://github.com/redwoodjs/local-ci"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#e0eee5] transition-colors"
@@ -55,7 +55,7 @@ export const Compatibility = () => {
             <div className="h-px bg-[#2b483e] flex-1"></div>
           </div>
           <p className="text-[#9bc5b3] text-lg max-w-2xl">
-            Agent CI aims to run real GitHub Actions workflows locally. Below is current support
+            Local CI aims to run real GitHub Actions workflows locally. Below is current support
             against the{" "}
             <a
               href="https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions"

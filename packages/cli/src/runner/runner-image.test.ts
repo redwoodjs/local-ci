@@ -12,19 +12,19 @@ import {
 
 describe("discoverRunnerImage", () => {
   let repoDir: string;
-  const originalEnv = process.env.AGENT_CI_RUNNER_IMAGE;
+  const originalEnv = process.env.LOCAL_CI_RUNNER_IMAGE;
 
   beforeEach(() => {
     repoDir = fs.mkdtempSync(path.join(os.tmpdir(), "runner-image-test-"));
-    delete process.env.AGENT_CI_RUNNER_IMAGE;
+    delete process.env.LOCAL_CI_RUNNER_IMAGE;
   });
 
   afterEach(() => {
     fs.rmSync(repoDir, { recursive: true, force: true });
     if (originalEnv === undefined) {
-      delete process.env.AGENT_CI_RUNNER_IMAGE;
+      delete process.env.LOCAL_CI_RUNNER_IMAGE;
     } else {
-      process.env.AGENT_CI_RUNNER_IMAGE = originalEnv;
+      process.env.LOCAL_CI_RUNNER_IMAGE = originalEnv;
     }
   });
 
@@ -35,13 +35,13 @@ describe("discoverRunnerImage", () => {
     expect(r.needsBuild).toBe(false);
   });
 
-  it("respects AGENT_CI_RUNNER_IMAGE env var as highest priority", () => {
+  it("respects LOCAL_CI_RUNNER_IMAGE env var as highest priority", () => {
     fs.mkdirSync(path.join(repoDir, ".github"));
     fs.writeFileSync(
-      path.join(repoDir, ".github", "agent-ci.Dockerfile"),
+      path.join(repoDir, ".github", "local-ci.Dockerfile"),
       "FROM ghcr.io/actions/actions-runner:latest\n",
     );
-    process.env.AGENT_CI_RUNNER_IMAGE = "my-org/custom:v1";
+    process.env.LOCAL_CI_RUNNER_IMAGE = "my-org/custom:v1";
 
     const r = discoverRunnerImage(repoDir);
     expect(r.image).toBe("my-org/custom:v1");
@@ -49,44 +49,69 @@ describe("discoverRunnerImage", () => {
     expect(r.needsBuild).toBe(false);
   });
 
-  it("discovers simple form .github/agent-ci.Dockerfile", () => {
+  it("discovers simple form .github/local-ci.Dockerfile", () => {
     fs.mkdirSync(path.join(repoDir, ".github"));
     fs.writeFileSync(
-      path.join(repoDir, ".github", "agent-ci.Dockerfile"),
+      path.join(repoDir, ".github", "local-ci.Dockerfile"),
       "FROM ghcr.io/actions/actions-runner:latest\nRUN echo hi\n",
     );
 
     const r = discoverRunnerImage(repoDir);
     expect(r.source).toBe("dockerfile-file");
     expect(r.needsBuild).toBe(true);
-    expect(r.image).toMatch(/^agent-ci-runner:[0-9a-f]{12}$/);
-    expect(r.dockerfilePath).toBe(path.join(repoDir, ".github", "agent-ci.Dockerfile"));
+    expect(r.image).toMatch(/^local-ci-runner:[0-9a-f]{12}$/);
+    expect(r.dockerfilePath).toBe(path.join(repoDir, ".github", "local-ci.Dockerfile"));
     expect(r.contextDir).toBeUndefined();
   });
 
-  it("discovers directory form .github/agent-ci/Dockerfile with context", () => {
-    fs.mkdirSync(path.join(repoDir, ".github", "agent-ci"), { recursive: true });
+  it("discovers directory form .github/local-ci/Dockerfile with context", () => {
+    fs.mkdirSync(path.join(repoDir, ".github", "local-ci"), { recursive: true });
     fs.writeFileSync(
-      path.join(repoDir, ".github", "agent-ci", "Dockerfile"),
+      path.join(repoDir, ".github", "local-ci", "Dockerfile"),
       "FROM ghcr.io/actions/actions-runner:latest\nCOPY ca.pem /etc/\n",
     );
-    fs.writeFileSync(path.join(repoDir, ".github", "agent-ci", "ca.pem"), "fake-cert");
+    fs.writeFileSync(path.join(repoDir, ".github", "local-ci", "ca.pem"), "fake-cert");
 
     const r = discoverRunnerImage(repoDir);
     expect(r.source).toBe("dockerfile-dir");
     expect(r.needsBuild).toBe(true);
-    expect(r.image).toMatch(/^agent-ci-runner:[0-9a-f]{12}$/);
-    expect(r.contextDir).toBe(path.join(repoDir, ".github", "agent-ci"));
+    expect(r.image).toMatch(/^local-ci-runner:[0-9a-f]{12}$/);
+    expect(r.contextDir).toBe(path.join(repoDir, ".github", "local-ci"));
+  });
+
+  it("supports the legacy .github/agent-ci.Dockerfile path", () => {
+    fs.mkdirSync(path.join(repoDir, ".github"));
+    const dockerfile = path.join(repoDir, ".github", "agent-ci.Dockerfile");
+    fs.writeFileSync(dockerfile, "FROM ghcr.io/actions/actions-runner:latest\n");
+
+    const result = discoverRunnerImage(repoDir);
+
+    expect(result.source).toBe("dockerfile-file");
+    expect(result.dockerfilePath).toBe(dockerfile);
+  });
+
+  it("prefers Local CI runner configuration over legacy Agent CI configuration", () => {
+    fs.mkdirSync(path.join(repoDir, ".github"));
+    const canonical = path.join(repoDir, ".github", "local-ci.Dockerfile");
+    fs.writeFileSync(canonical, "FROM ghcr.io/actions/actions-runner:latest\n");
+    fs.writeFileSync(
+      path.join(repoDir, ".github", "agent-ci.Dockerfile"),
+      "FROM ghcr.io/actions/actions-runner:latest\nRUN echo legacy\n",
+    );
+
+    const result = discoverRunnerImage(repoDir);
+
+    expect(result.dockerfilePath).toBe(canonical);
   });
 
   it("directory form takes precedence over simple form", () => {
-    fs.mkdirSync(path.join(repoDir, ".github", "agent-ci"), { recursive: true });
+    fs.mkdirSync(path.join(repoDir, ".github", "local-ci"), { recursive: true });
     fs.writeFileSync(
-      path.join(repoDir, ".github", "agent-ci", "Dockerfile"),
+      path.join(repoDir, ".github", "local-ci", "Dockerfile"),
       "FROM ghcr.io/actions/actions-runner:latest\n",
     );
     fs.writeFileSync(
-      path.join(repoDir, ".github", "agent-ci.Dockerfile"),
+      path.join(repoDir, ".github", "local-ci.Dockerfile"),
       "FROM ghcr.io/actions/actions-runner:latest\nRUN echo wrong\n",
     );
 
@@ -97,11 +122,11 @@ describe("discoverRunnerImage", () => {
   it("hash is stable across identical contents", () => {
     fs.mkdirSync(path.join(repoDir, ".github"));
     const contents = "FROM ghcr.io/actions/actions-runner:latest\nRUN echo stable\n";
-    fs.writeFileSync(path.join(repoDir, ".github", "agent-ci.Dockerfile"), contents);
+    fs.writeFileSync(path.join(repoDir, ".github", "local-ci.Dockerfile"), contents);
     const r1 = discoverRunnerImage(repoDir);
 
     // Overwrite with the same contents
-    fs.writeFileSync(path.join(repoDir, ".github", "agent-ci.Dockerfile"), contents);
+    fs.writeFileSync(path.join(repoDir, ".github", "local-ci.Dockerfile"), contents);
     const r2 = discoverRunnerImage(repoDir);
 
     expect(r1.image).toBe(r2.image);
@@ -110,13 +135,13 @@ describe("discoverRunnerImage", () => {
   it("hash changes when Dockerfile contents change", () => {
     fs.mkdirSync(path.join(repoDir, ".github"));
     fs.writeFileSync(
-      path.join(repoDir, ".github", "agent-ci.Dockerfile"),
+      path.join(repoDir, ".github", "local-ci.Dockerfile"),
       "FROM ghcr.io/actions/actions-runner:latest\nRUN echo a\n",
     );
     const r1 = discoverRunnerImage(repoDir);
 
     fs.writeFileSync(
-      path.join(repoDir, ".github", "agent-ci.Dockerfile"),
+      path.join(repoDir, ".github", "local-ci.Dockerfile"),
       "FROM ghcr.io/actions/actions-runner:latest\nRUN echo b\n",
     );
     const r2 = discoverRunnerImage(repoDir);
@@ -125,22 +150,22 @@ describe("discoverRunnerImage", () => {
   });
 
   it("hash changes when a context file changes (directory form)", () => {
-    fs.mkdirSync(path.join(repoDir, ".github", "agent-ci"), { recursive: true });
+    fs.mkdirSync(path.join(repoDir, ".github", "local-ci"), { recursive: true });
     fs.writeFileSync(
-      path.join(repoDir, ".github", "agent-ci", "Dockerfile"),
+      path.join(repoDir, ".github", "local-ci", "Dockerfile"),
       "FROM ghcr.io/actions/actions-runner:latest\nCOPY data /tmp/\n",
     );
-    fs.writeFileSync(path.join(repoDir, ".github", "agent-ci", "data"), "v1");
+    fs.writeFileSync(path.join(repoDir, ".github", "local-ci", "data"), "v1");
     const r1 = discoverRunnerImage(repoDir);
 
-    fs.writeFileSync(path.join(repoDir, ".github", "agent-ci", "data"), "v2");
+    fs.writeFileSync(path.join(repoDir, ".github", "local-ci", "data"), "v2");
     const r2 = discoverRunnerImage(repoDir);
 
     expect(r1.image).not.toBe(r2.image);
   });
 
-  it("ignores empty AGENT_CI_RUNNER_IMAGE", () => {
-    process.env.AGENT_CI_RUNNER_IMAGE = "   ";
+  it("ignores empty LOCAL_CI_RUNNER_IMAGE", () => {
+    process.env.LOCAL_CI_RUNNER_IMAGE = "   ";
     const r = discoverRunnerImage(repoDir);
     expect(r.source).toBe("default");
   });
@@ -194,7 +219,7 @@ describe("detectMissingToolHint", () => {
     const resolved: ResolvedRunnerImage = {
       image: "my-org/custom:v1",
       source: "env",
-      sourceLabel: "AGENT_CI_RUNNER_IMAGE",
+      sourceLabel: "LOCAL_CI_RUNNER_IMAGE",
       needsBuild: false,
     };
     const hint = detectMissingToolHint("error: linker `cc` not found", resolved);
@@ -203,11 +228,11 @@ describe("detectMissingToolHint", () => {
 
   it("returns null when the user already has a Dockerfile configured", () => {
     const resolved: ResolvedRunnerImage = {
-      image: "agent-ci-runner:abc123def456",
+      image: "local-ci-runner:abc123def456",
       source: "dockerfile-file",
-      sourceLabel: ".github/agent-ci.Dockerfile",
+      sourceLabel: ".github/local-ci.Dockerfile",
       needsBuild: true,
-      dockerfilePath: "/fake/.github/agent-ci.Dockerfile",
+      dockerfilePath: "/fake/.github/local-ci.Dockerfile",
     };
     const hint = detectMissingToolHint("error: linker `cc` not found", resolved);
     expect(hint).toBeNull();
@@ -220,7 +245,7 @@ describe("detectMissingToolHint", () => {
 });
 
 describe("detectToolcacheHint", () => {
-  const toolCacheDir = "/var/folders/xx/T/agent-ci/slug/cache/toolcache";
+  const toolCacheDir = "/var/folders/xx/T/local-ci/slug/cache/toolcache";
 
   it("matches tar `Cannot open: Permission denied` and returns an rm command", () => {
     const output = [

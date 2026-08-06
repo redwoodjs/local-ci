@@ -3,18 +3,18 @@
   "workflow_job": {
     "id": 12345678,
     "run_id": 87654321,
-    "workflow_name": "Agent CI CI",
+    "workflow_name": "Local CI CI",
     "head_sha": "d00d1e550c0de1d00d1e550c0de1d00d1e550c0d",
     "node_id": "CR_kwDOJH9-384AAAAA8Z4-3g",
     "name": "test-job",
-    "check_run_url": "https://api.github.com/repos/redwoodjs/agent-ci/check-runs/12345678",
-    "html_url": "https://github.com/redwoodjs/agent-ci/actions/runs/87654321/job/12345678",
+    "check_run_url": "https://api.github.com/repos/redwoodjs/local-ci/check-runs/12345678",
+    "html_url": "https://github.com/redwoodjs/local-ci/actions/runs/87654321/job/12345678",
     "status": "queued",
     "conclusion": null,
     "created_at": "2024-01-01T12:00:00Z",
     "started_at": null,
     "completed_at": null,
-    "run_url": "https://api.github.com/repos/redwoodjs/agent-ci/actions/runs/87654321",
+    "run_url": "https://api.github.com/repos/redwoodjs/local-ci/actions/runs/87654321",
     "run_attempt": 1,
     "runner_id": null,
     "runner_name": null,
@@ -26,8 +26,8 @@
   "repository": {
     "id": 123456789,
     "node_id": "MDEwOlJlcG9zaXRvcnkxMjM0NTY3ODk=",
-    "name": "agent-ci",
-    "full_name": "redwoodjs/agent-ci",
+    "name": "local-ci",
+    "full_name": "redwoodjs/local-ci",
     "private": false,
     "owner": {
       "login": "peterp",
@@ -36,7 +36,7 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/123456?v=4",
       "type": "Organization"
     },
-    "html_url": "https://github.com/redwoodjs/agent-ci"
+    "html_url": "https://github.com/redwoodjs/local-ci"
   },
   "sender": {
     "login": "peterp",

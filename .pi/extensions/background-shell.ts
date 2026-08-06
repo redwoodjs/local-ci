@@ -13,7 +13,7 @@
  *                      per-task byte offsets so repeated calls resume where
  *                      the previous one left off.
  *
- * Designed for workflows like the `agent-ci-dev` skill where the LLM needs
+ * Designed for workflows like the `local-ci-dev` skill where the LLM needs
  * to react live to a long-running subprocess (CI, builds, servers) without
  * relying on tools that only exist in specific agent runtimes (e.g. Claude
  * Code's `run_in_background` / `Monitor`).

@@ -16,10 +16,10 @@ if (!versionArg || !checksumsDirArg) {
 const version = versionArg.replace(/^v/, "");
 const tag = `v${version}`;
 const checksumsDir = path.resolve(checksumsDirArg);
-const templatePath = path.join(root, "packaging/homebrew/Formula/agent-ci.rb.template");
+const templatePath = path.join(root, "packaging/homebrew/Formula/local-ci.rb.template");
 
 function readSha(platform) {
-  const file = path.join(checksumsDir, `agent-ci-${tag}-${platform}.tar.gz.sha256`);
+  const file = path.join(checksumsDir, `local-ci-${tag}-${platform}.tar.gz.sha256`);
   const content = fs.readFileSync(file, "utf8").trim();
   const [sha] = content.split(/\s+/);
   if (!/^[a-f0-9]{64}$/i.test(sha)) {

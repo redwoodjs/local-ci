@@ -5,13 +5,13 @@ import { Copy, Check } from "lucide-react";
 
 const AGENT_INSTRUCTIONS = `## CI
 
-Install the agent-ci skill (one-time setup):
+Install the local-ci skill (one-time setup):
 
 \`\`\`bash
-npx skills add redwoodjs/agent-ci --skill agent-ci
+npx skills add redwoodjs/local-ci --skill local-ci
 \`\`\`
 
-Before completing any work, run the \`agent-ci\` skill to validate your changes locally. If it fails, fix the issue and re-run. Do not report work as done until it passes.`;
+Before completing any work, run the \`local-ci\` skill to validate your changes locally. If it fails, fix the issue and re-run. Do not report work as done until it passes.`;
 
 export function CopyAgentInstructions() {
   const [copied, setCopied] = useState(false);

@@ -6,12 +6,12 @@ Accepted as the working plan for the Rust rewrite checklist in [`../rust-rewrite
 
 ## Problem
 
-Agent CI is currently distributed as an npm-installed Node.js CLI. That works well for JavaScript users, but it ties every install path to a Node runtime and npm-compatible package installation. We want Agent CI to become a native binary so users can install it through npm, GitHub Releases, Homebrew, and other package managers without changing the CLI contract.
+Local CI is currently distributed as an npm-installed Node.js CLI. That works well for JavaScript users, but it ties every install path to a Node runtime and npm-compatible package installation. We want Local CI to become a native binary so users can install it through npm, GitHub Releases, Homebrew, and other package managers without changing the CLI contract.
 
 ## Goals
 
-- Keep the existing `agent-ci` command and CLI behavior stable.
-- Keep `npm install @redwoodjs/agent-ci` and `npx @redwoodjs/agent-ci` working.
+- Keep the existing `local-ci` command and CLI behavior stable.
+- Keep `npm install local-ci` and `npx run-local-ci` working.
 - Add direct native binary installs for users who do not want npm.
 - Preserve compatibility with the official GitHub Actions runner.
 - Preserve current pause/retry, cache, artifact, Docker, and macOS VM behavior.
@@ -39,7 +39,7 @@ Reasons:
 
 Use an incremental side-by-side migration:
 
-1. Add a Rust workspace and native `agent-ci` binary crate.
+1. Add a Rust workspace and native `local-ci` binary crate.
 2. Implement low-risk CLI behavior first: help text, config/env loading, `clean`, `retry`, and `abort`.
 3. Add golden tests that compare Rust output to the current TypeScript CLI.
 4. Port workflow parsing and scheduling.
@@ -59,7 +59,7 @@ Initial native binary targets:
 - `x86_64-unknown-linux-gnu` — Linux x64
 - `aarch64-unknown-linux-gnu` — Linux arm64
 
-Windows is not an initial target because Agent CI does not currently support Windows workflow execution locally. The Rust code should avoid unnecessary Unix-only assumptions outside runner execution paths so Windows support can be evaluated later.
+Windows is not an initial target because Local CI does not currently support Windows workflow execution locally. The Rust code should avoid unnecessary Unix-only assumptions outside runner execution paths so Windows support can be evaluated later.
 
 ## TypeScript fallback policy
 
@@ -81,7 +81,7 @@ The npm package remains the compatibility install path.
 
 Planned shape:
 
-- `@redwoodjs/agent-ci` keeps the public package name and `agent-ci` bin entry.
+- `local-ci` keeps the public package name and `local-ci` bin entry.
 - The package ships a small JavaScript launcher.
 - The launcher resolves a platform-specific optional package when available.
 - If no platform package is available during the migration window, the launcher can fall back to the TypeScript implementation.
@@ -92,7 +92,7 @@ Each release should attach native binaries and checksums for the supported platf
 
 ### Homebrew
 
-A Homebrew formula should install the macOS binaries from GitHub Releases and include a smoke test such as `agent-ci --help`.
+A Homebrew formula should install the macOS binaries from GitHub Releases and include a smoke test such as `local-ci --help`.
 
 ### Shell installer
 
@@ -108,7 +108,7 @@ A shell installer is optional, but if added it should:
 Every checklist item should define the smallest meaningful test before being marked complete. Examples:
 
 - CLI tasks: Rust unit tests and golden output comparisons.
-- Config tasks: fixture-based environment and `.env.agent-ci` tests.
+- Config tasks: fixture-based environment and `.env.local-ci` tests.
 - Workflow tasks: fixture workflows and smoke workflow parity.
 - DTU tasks: HTTP route tests and runner protocol fixtures.
 - Docker tasks: container config unit tests plus local smoke workflows.

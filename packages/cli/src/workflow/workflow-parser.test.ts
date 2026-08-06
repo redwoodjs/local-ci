@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   parseJobRunsOnLabels,
   parseMergedJobEnv,
+  parseWorkflowContainer,
   parseWorkflowServices,
 } from "./workflow-parser.ts";
 
@@ -60,6 +61,32 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_PASSWORD: secret
+    steps:
+      - run: echo hi
+`.trimStart();
+
+const WORKFLOW_WITH_PRIVATE_IMAGES = `
+name: Private Images
+on: [push]
+env:
+  REGISTRY_NAMESPACE: private-org
+  REGISTRY_USER: workflow-user
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY_USER: \${{ vars.registry_user }}
+    container:
+      image: \${{ vars.registry }}/\${{ github.repository_owner }}/\${{ env.REGISTRY_NAMESPACE }}/ci-image:latest
+      credentials:
+        username: \${{ github.actor }}
+        password: \${{ secrets.CONTAINER_TOKEN }}
+    services:
+      cache:
+        image: \${{ vars.registry }}/\${{ github.repository }}/cache:latest
+        credentials:
+          username: \${{ env.REGISTRY_USER }}-\${{ matrix.registry_user }}
+          password: \${{ secrets.SERVICE_TOKEN }}
     steps:
       - run: echo hi
 `.trimStart();
@@ -164,6 +191,28 @@ describe("parseWorkflowServices", () => {
     expect(pg.options).toBeUndefined();
   });
 
+  it("resolves GitHub, env, matrix, vars, and secret contexts for private services", async () => {
+    const filePath = writeWorkflow(WORKFLOW_WITH_PRIVATE_IMAGES);
+    const services = await parseWorkflowServices(filePath, "test", {
+      secrets: { SERVICE_TOKEN: "service-secret" },
+      matrixContext: { registry_user: "matrix-user" },
+      vars: { registry: "ghcr.io", registry_user: "env-service-user" },
+      githubContext: {
+        repository: "redwoodjs/local-ci",
+        repository_owner: "redwoodjs",
+        actor: "peterp",
+      },
+    });
+
+    expect(services[0]).toMatchObject({
+      image: "ghcr.io/redwoodjs/local-ci/cache:latest",
+      credentials: {
+        username: "env-service-user-matrix-user",
+        password: "service-secret",
+      },
+    });
+  });
+
   it("converts env values to strings", async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oa-svc-test-"));
     const filePath = path.join(tmpDir, "workflow.yml");
@@ -192,6 +241,40 @@ jobs:
     expect(db.env!.PORT).toBe("3306");
     expect(db.env!.SKIP_TZINFO).toBe("1");
     expect(db.env!.DEBUG).toBe("true");
+  });
+});
+
+describe("parseWorkflowContainer", () => {
+  let tmpDir: string;
+
+  afterEach(() => {
+    if (tmpDir) {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it("resolves real GitHub and merged env contexts for private job containers", async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oa-container-test-"));
+    const filePath = path.join(tmpDir, "workflow.yml");
+    fs.writeFileSync(filePath, WORKFLOW_WITH_PRIVATE_IMAGES);
+
+    const container = await parseWorkflowContainer(filePath, "test", {
+      secrets: { CONTAINER_TOKEN: "container-secret" },
+      vars: { registry: "ghcr.io", registry_user: "unused-here" },
+      githubContext: {
+        repository: "redwoodjs/local-ci",
+        repository_owner: "redwoodjs",
+        actor: "peterp",
+      },
+    });
+
+    expect(container).toEqual({
+      image: "ghcr.io/redwoodjs/private-org/ci-image:latest",
+      credentials: {
+        username: "peterp",
+        password: "container-secret",
+      },
+    });
   });
 });
 
@@ -789,7 +872,7 @@ jobs:
       - run: echo ok
 `);
     expect(() =>
-      validateSecrets(filePath, "run", { MY_TOKEN: "abc123" }, "/repo/.env.agent-ci"),
+      validateSecrets(filePath, "run", { MY_TOKEN: "abc123" }, "/repo/.env.local-ci"),
     ).not.toThrow();
   });
 
@@ -803,7 +886,7 @@ jobs:
     steps:
       - run: echo ok
 `);
-    expect(() => validateSecrets(filePath, "run", {}, "/repo/.env.agent-ci")).not.toThrow();
+    expect(() => validateSecrets(filePath, "run", {}, "/repo/.env.local-ci")).not.toThrow();
   });
 
   it("throws listing missing secrets and the secrets file path", () => {
@@ -819,16 +902,16 @@ jobs:
     steps:
       - run: echo deploy
 `);
-    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.agent-ci")).toThrow(
+    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.local-ci")).toThrow(
       /CLOUDFLARE_ACCOUNT_ID=/,
     );
 
-    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.agent-ci")).toThrow(
+    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.local-ci")).toThrow(
       /CLOUDFLARE_API_TOKEN=/,
     );
 
-    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.agent-ci")).toThrow(
-      /\/home\/user\/repo\/.env.agent-ci/,
+    expect(() => validateSecrets(filePath, "deploy", {}, "/home/user/repo/.env.local-ci")).toThrow(
+      /\/home\/user\/repo\/.env.local-ci/,
     );
   });
 
@@ -846,11 +929,11 @@ jobs:
       - run: echo ok
 `);
     expect(() =>
-      validateSecrets(filePath, "run", { PRESENT_SECRET: "value" }, "/repo/.env.agent-ci"),
+      validateSecrets(filePath, "run", { PRESENT_SECRET: "value" }, "/repo/.env.local-ci"),
     ).toThrow(/MISSING_SECRET/);
 
     expect(() =>
-      validateSecrets(filePath, "run", { PRESENT_SECRET: "value" }, "/repo/.env.agent-ci"),
+      validateSecrets(filePath, "run", { PRESENT_SECRET: "value" }, "/repo/.env.local-ci"),
     ).not.toThrow(/PRESENT_SECRET/);
   });
 });

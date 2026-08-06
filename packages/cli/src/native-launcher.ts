@@ -40,15 +40,20 @@ export function nativePackageName(
   arch: string = process.arch,
 ): string | null {
   const suffix = nativePackageSuffix(platform, arch);
-  return suffix ? `@redwoodjs/agent-ci-${suffix}` : null;
+  return suffix ? `@redwoodjs/local-ci-${suffix}` : null;
 }
 
 export function isTypeScriptForced(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.AGENT_CI_FORCE_TYPESCRIPT === "1" || env.AGENT_CI_FORCE_TS === "1";
+  return (
+    env.LOCAL_CI_FORCE_TYPESCRIPT === "1" ||
+    env.LOCAL_CI_FORCE_TS === "1" ||
+    env.AGENT_CI_FORCE_TYPESCRIPT === "1" ||
+    env.AGENT_CI_FORCE_TS === "1"
+  );
 }
 
 export function isRustForced(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.AGENT_CI_FORCE_RUST === "1";
+  return env.LOCAL_CI_FORCE_RUST === "1" || env.AGENT_CI_FORCE_RUST === "1";
 }
 
 export function forcedRustMissingBinaryMessage(
@@ -57,7 +62,7 @@ export function forcedRustMissingBinaryMessage(
 ): string {
   const packageName = nativePackageName(platform, arch);
   const packageHint = packageName ? ` Install ${packageName} or build the Rust binary first.` : "";
-  return `AGENT_CI_FORCE_RUST=1 was set, but no native agent-ci binary is available for ${platform}/${arch}.${packageHint} Unset AGENT_CI_FORCE_RUST to use the TypeScript fallback.`;
+  return `LOCAL_CI_FORCE_RUST=1 was set, but no native local-ci binary is available for ${platform}/${arch}.${packageHint} Unset LOCAL_CI_FORCE_RUST to use the TypeScript fallback.`;
 }
 
 export function resolveNativeBinary(opts: NativeResolutionOptions = {}): string | null {
@@ -69,14 +74,14 @@ export function resolveNativeBinary(opts: NativeResolutionOptions = {}): string 
   const platform = opts.platform ?? process.platform;
   const arch = opts.arch ?? process.arch;
   const suffix = nativePackageSuffix(platform, arch);
-  const packageName = suffix ? `@redwoodjs/agent-ci-${suffix}` : null;
+  const packageName = suffix ? `@redwoodjs/local-ci-${suffix}` : null;
   const existsSync = opts.existsSync ?? fs.existsSync;
   const resolvePackageJson = opts.resolvePackageJson ?? ((specifier) => require.resolve(specifier));
 
   if (packageName) {
     try {
       const packageJson = resolvePackageJson(`${packageName}/package.json`);
-      const candidate = path.join(path.dirname(packageJson), "bin", "agent-ci");
+      const candidate = path.join(path.dirname(packageJson), "bin", "local-ci");
       if (existsSync(candidate)) {
         return candidate;
       }
@@ -87,7 +92,7 @@ export function resolveNativeBinary(opts: NativeResolutionOptions = {}): string 
 
   if (suffix) {
     const launcherDir = opts.launcherDir ?? path.dirname(fileURLToPath(import.meta.url));
-    const bundledCandidate = path.resolve(launcherDir, "..", "native", suffix, "agent-ci");
+    const bundledCandidate = path.resolve(launcherDir, "..", "native", suffix, "local-ci");
     if (existsSync(bundledCandidate)) {
       return bundledCandidate;
     }
@@ -111,7 +116,7 @@ export async function runNativeOrTypeScript(args = process.argv.slice(2)): Promi
   await new Promise<void>((resolve) => {
     const child = spawn(nativeBinary, args, { stdio: "inherit", env: process.env });
     child.on("error", (err) => {
-      console.error(`Failed to launch native agent-ci binary at ${nativeBinary}: ${err.message}`);
+      console.error(`Failed to launch native local-ci binary at ${nativeBinary}: ${err.message}`);
       process.exitCode = 1;
       resolve();
     });

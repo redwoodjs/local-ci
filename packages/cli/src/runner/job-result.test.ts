@@ -82,7 +82,7 @@ describe("createFailedJobResult", () => {
     expect(result.succeeded).toBe(false);
     expect(result.taskId).toBe("setup_job");
     expect(result.workflow).toBe("workflow.yml");
-    expect(result.name).toBe("agent-ci-error-setup_job");
+    expect(result.name).toBe("local-ci-error-setup_job");
     expect(result.failedStep).toBe("[Job startup failed]");
     expect(result.durationMs).toBe(0);
     expect(result.debugLogPath).toBe("");

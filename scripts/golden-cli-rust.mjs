@@ -31,11 +31,11 @@ function assertEqual(label, left, right) {
   }
 }
 
-runRequired("pnpm", ["--filter", "@redwoodjs/agent-ci", "build"]);
-runRequired("cargo", ["build", "-p", "agent-ci"]);
+runRequired("pnpm", ["--filter", "run-local-ci", "build"]);
+runRequired("cargo", ["build", "-p", "local-ci"]);
 
 const ts = ["node", "packages/cli/dist/native-launcher.js"];
-const rust = [path.join("target", "debug", "agent-ci")];
+const rust = [path.join("target", "debug", "local-ci")];
 const cases = [
   { name: "help output", args: ["--help"] },
   { name: "no-args usage", args: [] },
@@ -47,7 +47,7 @@ const cases = [
 
 for (const testCase of cases) {
   const tsResult = capture(ts[0], [...ts.slice(1), ...testCase.args], {
-    AGENT_CI_FORCE_TYPESCRIPT: "1",
+    LOCAL_CI_FORCE_TYPESCRIPT: "1",
   });
   const rustResult = capture(rust[0], testCase.args);
   assertEqual(`${testCase.name} exit status`, tsResult.status, rustResult.status);

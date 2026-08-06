@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import Docker from "dockerode";
 import type { DockerSocket } from "../docker/docker-socket.ts";
 
-// End-to-end reproduction for #322: when AGENT_CI_DOCKER_HOST is an ssh:// URI,
+// End-to-end reproduction for #322: when LOCAL_CI_DOCKER_HOST is an ssh:// URI,
 // the Docker client must be wired so docker-modem ends up with the parsed
 // hostname (and the username/port carried separately), not the full raw URI.
 //

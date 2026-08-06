@@ -3,7 +3,7 @@ description: "Composite action referenced via `uses: ./.github/actions/smoke-loc
 
 inputs:
   tag:
-    description: "Opaque string written to /tmp/agent-ci-smoke-local-action so the caller can verify the action ran."
+    description: "Opaque string written to /tmp/local-ci-smoke-local-action so the caller can verify the action ran."
     required: true
 
 runs:
@@ -11,5 +11,5 @@ runs:
   steps:
     - shell: bash
       run: |
-        echo "tag=${{ inputs.tag }}" > /tmp/agent-ci-smoke-local-action
+        echo "tag=${{ inputs.tag }}" > /tmp/local-ci-smoke-local-action
         echo "local-action ran with tag=${{ inputs.tag }}"

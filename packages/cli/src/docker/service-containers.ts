@@ -1,5 +1,6 @@
 import Docker from "dockerode";
 import type { WorkflowService } from "../workflow/workflow-parser.ts";
+import { ensureImagePulled } from "./image-pull.ts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -101,7 +102,7 @@ export async function startServiceContainers(
   runnerName: string,
   emit?: (line: string) => void,
 ): Promise<ServiceContext> {
-  const networkName = `agent-ci-net-${runnerName}`;
+  const networkName = `local-ci-net-${runnerName}`;
   const containerIds: string[] = [];
   const portForwards: string[] = [];
 
@@ -138,32 +139,16 @@ export async function startServiceContainers(
       // doesn't exist — fine
     }
 
-    // Pull the image if missing
-    try {
-      await docker.getImage(svc.image).inspect();
-    } catch {
-      emit?.(`  📦 Pulling image ${svc.image}...`);
-      await new Promise<void>((resolve, reject) => {
-        docker.pull(svc.image, (err: any, stream: any) => {
-          if (err) {
-            return reject(err);
-          }
-          docker.modem.followProgress(stream, (err: any) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        });
-      });
-    }
+    await ensureImagePulled(docker, svc.image, {
+      credentials: svc.credentials,
+      onPullStart: () => emit?.(`  📦 Pulling image ${svc.image}...`),
+    });
 
     const container = await docker.createContainer({
       Image: svc.image,
       name: containerName,
       Labels: {
-        "agent-ci.pid": String(process.pid),
+        "local-ci.pid": String(process.pid),
       },
       Env: envArr,
       ExposedPorts: exposedPorts,

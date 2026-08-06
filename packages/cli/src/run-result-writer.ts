@@ -47,45 +47,45 @@ export interface RunResultInput {
 }
 
 export type StateDirEnv = Partial<
-  Record<"AGENT_CI_STATE_DIR" | "AGENT_CI_LOG_DIR" | "XDG_STATE_HOME" | "HOME", string>
+  Record<"LOCAL_CI_STATE_DIR" | "LOCAL_CI_LOG_DIR" | "XDG_STATE_HOME" | "HOME", string>
 >;
 
 /**
  * Resolve the root directory for per-branch run-result JSON files.
  *
  * Priority:
- *   1. `AGENT_CI_STATE_DIR` override (used as-is)
- *   2. `$XDG_STATE_HOME/agent-ci` on Linux (falling back to `~/.local/state/agent-ci`)
- *   3. `~/Library/Application Support/agent-ci` on macOS
- *   4. Elsewhere: `~/.local/state/agent-ci`
+ *   1. `LOCAL_CI_STATE_DIR` override (used as-is)
+ *   2. `$XDG_STATE_HOME/local-ci` on Linux (falling back to `~/.local/state/local-ci`)
+ *   3. `~/Library/Application Support/local-ci` on macOS
+ *   4. Elsewhere: `~/.local/state/local-ci`
  */
 export function resolveStateDir(
   env: StateDirEnv = process.env as StateDirEnv,
   platform: NodeJS.Platform = process.platform,
 ): string {
-  if (env.AGENT_CI_STATE_DIR) {
-    return env.AGENT_CI_STATE_DIR;
+  if (env.LOCAL_CI_STATE_DIR) {
+    return env.LOCAL_CI_STATE_DIR;
   }
   const home = env.HOME ?? os.homedir();
   if (platform === "darwin") {
-    return path.join(home, "Library", "Application Support", "agent-ci");
+    return path.join(home, "Library", "Application Support", "local-ci");
   }
   const xdgState = env.XDG_STATE_HOME || path.join(home, ".local", "state");
-  return path.join(xdgState, "agent-ci");
+  return path.join(xdgState, "local-ci");
 }
 
 /**
  * Resolve the root directory for per-run log artifacts (logs, timeline, metadata).
  * Defaults to `<stateDir>/logs/` so log lifetime is co-managed with the run-result
- * JSON that references them. `AGENT_CI_LOG_DIR` overrides it for users who want
+ * JSON that references them. `LOCAL_CI_LOG_DIR` overrides it for users who want
  * logs in a cache-shaped location.
  */
 export function resolveLogsDir(
   env: StateDirEnv = process.env as StateDirEnv,
   platform: NodeJS.Platform = process.platform,
 ): string {
-  if (env.AGENT_CI_LOG_DIR) {
-    return env.AGENT_CI_LOG_DIR;
+  if (env.LOCAL_CI_LOG_DIR) {
+    return env.LOCAL_CI_LOG_DIR;
   }
   return path.join(resolveStateDir(env, platform), "logs");
 }

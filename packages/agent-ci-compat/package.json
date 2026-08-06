@@ -1,0 +1,33 @@
+{
+  "name": "@redwoodjs/agent-ci",
+  "version": "0.17.1",
+  "description": "Compatibility package for local-ci.",
+  "license": "FSL-1.1-MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/redwoodjs/local-ci.git",
+    "directory": "packages/agent-ci-compat"
+  },
+  "bin": {
+    "agent-ci": "bin/agent-ci.mjs"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').chmodSync('bin/agent-ci.mjs', 0o755)\"",
+    "typecheck": "node --check bin/agent-ci.mjs",
+    "test": "node --check bin/agent-ci.mjs"
+  },
+  "dependencies": {
+    "run-local-ci": "workspace:*"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

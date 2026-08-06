@@ -71,7 +71,7 @@ Docker daemon/container CPU and memory are not included.
 Options:
   -n, --iterations <N>       Runs per implementation/workflow (default: 1)
   -w, --workflow <path>      Workflow to benchmark; repeat to select multiple
-  -j, --jobs <N>             agent-ci --jobs value for both implementations (default: 2)
+  -j, --jobs <N>             local-ci --jobs value for both implementations (default: 2)
       --no-build             Skip building TS dist and Rust release binary
   -o, --output <path>        Write markdown report to a file
       --json                 Emit JSON instead of markdown
@@ -103,7 +103,7 @@ function runRequired(command, args) {
 
 function timeCommand(command, args, env) {
   const metricsFile = path.join(
-    fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-bench-time-")),
+    fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-bench-time-")),
     "time.txt",
   );
   const platform = process.platform;
@@ -179,7 +179,7 @@ function runBenchmark({ implementation, command, args, workflow, iteration, jobs
   fs.mkdirSync(workDir, { recursive: true });
   const env = {
     ...process.env,
-    AGENT_CI_WORKING_DIR: workDir,
+    LOCAL_CI_WORKING_DIR: workDir,
   };
   const result = timeCommand(
     command,
@@ -239,11 +239,11 @@ function average(values) {
 function renderMarkdown(results) {
   const rows = summarize(results);
   const lines = [
-    "# Agent CI smoke benchmark",
+    "# Local CI smoke benchmark",
     "",
     `Generated: ${new Date().toISOString()}`,
     "",
-    "> Metrics are collected with `/usr/bin/time` around the host orchestrator process tree. Docker daemon and container CPU/memory are not included, so this compares Agent CI orchestration overhead rather than total machine load.",
+    "> Metrics are collected with `/usr/bin/time` around the host orchestrator process tree. Docker daemon and container CPU/memory are not included, so this compares Local CI orchestration overhead rather than total machine load.",
     "",
     "| Impl | Workflow | Runs | Failures | Wall avg | CPU avg | User avg | Sys avg | Max RSS |",
     "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
@@ -300,11 +300,11 @@ if (!fs.existsSync("/usr/bin/time")) {
 }
 
 if (!options.noBuild) {
-  runRequired("pnpm", ["--filter", "@redwoodjs/agent-ci...", "-r", "build"]);
-  runRequired("cargo", ["build", "-p", "agent-ci", "--release"]);
+  runRequired("pnpm", ["--filter", "run-local-ci...", "-r", "build"]);
+  runRequired("cargo", ["build", "-p", "local-ci", "--release"]);
 }
 
-const rootWorkDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-smoke-bench-"));
+const rootWorkDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-smoke-bench-"));
 const implementations = [
   {
     implementation: "typescript",
@@ -313,7 +313,7 @@ const implementations = [
   },
   {
     implementation: "rust",
-    command: path.join(root, "target/release/agent-ci"),
+    command: path.join(root, "target/release/local-ci"),
     args: [],
   },
 ];

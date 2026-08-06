@@ -21,7 +21,7 @@ describe("DEFAULT_WORKING_DIR", () => {
 
     const { DEFAULT_WORKING_DIR } = await importFresh();
 
-    expect(DEFAULT_WORKING_DIR).toMatch(/^\/.*\/agent-ci\//);
+    expect(DEFAULT_WORKING_DIR).toMatch(/^\/.*\/local-ci\//);
     expect(DEFAULT_WORKING_DIR).not.toContain(".cache");
   });
 
@@ -31,7 +31,7 @@ describe("DEFAULT_WORKING_DIR", () => {
 
     const { DEFAULT_WORKING_DIR } = await importFresh();
 
-    expect(DEFAULT_WORKING_DIR).toMatch(/^\/.*\/agent-ci\//);
+    expect(DEFAULT_WORKING_DIR).toMatch(/^\/.*\/local-ci\//);
     expect(DEFAULT_WORKING_DIR).not.toContain(".cache");
   });
 
@@ -45,7 +45,7 @@ describe("DEFAULT_WORKING_DIR", () => {
 
     const { DEFAULT_WORKING_DIR } = await importFresh();
 
-    expect(DEFAULT_WORKING_DIR).toContain(path.join(".cache", "agent-ci"));
+    expect(DEFAULT_WORKING_DIR).toContain(path.join(".cache", "local-ci"));
   });
 
   it("respects XDG_CACHE_HOME on Linux + Docker Desktop", async () => {
@@ -58,7 +58,7 @@ describe("DEFAULT_WORKING_DIR", () => {
 
     const { DEFAULT_WORKING_DIR } = await importFresh();
 
-    expect(DEFAULT_WORKING_DIR).toMatch(/^\/custom\/cache\/agent-ci\//);
+    expect(DEFAULT_WORKING_DIR).toMatch(/^\/custom\/cache\/local-ci\//);
   });
 
   it("uses project-relative dir inside Docker container", async () => {
@@ -68,7 +68,7 @@ describe("DEFAULT_WORKING_DIR", () => {
 
     const { DEFAULT_WORKING_DIR } = await importFresh();
 
-    expect(DEFAULT_WORKING_DIR).toContain(".agent-ci");
+    expect(DEFAULT_WORKING_DIR).toContain(".local-ci");
   });
 
   it("Docker-inside-Docker takes priority over Linux + Docker Desktop", async () => {
@@ -82,8 +82,8 @@ describe("DEFAULT_WORKING_DIR", () => {
 
     const { DEFAULT_WORKING_DIR } = await importFresh();
 
-    // Inside Docker wins — uses project-relative .agent-ci, not XDG cache
-    expect(DEFAULT_WORKING_DIR).toContain(".agent-ci");
+    // Inside Docker wins — uses project-relative .local-ci, not XDG cache
+    expect(DEFAULT_WORKING_DIR).toContain(".local-ci");
     expect(DEFAULT_WORKING_DIR).not.toContain(".cache");
   });
 

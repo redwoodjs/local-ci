@@ -14,7 +14,7 @@ export interface PruneOptions {
   stateDir?: string;
   retainDays?: number;
   retainRuns?: number;
-  /** Bypass the throttle and the AGENT_CI_LOG_PRUNE=0 disable. Used by `agent-ci clean`. */
+  /** Bypass the throttle and the LOCAL_CI_LOG_PRUNE=0 disable. Used by `local-ci clean`. */
   force?: boolean;
   env?: NodeJS.ProcessEnv;
   /** Override "now" for tests. */
@@ -38,7 +38,7 @@ const STAMP_BASENAME = ".prune.stamp";
  * Policy: never delete a run dir referenced by any branch's checks JSON
  * (those are "current" results consumers might still be reading), then
  * keep the newest `retainRuns` by mtime, then drop anything older than
- * `retainDays` days. Runs opportunistically on `agent-ci run` startup.
+ * `retainDays` days. Runs opportunistically on `local-ci run` startup.
  *
  * Never throws — a failed prune must not fail the run.
  */
@@ -46,16 +46,16 @@ export function pruneLogs(opts: PruneOptions = {}): PruneResult {
   const env = opts.env ?? process.env;
   const force = opts.force ?? false;
 
-  if (!force && env.AGENT_CI_LOG_PRUNE === "0") {
+  if (!force && env.LOCAL_CI_LOG_PRUNE === "0") {
     return { skipped: true, reason: "disabled", removed: [], kept: 0, protected: [] };
   }
 
   const logsDir = opts.logsDir ?? resolveLogsDir(env as Parameters<typeof resolveLogsDir>[0]);
   const stateDir = opts.stateDir ?? resolveStateDir(env as Parameters<typeof resolveStateDir>[0]);
   const retainDays =
-    opts.retainDays ?? readPositiveInt(env.AGENT_CI_LOG_RETAIN_DAYS) ?? DEFAULT_RETAIN_DAYS;
+    opts.retainDays ?? readPositiveInt(env.LOCAL_CI_LOG_RETAIN_DAYS) ?? DEFAULT_RETAIN_DAYS;
   const retainRuns =
-    opts.retainRuns ?? readPositiveInt(env.AGENT_CI_LOG_RETAIN_RUNS) ?? DEFAULT_RETAIN_RUNS;
+    opts.retainRuns ?? readPositiveInt(env.LOCAL_CI_LOG_RETAIN_RUNS) ?? DEFAULT_RETAIN_RUNS;
   const now = opts.now ? opts.now() : Date.now();
 
   if (!fs.existsSync(logsDir)) {
@@ -229,8 +229,8 @@ function maybeAdd(p: unknown, resolvedLogsDir: string, sink: Set<string>): void 
     return;
   }
   // The run-name is the directory immediately under logsDir. e.g.
-  //   /<logsDir>/agent-ci-redwoodjssdk-15/output.log → "agent-ci-redwoodjssdk-15"
-  //   /<logsDir>/agent-ci-redwoodjssdk-15/steps/2.log → "agent-ci-redwoodjssdk-15"
+  //   /<logsDir>/local-ci-redwoodjssdk-15/output.log → "local-ci-redwoodjssdk-15"
+  //   /<logsDir>/local-ci-redwoodjssdk-15/steps/2.log → "local-ci-redwoodjssdk-15"
   const resolved = path.resolve(p);
   const rel = path.relative(resolvedLogsDir, resolved);
   if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) {

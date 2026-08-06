@@ -18,7 +18,7 @@
 #
 # If Docker does not expose /var/run/docker.sock, pass the active context:
 #
-#   AGENT_CI_DOCKER_HOST="$(docker context inspect --format '{{.Endpoints.docker.Host}}')" \
+#   LOCAL_CI_DOCKER_HOST="$(docker context inspect --format '{{.Endpoints.docker.Host}}')" \
 #     ./scripts/repro-378.sh
 set -euo pipefail
 
@@ -30,7 +30,7 @@ while [ -L "$SOURCE" ]; do
 done
 SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-AGENT_CI="$REPO_ROOT/scripts/agent-ci-dev.sh"
+LOCAL_CI="$REPO_ROOT/scripts/local-ci-dev.sh"
 
 if [ -f /.dockerenv ]; then
   # Nested Docker runners cannot bind-mount the outer container's /tmp into
@@ -40,7 +40,7 @@ else
   TMP="$(mktemp -d)"
 fi
 PROJECT="$TMP/project"
-WORK_DIR="$TMP/agent-ci-work"
+WORK_DIR="$TMP/local-ci-work"
 trap 'rm -rf "$TMP"' EXIT
 
 mkdir -p "$PROJECT/.github/workflows" "$PROJECT/slow-dependency"
@@ -178,9 +178,9 @@ printf 'warmup\n' > "$PROJECT/repro-mode.txt"
 )
 
 export GITHUB_REPO="repro/issue-378"
-export AGENT_CI_WORKING_DIR="$WORK_DIR"
+export LOCAL_CI_WORKING_DIR="$WORK_DIR"
 
-run_agent_ci() {
+run_local_ci() {
   local jobs="$1" output="$2"
   local prewarm_args=()
   if [ "${EXPECT_BUG:-0}" != "1" ]; then
@@ -189,12 +189,12 @@ run_agent_ci() {
       "$PROJECT/.github/workflows/repro.yml:install-a:install"
     )
   fi
-  # Start the dev wrapper from its own repo so Corepack selects Agent CI's
+  # Start the dev wrapper from its own repo so Corepack selects Local CI's
   # pinned pnpm version. The absolute workflow path still selects the fixture
   # as the repository under test.
   (
     cd "$REPO_ROOT"
-    "$AGENT_CI" run \
+    "$LOCAL_CI" run \
       --quiet \
       --jobs "$jobs" \
       --workflow "$PROJECT/.github/workflows/repro.yml" \
@@ -205,7 +205,7 @@ run_agent_ci() {
 
 echo "▶ Seeding a valid warm cache with serial jobs..."
 set +e
-run_agent_ci 1 "$TMP/warmup.log"
+run_local_ci 1 "$TMP/warmup.log"
 WARMUP_STATUS=$?
 set -e
 if [ "$WARMUP_STATUS" -ne 0 ]; then
@@ -226,7 +226,7 @@ echo "  incomplete package: $LEGACY_WARM_MODULES/incomplete-package"
 echo "▶ Running two independent npm ci jobs in parallel..."
 
 set +e
-run_agent_ci 2 "$TMP/race.log"
+run_local_ci 2 "$TMP/race.log"
 RACE_STATUS=$?
 set -e
 
@@ -234,7 +234,7 @@ echo
 echo "▶ parallel run exit code: $RACE_STATUS"
 if [ "${EXPECT_BUG:-0}" = "1" ]; then
   if grep -q "REPRO_378_OVERLAP" "$TMP/race.log"; then
-    echo "✓ REPRODUCED: Agent CI accepted the partial cache and shared node_modules."
+    echo "✓ REPRODUCED: Local CI accepted the partial cache and shared node_modules."
     exit 0
   fi
   echo "✗ BUG NOT REPRODUCED"

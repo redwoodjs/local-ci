@@ -1,6 +1,6 @@
 # Skill evals
 
-Measure whether `skills/agent-ci/SKILL.md` (and variants) cause agents to do the right thing in realistic CI-failure scenarios.
+Measure whether `skills/local-ci/SKILL.md` (and variants) cause agents to do the right thing in realistic CI-failure scenarios.
 
 ## What it is
 
@@ -15,7 +15,7 @@ A matrix: `variants × fixtures → scorecard`.
 ## v1 scope
 
 - **Agents:** Claude Code only (`runners/claude-code.mjs`).
-- **Ground-truth CI check:** the fixture ships a **mocked `agent-ci`** (`fake-agent-ci/`) that counts violations in source files and emits canned eslint-style output — no Docker, runs in seconds. The agent's edits change the stub's output on the next invocation, closing the fix/retry loop. Swap in a real `@redwoodjs/agent-ci` dependency later if fidelity matters.
+- **Ground-truth CI check:** the fixture ships a **mocked `local-ci`** (`fake-local-ci/`) that counts violations in source files and emits canned eslint-style output — no Docker, runs in seconds. The agent's edits change the stub's output on the next invocation, closing the fix/retry loop. Swap in a real `local-ci` dependency later if fidelity matters.
 - **Scoring:** regex-only. Add an LLM-judge pass later for semantic checks like "did it root-cause vs. suppress."
 
 ## Run
@@ -59,8 +59,8 @@ experiments/skill-evals/
             ├── package.json
             ├── .eslintrc.json
             ├── src/index.js           # 18 curly violations
-            └── fake-agent-ci/         # mock CLI
-                └── bin/agent-ci.mjs
+            └── fake-local-ci/         # mock CLI
+                └── bin/local-ci.mjs
 ```
 
 ## Adding a fixture

@@ -23,7 +23,7 @@ export async function prepareWorkspace(opts: PrepareWorkspaceOpts): Promise<void
 
   // Resolve repo root — needed for both archive and rsync paths.
   // Derive from the workflow path (which lives inside the target repo) so we copy
-  // from the correct repo, not from the CLI's CWD (which is agent-ci).
+  // from the correct repo, not from the CLI's CWD (which is local-ci).
   let repoRoot: string | undefined;
   if (workflowPath) {
     repoRoot = findRepoRoot(workflowPath);
@@ -63,8 +63,8 @@ async function initFakeGitRepo(dir: string, githubRepo: string): Promise<void> {
   // The remote URL must exactly match what actions/checkout computes via URL.origin.
   // Node.js URL.origin strips the default port (80), so we must NOT include :80.
   await execAsync(`git init`, opts);
-  await execAsync(`git config user.name "agent-ci"`, opts);
-  await execAsync(`git config user.email "agent-ci@example.com"`, opts);
+  await execAsync(`git config user.name "local-ci"`, opts);
+  await execAsync(`git config user.email "local-ci@example.com"`, opts);
   await execAsync(`git remote add origin http://127.0.0.1/${githubRepo}`, opts);
   await execAsync(`git add . && git commit -m "workspace" || true`, opts);
   // Create main and refs/remotes/origin/main pointing to this commit

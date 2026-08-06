@@ -25,7 +25,7 @@ export interface ImageResolution {
 }
 
 export function resolveMacosVmImage(labels: string[]): ImageResolution {
-  const override = process.env.AGENT_CI_MACOS_VM_IMAGE?.trim();
+  const override = process.env.LOCAL_CI_MACOS_VM_IMAGE?.trim();
   if (override) {
     return { image: override, exact: true, matchedLabel: null };
   }

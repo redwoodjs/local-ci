@@ -22,7 +22,7 @@ export const Home = () => {
           </span>
 
           <a
-            href="https://github.com/redwoodjs/agent-ci"
+            href="https://github.com/redwoodjs/local-ci"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-[#161b18] border border-[#3f6f5e] text-[#9bc5b3] hover:bg-[#243c34] hover:text-[#e0eee5] transition-all rounded-sm font-mono text-xs md:text-sm uppercase tracking-wider"
@@ -45,7 +45,7 @@ export const Home = () => {
               Blog
             </a>
             <a
-              href="https://github.com/redwoodjs/agent-ci"
+              href="https://github.com/redwoodjs/local-ci"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#e0eee5] transition-colors"
@@ -91,7 +91,7 @@ export const Home = () => {
                   <p className="text-[#c2ddd0] text-sm leading-relaxed">
                     By bind-mounting your local{" "}
                     <code className="text-[#71a792] bg-[#12211c] px-1 rounded">node_modules</code>{" "}
-                    and tool caches, Agent CI starts in ~0ms. Your first run warms the cache;
+                    and tool caches, Local CI starts in ~0ms. Your first run warms the cache;
                     subsequent runs are instant.
                   </p>
                 </div>
@@ -118,7 +118,7 @@ export const Home = () => {
                     Advantage
                   </h3>
                   <p className="text-[#c2ddd0] text-sm leading-relaxed">
-                    Agent CI pauses on failure. The container stays alive with all state intact. Fix
+                    Local CI pauses on failure. The container stays alive with all state intact. Fix
                     the issue on your host, then retry just the failed step.
                   </p>
                 </div>
@@ -145,7 +145,7 @@ export const Home = () => {
                     Advantage
                   </h3>
                   <p className="text-[#c2ddd0] text-sm leading-relaxed">
-                    Agent CI emulates the server-side API surface and feeds jobs to the unmodified,
+                    Local CI emulates the server-side API surface and feeds jobs to the unmodified,
                     official GitHub Actions runner binary.
                   </p>
                 </div>
@@ -177,7 +177,7 @@ export const Home = () => {
                       Other local runners
                     </th>
                     <th className="py-4 px-6 font-mono text-xs text-[#528b76] font-bold uppercase tracking-wider bg-[#161b18]">
-                      Agent CI
+                      Local CI
                     </th>
                   </tr>
                 </thead>
@@ -270,7 +270,7 @@ export const Home = () => {
                       <span className="text-[#9bc5b3]">{row.others}</span>
                     </div>
                     <div className="px-4 py-3 flex justify-between text-sm bg-[#161b18] border-t border-[#3f6f5e]">
-                      <span className="text-[#528b76] font-bold">Agent CI</span>
+                      <span className="text-[#528b76] font-bold">Local CI</span>
                       <span className="text-[#e0eee5] font-bold">{row.aci}</span>
                     </div>
                   </div>
@@ -389,7 +389,7 @@ export const Home = () => {
               <Panel title="x.com/penberg" className="bg-[#12211c]">
                 <QuoteIcon className="text-[#34594c] mb-4" size={32} />
                 <p className="text-[#e0eee5] text-xl leading-relaxed mb-6 font-serif">
-                  "You can run Github actions workflows fully locally with Agent CI. Such a crazy
+                  "You can run Github actions workflows fully locally with Local CI. Such a crazy
                   good unlock for coding agents!"
                 </p>
                 <div className="flex items-center gap-3">
@@ -460,7 +460,7 @@ export const Home = () => {
                   1. Run
                 </h4>
                 <Terminal
-                  code={`# Run a specific workflow\nnpx @redwoodjs/agent-ci run --workflow .github/workflows/ci.yml\n\n# Run all relevant workflows for current branch\nnpx @redwoodjs/agent-ci run --all`}
+                  code={`# Run a specific workflow\nnpx run-local-ci run --workflow .github/workflows/ci.yml\n\n# Run all relevant workflows for current branch\nnpx run-local-ci run --all`}
                   language="bash"
                   title="Terminal"
                 />
@@ -471,7 +471,7 @@ export const Home = () => {
                   2. Retry
                 </h4>
                 <Terminal
-                  code="npx @redwoodjs/agent-ci retry --name <runner-name>"
+                  code="npx run-local-ci retry --name <runner-name>"
                   language="bash"
                   title="Terminal"
                 />
@@ -499,7 +499,7 @@ export const Home = () => {
             <Terminal
               title="Terminal"
               language="bash"
-              code="npx skills add redwoodjs/agent-ci --skill agent-ci"
+              code="npx skills add redwoodjs/local-ci --skill local-ci"
             />
 
             <p className="text-[#9bc5b3] mt-6 mb-6 leading-relaxed">
@@ -521,17 +521,17 @@ export const Home = () => {
             <Terminal
               title="Agent Instructions"
               language="markdown"
-              code={`## CI\n\nInstall the agent-ci skill (one-time setup):\n\n\`\`\`bash\nnpx skills add redwoodjs/agent-ci --skill agent-ci\n\`\`\`\n\nBefore completing any work, run the \`agent-ci\` skill to validate\nyour changes locally. If it fails, fix the issue and re-run.\nDo not report work as done until it passes.`}
+              code={`## CI\n\nInstall the local-ci skill (one-time setup):\n\n\`\`\`bash\nnpx skills add redwoodjs/local-ci --skill local-ci\n\`\`\`\n\nBefore completing any work, run the \`local-ci\` skill to validate\nyour changes locally. If it fails, fix the issue and re-run.\nDo not report work as done until it passes.`}
             />
 
             <p className="text-[#9bc5b3] mt-6 leading-relaxed">
-              <strong className="text-[#e0eee5]">Claude Code:</strong> Agent CI also ships a{" "}
+              <strong className="text-[#e0eee5]">Claude Code:</strong> Local CI also ships a{" "}
               <code className="bg-[#161b18] border border-[#2b483e] px-1.5 py-0.5 rounded text-[#c2ddd0] font-mono text-sm">
                 /validate
               </code>{" "}
               skill. Copy{" "}
               <a
-                href="https://github.com/redwoodjs/agent-ci/blob/main/.claude/commands/validate.md"
+                href="https://github.com/redwoodjs/local-ci/blob/main/.claude/commands/validate.md"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#9bc5b3] hover:text-[#e0eee5] transition-colors underline decoration-[#34594c] underline-offset-4"

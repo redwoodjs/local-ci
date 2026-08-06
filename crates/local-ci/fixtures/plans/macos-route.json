@@ -1,0 +1,19 @@
+{
+  "workflow": "macos-route.yml",
+  "plan": {
+    "jobs": [
+      {
+        "id": "ios",
+        "runnerName": "local-ci-1-j1",
+        "target": "macos:macos-14",
+        "needs": [],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      }
+    ],
+    "schedule": [["ios"]]
+  }
+}

@@ -78,7 +78,7 @@ jobs:
 
       - name: Build release binary
         if: ${{ matrix.target != '' }}
-        run: cargo build --release -p agent-ci --target ${{ matrix.target }}
+        run: cargo build --release -p local-ci --target ${{ matrix.target }}
 
       - name: Stage binary
         if: ${{ matrix.target != '' }}
@@ -86,12 +86,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist/${{ matrix.name }}
-          cp target/${{ matrix.target }}/release/agent-ci dist/${{ matrix.name }}/agent-ci
-          chmod +x dist/${{ matrix.name }}/agent-ci
+          cp target/${{ matrix.target }}/release/local-ci dist/${{ matrix.name }}/local-ci
+          chmod +x dist/${{ matrix.name }}/local-ci
 
       - name: Ad-hoc sign macOS binary
         if: ${{ matrix.target != '' && startsWith(matrix.name, 'macos-') }}
-        run: codesign --force --sign - dist/${{ matrix.name }}/agent-ci
+        run: codesign --force --sign - dist/${{ matrix.name }}/local-ci
 
       - name: Package archive and checksum
         if: ${{ matrix.target != '' }}
@@ -99,8 +99,8 @@ jobs:
         run: |
           set -euo pipefail
           version="${GITHUB_REF_NAME:-dev}"
-          archive="agent-ci-${version}-${{ matrix.name }}.tar.gz"
-          tar -C dist/${{ matrix.name }} -czf "dist/${archive}" agent-ci
+          archive="local-ci-${version}-${{ matrix.name }}.tar.gz"
+          tar -C dist/${{ matrix.name }} -czf "dist/${archive}" local-ci
           (cd dist && shasum -a 256 "${archive}" > "${archive}.sha256")
           echo "archive=${archive}" >> "$GITHUB_ENV"
 
@@ -108,7 +108,7 @@ jobs:
         if: ${{ matrix.target != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: agent-ci-${{ matrix.name }}
+          name: local-ci-${{ matrix.name }}
           path: |
             dist/${{ env.archive }}
             dist/${{ env.archive }}.sha256

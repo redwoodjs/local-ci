@@ -51,7 +51,7 @@ describe("loadVarFiles", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-vars-test-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-vars-test-"));
   });
 
   afterEach(() => {

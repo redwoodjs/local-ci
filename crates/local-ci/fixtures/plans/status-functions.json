@@ -1,0 +1,30 @@
+{
+  "workflow": "status-functions.yml",
+  "plan": {
+    "jobs": [
+      {
+        "id": "cleanup",
+        "runnerName": "local-ci-1-j1",
+        "target": "linux:ubuntu-latest",
+        "needs": ["first"],
+        "if": "${{ always() }}",
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      },
+      {
+        "id": "first",
+        "runnerName": "local-ci-1-j2",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": [],
+        "container": null
+      }
+    ],
+    "schedule": [["first"], ["cleanup"]]
+  }
+}

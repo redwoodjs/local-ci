@@ -1,7 +1,7 @@
 # ts-runner — Implementation Plan
 
 TypeScript replacement for the official GitHub Actions runner binary.
-Eliminates Docker and the .NET runtime from agent-ci's stack.
+Eliminates Docker and the .NET runtime from local-ci's stack.
 
 ---
 
@@ -127,27 +127,27 @@ Execute `uses:` steps that reference composite actions (`runs.using: composite`)
 
 ---
 
-## Phase 4: Integration with agent-ci CLI
+## Phase 4: Integration with local-ci CLI
 
-Wire ts-runner as an alternative backend in the existing agent-ci CLI,
+Wire ts-runner as an alternative backend in the existing local-ci CLI,
 alongside the current Docker+official-runner path.
 
 ### Tasks
 
 - [ ] **CLI flag** — `--runner ts` or `--no-docker` to select ts-runner
-- [ ] **Adapter layer** — ts-runner's `runWorkflow()` returns `WorkflowResult`, which needs to map to agent-ci's `JobResult` format for reporting
+- [ ] **Adapter layer** — ts-runner's `runWorkflow()` returns `WorkflowResult`, which needs to map to local-ci's `JobResult` format for reporting
 - [ ] **Run state integration** — Feed ts-runner events into `RunStateStore` so the existing TUI/reporter works
 - [ ] **Pause-on-failure** — Port the pause/retry mechanism:
   - On step failure, wait for signal (file or IPC)
-  - `agent-ci retry` syncs workspace and writes retry signal
+  - `local-ci retry` syncs workspace and writes retry signal
   - Step re-executes
-- [ ] **Secrets** — Pass secrets from `.agent-ci.secrets` file into expression context
+- [ ] **Secrets** — Pass secrets from `.local-ci.secrets` file into expression context
 - [ ] **Warm module caching** — ts-runner doesn't need Docker bind mounts, but should still benefit from npm/pnpm cache dirs
 - [ ] **Multi-workflow orchestration** — `--all` flag should work with ts-runner, running relevant workflows with wave scheduling
 
 ### Test targets
 
-- Run an existing agent-ci test workflow with `--runner ts` and compare output to Docker-based run
+- Run an existing local-ci test workflow with `--runner ts` and compare output to Docker-based run
 - Pause-on-failure + retry cycle with ts-runner
 - `--all` with multiple workflows, verify dependency ordering
 
@@ -166,7 +166,7 @@ Run ts-runner inside a RivetKit Agent OS actor. See `experiments/rivetkit-agent-
   - Queues: accept CI run requests
 - [ ] **Process adapter** — Replace `child_process.spawn` with Agent OS `exec()`/`spawn()` for VM execution
 - [ ] **Filesystem adapter** — Use Agent OS persistent filesystem (`/home/user`) instead of temp dirs
-- [ ] **Permission gating** — Map agent-ci's pause-on-failure to Agent OS's `permissionRequest` events
+- [ ] **Permission gating** — Map local-ci's pause-on-failure to Agent OS's `permissionRequest` events
 - [ ] **Durable workflows** — Each job becomes a Rivet workflow step with checkpoint/retry/rollback
 
 ### Prerequisites

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { applyAgentCiEnv } from "./config.ts";
+import { applyLocalCiEnv } from "./config.ts";
 
 function resolveRepoRoot() {
   let repoRoot = process.cwd();
@@ -12,22 +12,22 @@ function resolveRepoRoot() {
 }
 
 async function main() {
-  // Bootstrap: `.env.agent-ci` (AGENT_CI_* keys only) → process.env, shell wins.
-  applyAgentCiEnv(resolveRepoRoot());
+  // Bootstrap: `.env.local-ci` (LOCAL_CI_* keys only) → process.env, shell wins.
+  applyLocalCiEnv(resolveRepoRoot());
 
-  // DOCKER_HOST was removed in favor of AGENT_CI_DOCKER_HOST so that the value
-  // can live in .env.agent-ci without colliding with the shell's expectation
+  // DOCKER_HOST was removed in favor of LOCAL_CI_DOCKER_HOST so that the value
+  // can live in .env.local-ci without colliding with the shell's expectation
   // that DOCKER_HOST points at the real Docker daemon.
   if (process.env.DOCKER_HOST) {
     console.error(
-      "[Agent CI] Error: DOCKER_HOST is no longer supported.\n" +
-        "  Rename it to AGENT_CI_DOCKER_HOST (shell env or .env.agent-ci).",
+      "[Local CI] Error: DOCKER_HOST is no longer supported.\n" +
+        "  Rename it to LOCAL_CI_DOCKER_HOST (shell env or .env.local-ci).",
     );
     process.exit(1);
   }
-  if (process.env.AGENT_CI_DOCKER_HOST) {
+  if (process.env.LOCAL_CI_DOCKER_HOST) {
     // Forward to DOCKER_HOST so dockerode's default client picks it up.
-    process.env.DOCKER_HOST = process.env.AGENT_CI_DOCKER_HOST;
+    process.env.DOCKER_HOST = process.env.LOCAL_CI_DOCKER_HOST;
   }
 
   const args = process.argv.slice(2);
@@ -52,7 +52,7 @@ async function main() {
 }
 
 function printUsage() {
-  console.log("Usage: agent-ci <command> [args]");
+  console.log("Usage: local-ci <command> [args]");
   console.log("");
   console.log("Commands:");
   console.log("  run [sha] --workflow <path>   Run all jobs in a workflow file (defaults to HEAD)");
@@ -73,7 +73,7 @@ function printUsage() {
     "  -q, --quiet                   Suppress animated rendering (also enabled by AI_AGENT=1)",
   );
   console.log(
-    "      --json                    Emit NDJSON event stream on stdout (also enabled by AGENT_CI_JSON=1)",
+    "      --json                    Emit NDJSON event stream on stdout (also enabled by LOCAL_CI_JSON=1)",
   );
   console.log(
     "      --no-matrix               Collapse all matrix combinations into a single job (uses first value of each key)",
@@ -83,14 +83,14 @@ function printUsage() {
   console.log(
     "                                Populate the private dependency cache before parallel jobs",
   );
-  console.log("                                Or set: AGENT_CI_PREWARM_THROUGH env var");
+  console.log("                                Or set: LOCAL_CI_PREWARM_THROUGH env var");
   console.log(
     "      --github-token [<token>]  GitHub token for fetching remote reusable workflows",
   );
   console.log(
     "                                (auto-resolves via `gh auth token` if no value given)",
   );
-  console.log("                                Or set: AGENT_CI_GITHUB_TOKEN env var");
+  console.log("                                Or set: LOCAL_CI_GITHUB_TOKEN env var");
   console.log(
     "      --commit-status           Post a GitHub commit status after the run (requires --github-token)",
   );
@@ -101,7 +101,7 @@ function printUsage() {
   console.log("");
   console.log("Secrets:");
   console.log("  Workflow secrets (${{ secrets.FOO }}) are resolved from:");
-  console.log("    1. .env.agent-ci file in the repo root");
+  console.log("    1. .env.local-ci file in the repo root");
   console.log("    2. Environment variables (shell env acts as fallback)");
   console.log("    3. --github-token automatically provides secrets.GITHUB_TOKEN");
   console.log("");
@@ -112,6 +112,6 @@ function printUsage() {
 }
 
 main().catch((err) => {
-  console.error("[Agent CI] Fatal error:", err);
+  console.error("[Local CI] Fatal error:", err);
   process.exit(1);
 });

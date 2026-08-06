@@ -4,8 +4,8 @@
   "after": "d00d1e550c0de1d00d1e550c0de1d00d1e550c0d",
   "repository": {
     "id": 123456789,
-    "name": "agent-ci",
-    "full_name": "redwoodjs/agent-ci",
+    "name": "local-ci",
+    "full_name": "redwoodjs/local-ci",
     "private": false,
     "owner": {
       "login": "peterp",
@@ -13,7 +13,7 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/123456?v=4",
       "type": "Organization"
     },
-    "html_url": "https://github.com/redwoodjs/agent-ci"
+    "html_url": "https://github.com/redwoodjs/local-ci"
   },
   "pusher": {
     "name": "peterp",

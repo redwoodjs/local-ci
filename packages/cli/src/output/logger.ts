@@ -18,9 +18,9 @@ function runNumberFromDirName(prefix: string, name: string): number | null {
   }
 
   // Extract the trailing numeric run counter from a name like:
-  //   agent-ci-redwoodjssdk-14        → 14
-  //   agent-ci-redwoodjssdk-15-j1     → 15
-  //   agent-ci-redwoodjssdk-15-j1-m2  → 15
+  //   local-ci-redwoodjssdk-14        → 14
+  //   local-ci-redwoodjssdk-15-j1     → 15
+  //   local-ci-redwoodjssdk-15-j1-m2  → 15
   // Strategy: strip any -j<N>, -m<N>, -r<N> suffixes first, then grab the last number.
   const baseName = name
     .replace(/-j\d+(-m\d+)?(-r\d+)?$/, "")
@@ -46,8 +46,8 @@ export function getNextLogNum(prefix: string): number {
   const nums = [
     ...collectRunNums(getRunsDir(), prefix),
     // Stable log dirs outlive temporary run dirs. Count them too so a pruned
-    // `<workDir>/runs/agent-ci-N-*` cannot be reused while
-    // `<logsDir>/agent-ci-N-*/timeline.json` still exists. Otherwise the DTU
+    // `<workDir>/runs/local-ci-N-*` cannot be reused while
+    // `<logsDir>/local-ci-N-*/timeline.json` still exists. Otherwise the DTU
     // appends the new run's timeline to stale records and the result builder can
     // replay an old failure as the current run's outcome. See issue #341.
     ...collectRunNums(getLogsDirectory(), prefix),
@@ -114,7 +114,7 @@ export function createLogContext(prefix: string, preferredName?: string) {
     ({ num, name, runDir } = allocateRunDir(prefix));
   }
 
-  // Run logs live under a stable, agent-ci-owned directory (default `<stateDir>/logs/`),
+  // Run logs live under a stable, local-ci-owned directory (default `<stateDir>/logs/`),
   // not next to the runner's working dir which lands in `os.tmpdir()` and gets pruned
   // by the OS. Keeps log paths in run-result JSON resolvable after the OS cleans tmp.
   // See issue #312.

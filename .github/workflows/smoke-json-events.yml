@@ -1,6 +1,6 @@
 name: "Smoke: --json NDJSON event stream (#289)"
 
-# Asserts that `agent-ci run --json` emits a well-formed NDJSON event stream:
+# Asserts that `local-ci run --json` emits a well-formed NDJSON event stream:
 # run.start with schemaVersion=1, step.start/finish for each step, job.finish,
 # and a final run.finish — and that every JSON line on stdout has a known
 # event field. See scripts/smoke-289.sh.
@@ -32,5 +32,5 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm --filter dtu-github-actions build
-      - name: agent-ci --json must emit a complete event stream
+      - name: local-ci --json must emit a complete event stream
         run: ./scripts/smoke-289.sh

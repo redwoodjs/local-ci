@@ -2,7 +2,7 @@ name: "Smoke: resource fidelity (degraded mode)"
 
 # Exercises the resource-fidelity classifier. The job declares an absurd
 # `runs-on: ubuntu-latest-999-cores` so that on every reasonable host the
-# `requestedCpuCount` (999) exceeds the host's CPU count, and agent-ci
+# `requestedCpuCount` (999) exceeds the host's CPU count, and local-ci
 # tags the job as `degraded` and prints a warning before execution.
 #
 # The workflow itself is trivial — the assertion is that the run completes
@@ -12,7 +12,7 @@ name: "Smoke: resource fidelity (degraded mode)"
 #
 # Local-only: the `ubuntu-latest-999-cores` label is unsatisfiable on real
 # GitHub-hosted runners, so the workflow is gated to `workflow_dispatch:`
-# to keep PRs from queueing a job that can never be picked up. agent-ci's
+# to keep PRs from queueing a job that can never be picked up. local-ci's
 # `--all` discovery treats `workflow_dispatch:`-only workflows as relevant.
 
 on:

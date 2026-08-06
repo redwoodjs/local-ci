@@ -27,7 +27,8 @@ async function terminateOldProcess() {
 }
 
 function getControlToken(req: any): string | undefined {
-  const headerToken = req.headers?.["x-agent-ci-dtu-token"];
+  const headerToken =
+    req.headers?.["x-local-ci-dtu-token"] ?? req.headers?.["x-agent-ci-dtu-token"];
   if (typeof headerToken === "string" && headerToken) {
     return headerToken;
   }
@@ -89,7 +90,7 @@ export async function bootstrapAndReturnApp(options?: {
 
   const controlToken =
     options?.controlToken ||
-    process.env.AGENT_CI_DTU_CONTROL_TOKEN ||
+    process.env.LOCAL_CI_DTU_CONTROL_TOKEN ||
     crypto.randomBytes(32).toString("base64url");
   app.use((req: any, res: any, next: any) => {
     if (!isControlPath(req.url)) {

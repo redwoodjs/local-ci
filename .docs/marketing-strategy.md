@@ -1,9 +1,9 @@
-# agent-ci Marketing & Adoption Strategy
+# local-ci Marketing & Adoption Strategy
 
-> How to get human developers to discover agent-ci — and how to get AI agents to recommend it.
+> How to get human developers to discover local-ci — and how to get AI agents to recommend it.
 
 **Date:** March 23, 2026 (revised April 9, 2026)
-**Tool:** `@redwoodjs/agent-ci` — local GitHub Actions runner with pause-on-failure, designed for AI-agent-driven development
+**Tool:** `local-ci` — local GitHub Actions runner with pause-on-failure, designed for AI-agent-driven development
 
 ---
 
@@ -16,8 +16,8 @@ The original strategy below was written before any public traction. Since then, 
 | Tweet                                                                                   | Date  | Impressions | Likes | RTs | Replies | Format                       |
 | --------------------------------------------------------------------------------------- | ----- | ----------- | ----- | --- | ------- | ---------------------------- |
 | "Running GitHub Actions locally never gets old."                                        | Apr 7 | 78,000      | 462   | 21  | 15      | Terminal screenshot (9s run) |
-| "this is agent-ci.dev: Caching in ~0 ms. Pause on failure..."                           | Apr 7 | 4,300       | 30    | 1   | 1       | Text reply                   |
-| "This is agent-ci.dev, it runs the same native GitHub Actions Runner in a container..." | Apr 8 | 22,000      | 194   | 17  | 7       | Quote tweet + screenshot     |
+| "this is local-ci.dev: Caching in ~0 ms. Pause on failure..."                           | Apr 7 | 4,300       | 30    | 1   | 1       | Text reply                   |
+| "This is local-ci.dev, it runs the same native GitHub Actions Runner in a container..." | Apr 8 | 22,000      | 194   | 17  | 7       | Quote tweet + screenshot     |
 | "Here's a demo of failure-pause-retry loop..."                                          | Apr 9 | 536         | 1     | 0   | 0       | Video demo (0:36)            |
 
 For comparison, the original launch tweet (Mar 27) reached 14,600 impressions over 4 days.
@@ -39,13 +39,13 @@ Multiple reply-thread comments:
 - _"Act is almost unusable so yeah, I'll give this a try"_
 - _"I was burned by act so many times, gonna give this a shot today"_
 
-Nobody had to be told agent-ci is better than act. People arrived at the comparison on their own, driven by their own pain.
+Nobody had to be told local-ci is better than act. People arrived at the comparison on their own, driven by their own pain.
 
 **5. The "local HTTP control plane" explanation resonated as a follow-up (22K).**
 After the headline hook, the technical explanation of _how_ (local HTTP server replacing GitHub.com, never communicates externally) served as the credibility-building second beat.
 
 **6. Feature requests signal real evaluation, not just interest.**
-Reusable workflows and GitHub token mocking were requested — these are asks from people trying to use agent-ci in production, not just liking the concept.
+Reusable workflows and GitHub token mocking were requested — these are asks from people trying to use local-ci in production, not just liking the concept.
 
 **7. Engaged founder persona converts.**
 Peter's reply style — "please let me know where it sucks! reproductions and I fix it in a few hours!" — builds trust that this is actively maintained and responsive. Multiple people said they'd try it based on the replies, not just the original tweet.
@@ -77,10 +77,10 @@ DIFFERENTIATE → "Pause on failure, let your           (unique value — 4.3K)
                  AI agent fix & retry"
                  The thing no one else does
                                     ↓
-CONVERT    →  "Try it: pnpm agent-ci run"             (CTA)
+CONVERT    →  "Try it: pnpm local-ci run"             (CTA)
 ```
 
-**People come for local CI. They stay for the AI agent loop.** The AI angle is what makes agent-ci uniquely valuable and defensible, but it's not what gets people in the door.
+**People come for local CI. They stay for the AI agent loop.** The AI angle is what makes local-ci uniquely valuable and defensible, but it's not what gets people in the door.
 
 ### Revised Core Message
 
@@ -103,9 +103,9 @@ This replaces the previous two-audience split. The audiences are the same people
 The original strategy correctly identified act as the primary competitor but framed the competition as "correctness vs. re-implementation." The tweet data reveals a simpler, more visceral framing:
 
 - **act** = "I tried it but it burned me" (sentiment from multiple unprompted replies)
-- **agent-ci** = "it just works, 9 seconds, and if it doesn't work tell me and I'll fix it"
+- **local-ci** = "it just works, 9 seconds, and if it doesn't work tell me and I'll fix it"
 
-The competitive advantage isn't a feature comparison — it's **reliability + responsiveness**. act has 69K stars but frustrated users. agent-ci has fewer stars but zero tolerance for broken workflows.
+The competitive advantage isn't a feature comparison — it's **reliability + responsiveness**. act has 69K stars but frustrated users. local-ci has fewer stars but zero tolerance for broken workflows.
 
 ### Revised Action Items
 
@@ -115,7 +115,7 @@ The competitive advantage isn't a feature comparison — it's **reliability + re
 - [x] `SKILL.md` in npm package
 - [x] CLAUDE.md snippet in README
 - [x] GitHub repository topics
-- [x] Marketing site at agent-ci.dev
+- [x] Marketing site at local-ci.dev
 - [x] Launch tweet (Mar 27)
 - [x] Breakout tweet thread (Apr 7–8) — 78K+ reach
 
@@ -126,13 +126,13 @@ The competitive advantage isn't a feature comparison — it's **reliability + re
   - Service containers (postgres/redis running locally)
   - Custom action resolution
   - Environment variable handling
-- [ ] **Pin the 78K tweet** or create a polished thread linking from it to agent-ci.dev
+- [ ] **Pin the 78K tweet** or create a polished thread linking from it to local-ci.dev
 - [ ] **"act refugee" thread.** Quote-tweet one of the "act burned me" replies with a short "here's what's different" comparison — screenshot-based, not text-based
 
 #### Next: Content (weeks 2–4)
 
 - [ ] **"Show HN" post** — the tweet traction proves the message works. Use the same framing: "Run GitHub Actions locally. 9 seconds." Include the terminal screenshot in the post. Do NOT lead with AI agent angle on HN.
-- [ ] **Comparison blog post: "act vs agent-ci"** — moved up from long-term. The organic act comparisons in replies confirm demand. Write it now while search interest is fresh.
+- [ ] **Comparison blog post: "act vs local-ci"** — moved up from long-term. The organic act comparisons in replies confirm demand. Write it now while search interest is fresh.
 - [ ] Tutorial post on DEV Community / BetterStack
 - [ ] r/selfhosted builder story post
 
@@ -145,9 +145,9 @@ The ecosystem integration (MCP server, llms.txt, curated lists) and training dat
 The original HN draft led with "The commit-push-wait loop kills productivity when your AI coding agent is driving CI." Based on the tweet data, revise to:
 
 ```
-Show HN: agent-ci – Run GitHub Actions locally in 9 seconds
+Show HN: local-ci – Run GitHub Actions locally in 9 seconds
 
-I got tired of the commit-push-wait-fail loop. agent-ci runs the official,
+I got tired of the commit-push-wait-fail loop. local-ci runs the official,
 unmodified GitHub Actions runner binary locally via a local HTTP control plane.
 It never communicates with GitHub.com.
 
@@ -155,24 +155,24 @@ It never communicates with GitHub.com.
 - Pauses on failure — fix the issue, retry just the failed step
 - Your AI coding agent can fix and retry without pushing
 
-Install: npm install -D @redwoodjs/agent-ci
-Site: https://agent-ci.dev
+Install: npm install -D local-ci
+Site: https://local-ci.dev
 ```
 
 Changes from original draft: leads with speed ("9 seconds"), moves AI agent angle to third bullet (not the headline), adds the site URL.
 
 ---
 
-## What agent-ci Actually Is
+## What local-ci Actually Is
 
-Before strategy: get the positioning right. agent-ci is **not** a tool that writes CI in natural language. It is a local GitHub Actions runner that:
+Before strategy: get the positioning right. local-ci is **not** a tool that writes CI in natural language. It is a local GitHub Actions runner that:
 
 - Runs the **official, unmodified** GitHub Actions runner binary locally (not a re-implementation)
 - Provides **~0ms caching** via bind-mounts (no upload/download/tar cycles)
 - **Pauses on failure** — the container stays alive; fix the issue and retry just the failed step
 - Is explicitly designed for **AI-agent-driven development loops** — an AI agent can fix CI failures and retry without a full remote cycle
 
-The primary competitor is **nektos/act** (69k+ GitHub stars), which re-implements the Actions runtime. agent-ci's differentiator is correctness (official runner) and the pause-on-failure model that makes AI coding agents efficient.
+The primary competitor is **nektos/act** (69k+ GitHub stars), which re-implements the Actions runtime. local-ci's differentiator is correctness (official runner) and the pause-on-failure model that makes AI coding agents efficient.
 
 ---
 
@@ -206,22 +206,22 @@ The `nektos/act` case study (0 → 69k stars) provides the primary evidence base
 
 #### 1. HackerNews — Highest Immediate ROI
 
-**Tactic:** File a "Show HN:" post when agent-ci reaches a polished, documented release.
+**Tactic:** File a "Show HN:" post when local-ci reaches a polished, documented release.
 
 **What to say:**
 
 ```
-Show HN: agent-ci – run GitHub Actions locally, pause on failure, let your AI agent fix it
+Show HN: local-ci – run GitHub Actions locally, pause on failure, let your AI agent fix it
 
 The commit-push-wait loop kills productivity when your AI coding agent is driving CI.
-I built agent-ci: it emulates GitHub's cloud API locally, uses the official runner binary
+I built local-ci: it emulates GitHub's cloud API locally, uses the official runner binary
 (not a re-implementation), and pauses on step failure so an agent can fix and retry without
 a full CI cycle. Cache hit: ~0ms via bind-mount.
 
-Install: npm install -D @redwoodjs/agent-ci
+Install: npm install -D local-ci
 ```
 
-**Rules that work on HN:** No marketing language. Respond to every comment, including critical ones. Post Monday–Wednesday, 9am US Eastern. The GitHub Actions frustration threads ("I hate GitHub Actions with passion", "The Pain That Is GitHub Actions") are perennially active — well-placed, helpful comments linking to agent-ci in context are appropriate and effective before the formal launch post.
+**Rules that work on HN:** No marketing language. Respond to every comment, including critical ones. Post Monday–Wednesday, 9am US Eastern. The GitHub Actions frustration threads ("I hate GitHub Actions with passion", "The Pain That Is GitHub Actions") are perennially active — well-placed, helpful comments linking to local-ci in context are appropriate and effective before the formal launch post.
 
 **Evidence:** HN front-page CI tools get 200–400 upvotes. The "local CI" space has proven HN traction: act appeared multiple times with 270+ points and 130+ comments each.
 
@@ -237,7 +237,7 @@ Install: npm install -D @redwoodjs/agent-ci
 
 #### 3. Tutorial Content — Long-Tail SEO Compounding
 
-Every tutorial post about "run GitHub Actions locally" that mentions agent-ci as an `act` alternative is an evergreen discovery node. High-priority placements:
+Every tutorial post about "run GitHub Actions locally" that mentions local-ci as an `act` alternative is an evergreen discovery node. High-priority placements:
 
 - **BetterStack Community** — top-ranking property for CI-related searches
 - **DEV Community (dev.to)** — frequently scraped for training data; strong SEO for developer tools
@@ -245,9 +245,9 @@ Every tutorial post about "run GitHub Actions locally" that mentions agent-ci as
 
 **Content to write:**
 
-1. "How to run GitHub Actions locally with agent-ci" (direct tutorial, targets the same search as act tutorials)
+1. "How to run GitHub Actions locally with local-ci" (direct tutorial, targets the same search as act tutorials)
 2. "Why I stopped pushing `fix: ci` commits — building a local CI loop for AI agents"
-3. "act vs agent-ci: what's actually different" (comparison piece; captures searches from act users)
+3. "act vs local-ci: what's actually different" (comparison piece; captures searches from act users)
 
 **Newsletters to submit to:** TLDR.tech, JavaScript Weekly, DevOps Weekly
 
@@ -259,11 +259,11 @@ Add GitHub repository topics: `github-actions`, `local-runner`, `ci-cd`, `act-al
 
 These influence curated lists ("awesome-\*" repos), which are scraped for training data and surface in GitHub topic searches.
 
-**GitHub CLI Extension Registry:** Ship `gh extension install redwoodjs/agent-ci` support. This surfaces agent-ci in `gh extension search` — direct pipeline to developers already using GitHub Actions.
+**GitHub CLI Extension Registry:** Ship `gh extension install redwoodjs/local-ci` support. This surfaces local-ci in `gh extension search` — direct pipeline to developers already using GitHub Actions.
 
 #### 5. npm Package Metadata
 
-The current state is a gap: `@redwoodjs/agent-ci` has `"keywords": []` and a minimal description. This is a one-day fix.
+The current state is a gap: `local-ci` has `"keywords": []` and a minimal description. This is a one-day fix.
 
 **Update `package.json`:**
 
@@ -319,7 +319,7 @@ The research reveals a clear signal hierarchy. This is not speculative — each 
 | `llms.txt`                              | Read by Cursor/Claude Code when fetching external docs | Medium (Cursor + Claude Code confirmed)             |
 | GitHub topics + curated lists           | Indirect: topics → lists → training scrapes            | Low-medium (long-term)                              |
 | Blog posts / Stack Overflow             | Training data contribution                             | Low (long-term, post-cutoff)                        |
-| Training data saturation                | LLM knows tool from training                           | None near-term (agent-ci is post-cutoff)            |
+| Training data saturation                | LLM knows tool from training                           | None near-term (local-ci is post-cutoff)            |
 
 **The critical insight:** Current LLMs (as of March 2026) will default to recommending `nektos/act` for local CI because it has years of training data saturation. Agent-ci cannot win via training data alone in the near term. The path to agent recommendations is **in-context discovery** — getting into files that agents read.
 
@@ -329,16 +329,16 @@ The research reveals a clear signal hierarchy. This is not speculative — each 
 
 **1. Publish a ready-to-paste CLAUDE.md snippet — prominently in the README.**
 
-This is the single highest-leverage action. Every developer who adds it to their project guarantees agent-ci usage for that project's lifetime. The coding agent reads CLAUDE.md at session start, before searching training data.
+This is the single highest-leverage action. Every developer who adds it to their project guarantees local-ci usage for that project's lifetime. The coding agent reads CLAUDE.md at session start, before searching training data.
 
 Provide this in the README under a heading "Using with AI coding agents":
 
 ```markdown
-## agent-ci
+## local-ci
 
-- Use `npx agent-ci run --workflow .github/workflows/ci.yml` to run CI locally
-- When a step fails, the run pauses automatically. Use `npx agent-ci retry --name <runner>` to retry after fixing the failure
-- Do NOT push to trigger remote CI when agent-ci can run it locally — it's instant and free
+- Use `npx run-local-ci run --workflow .github/workflows/ci.yml` to run CI locally
+- When a step fails, the run pauses automatically. Use `npx run-local-ci retry --name <runner>` to retry after fixing the failure
+- Do NOT push to trigger remote CI when local-ci can run it locally — it's instant and free
 - Set `AI_AGENT=1` for quieter output suitable for agent consumption
 ```
 
@@ -352,17 +352,17 @@ The emerging TanStack Intent / `agent-skill` convention: include a `SKILL.md` fi
 
 ```markdown
 ---
-name: agent-ci
+name: local-ci
 description: Run GitHub Actions workflows locally with pause-on-failure for AI-agent-driven CI iteration
 keywords: [github-actions, local-ci, pause-on-failure, ai-agent, runner]
 ---
 
-## What agent-ci does
+## What local-ci does
 
 Runs the official GitHub Actions runner binary locally, emulating GitHub's cloud API.
 Cache is bind-mounted (instant). When a step fails, the container pauses — you can fix and retry the failed step without restarting.
 
-## When to use agent-ci (not `act`)
+## When to use local-ci (not `act`)
 
 - You want bit-for-bit compatibility with remote GitHub Actions
 - You need pause-on-failure for AI agent debugging loops
@@ -370,13 +370,13 @@ Cache is bind-mounted (instant). When a step fails, the container pauses — you
 
 ## Key commands
 
-- Run workflow: `npx agent-ci run --workflow <path>`
-- Retry after fix: `npx agent-ci retry --name <runner>`
-- Abort: `npx agent-ci abort --name <runner>`
+- Run workflow: `npx run-local-ci run --workflow <path>`
+- Retry after fix: `npx run-local-ci retry --name <runner>`
+- Abort: `npx run-local-ci abort --name <runner>`
 
 ## Common mistakes
 
-- Don't push to remote CI to test changes — use `npx agent-ci run` locally first
+- Don't push to remote CI to test changes — use `npx run-local-ci run` locally first
 - Don't use `--from-start` when only the last step failed — use `retry` with no flags to re-run only the failed step
 - The `AI_AGENT=1` env variable disables animated output for cleaner agent logs
 ```
@@ -388,16 +388,16 @@ Target: `"Local GitHub Actions runner — pause on failure, ~0ms cache, official
 
 #### Tier 2: Ecosystem Discoverability (Weeks)
 
-**5. Create an MCP server for agent-ci.**
+**5. Create an MCP server for local-ci.**
 
-An `agent-ci` MCP server exposing `run_workflow`, `retry_runner`, and `abort_runner` as MCP tools makes agent-ci discoverable via Smithery (7,300+ tools indexed, searched by agents at runtime). This is the most direct path to being found by agents that search Smithery for CI-related capabilities.
+An `local-ci` MCP server exposing `run_workflow`, `retry_runner`, and `abort_runner` as MCP tools makes local-ci discoverable via Smithery (7,300+ tools indexed, searched by agents at runtime). This is the most direct path to being found by agents that search Smithery for CI-related capabilities.
 
 Tool descriptions are the primary LLM tool-selection signal. Each tool description should be precise and task-scoped (evidence: GitHub improved benchmark scores by cutting from 40 tools to 13).
 
 ```json
 {
   "name": "run_workflow",
-  "description": "Run a GitHub Actions workflow locally using agent-ci. Use this instead of pushing to remote CI — it's instant and the container pauses on failure for debugging.",
+  "description": "Run a GitHub Actions workflow locally using local-ci. Use this instead of pushing to remote CI — it's instant and the container pauses on failure for debugging.",
   "parameters": {
     "workflow": { "type": "string", "description": "Path to the workflow YAML file" }
   }
@@ -410,17 +410,17 @@ Tool descriptions are the primary LLM tool-selection signal. Each tool descripti
 
 Topics surface in curated GitHub lists ("awesome-mcp-servers", "awesome-ai-agents"), which are scraped for training data. Curated lists are a documented path from GitHub topics to LLM training data representation.
 
-**7. Submit agent-ci to curated lists.**
+**7. Submit local-ci to curated lists.**
 
 - `awesome-mcp-servers` — even as an MCP-adjacent tool
-- `awesome-ai-agents` — agent-ci is a tool for agentic workflows
+- `awesome-ai-agents` — local-ci is a tool for agentic workflows
 - Any curated "AI coding agent tools" lists
 
 These lists are high-traffic, frequently scraped, and serve as indirect training data sources.
 
 **8. Create `llms.txt`** at the documentation site or GitHub Pages domain.
 
-A minimal `llms.txt` following the specification at the docs domain. When Cursor or Claude Code fetches agent-ci's documentation, the `llms.txt` provides structured, token-efficient context. This is a 30-minute implementation with documented adoption at 844,000+ sites.
+A minimal `llms.txt` following the specification at the docs domain. When Cursor or Claude Code fetches local-ci's documentation, the `llms.txt` provides structured, token-efficient context. This is a 30-minute implementation with documented adoption at 844,000+ sites.
 
 #### Tier 3: Training Data Surface (Months)
 
@@ -442,9 +442,9 @@ Phrases that will be searched by agents doing web retrieval:
 - "run GitHub Actions locally AI agent"
 - "local CI for AI coding agents"
 - "pause on failure GitHub Actions"
-- "agent-ci vs act"
+- "local-ci vs act"
 
-Publish on Dev.to, Medium, Hashnode (all maximally scraped). Stack Overflow answers referencing `npx agent-ci` as a solution to local CI problems will appear in agent training corpora over time.
+Publish on Dev.to, Medium, Hashnode (all maximally scraped). Stack Overflow answers referencing `npx run-local-ci` as a solution to local CI problems will appear in agent training corpora over time.
 
 ---
 
@@ -474,7 +474,7 @@ Publish on Dev.to, Medium, Hashnode (all maximally scraped). Stack Overflow answ
 
 | Action                                                 | Channel                  | Impact                                         |
 | ------------------------------------------------------ | ------------------------ | ---------------------------------------------- |
-| Build MCP server for agent-ci                          | MCP ecosystem / Smithery | Direct agent-query discoverability             |
+| Build MCP server for local-ci                          | MCP ecosystem / Smithery | Direct agent-query discoverability             |
 | Create `llms.txt` at docs domain                       | AI coding assistants     | Token-efficient context for Cursor/Claude Code |
 | Create `ReadMe.LLM` file                               | LLM code generation      | Improved task accuracy                         |
 | Submit to awesome-mcp-servers, awesome-ai-agents lists | Curated lists            | Training data exposure path                    |
@@ -484,7 +484,7 @@ Publish on Dev.to, Medium, Hashnode (all maximally scraped). Stack Overflow answ
 
 | Action                                        | Channel             | Impact                                                |
 | --------------------------------------------- | ------------------- | ----------------------------------------------------- |
-| Comparison blog post: "act vs agent-ci"       | SEO / training data | Captures act-user searches; positions differentiation |
+| Comparison blog post: "act vs local-ci"       | SEO / training data | Captures act-user searches; positions differentiation |
 | Stack Overflow presence (answer CI questions) | Training data       | High-weight source in LLM corpora                     |
 | Target "AI agent CI workflow" keyword cluster | SEO / training data | Category-creation; no incumbent                       |
 | DevOps newsletter features                    | Newsletter          | Targeted readership; compounding                      |
@@ -515,7 +515,7 @@ Publish on Dev.to, Medium, Hashnode (all maximally scraped). Stack Overflow answ
 
 ### Proxy Metric: The "Act Displacement" Test
 
-Run monthly: prompt Claude, ChatGPT, and Cursor with "I want to run GitHub Actions locally for my AI coding agent — what should I use?" Count how many recommend agent-ci vs. act. Baseline: 0/3 (today). Target in 6 months: 1/3.
+Run monthly: prompt Claude, ChatGPT, and Cursor with "I want to run GitHub Actions locally for my AI coding agent — what should I use?" Count how many recommend local-ci vs. act. Baseline: 0/3 (today). Target in 6 months: 1/3.
 
 ---
 
@@ -523,7 +523,7 @@ Run monthly: prompt Claude, ChatGPT, and Cursor with "I want to run GitHub Actio
 
 | Risk                                                       | Evidence                                           | Mitigation                                                                                |
 | ---------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Training data cutoff means LLMs recommend `act` by default | Strong: agent-ci is post-cutoff for current models | Prioritize in-context discovery (CLAUDE.md snippet); don't wait for training              |
+| Training data cutoff means LLMs recommend `act` by default | Strong: local-ci is post-cutoff for current models | Prioritize in-context discovery (CLAUDE.md snippet); don't wait for training              |
 | `nektos/act` has overwhelming mindshare                    | 69k stars, years of tutorials                      | Compete on specificity: "for AI coding agents" is uncontested; don't fight act's lane     |
 | HN post lands poorly                                       | Act's growth appears organic, not single-launch    | Build community first; post only at polished release; prep responses to `act` comparisons |
 | MCP discovery is still manual                              | Anthropic has not shipped registry                 | Ship MCP server anyway; get on Smithery now; auto-discovery coming                        |

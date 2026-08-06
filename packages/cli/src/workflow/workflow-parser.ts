@@ -23,7 +23,7 @@ export type RunnerContext = {
 /**
  * Derive a `RunnerContext` from a job's `runs-on:` labels. Defaults to
  * Linux/X64 for unknown labels so existing self-hosted configurations keep
- * working. macOS is mapped to ARM64 because agent-ci's macOS backend (tart)
+ * working. macOS is mapped to ARM64 because local-ci's macOS backend (tart)
  * only runs Apple Silicon VMs.
  */
 export function runnerContextFromRunsOn(labels: string[]): RunnerContext {
@@ -161,6 +161,7 @@ type ExprContext = {
   vars?: Record<string, string>;
   runnerContext?: RunnerContext;
   envContext?: Record<string, string>;
+  githubContext?: Record<string, string>;
 };
 
 const ZERO_SHA = "0000000000000000000000000000000000000000";
@@ -367,6 +368,13 @@ function resolveContextRef(trimmed: string, ctx: ExprContext): string | undefine
   }
   if (trimmed === "strategy.job-index") {
     return ctx.matrixContext?.["__job_index"] ?? "0";
+  }
+  if (trimmed.startsWith("github.")) {
+    const key = trimmed.slice("github.".length);
+    const dynamicValue = ctx.githubContext?.[key];
+    if (dynamicValue !== undefined) {
+      return dynamicValue;
+    }
   }
   if (trimmed in CONST_CONTEXT_REFS) {
     return CONST_CONTEXT_REFS[trimmed];
@@ -576,6 +584,7 @@ export function expandExpressions(
   vars?: Record<string, string>,
   runnerContext?: RunnerContext,
   envContext?: Record<string, string>,
+  githubContext?: Record<string, string>,
 ): string {
   const ctx: ExprContext = {
     repoPath,
@@ -586,6 +595,7 @@ export function expandExpressions(
     vars,
     runnerContext,
     envContext,
+    githubContext,
   };
   return value.replace(/\$\{\{([\s\S]*?)\}\}/g, (_match, expr: string) =>
     evaluateExprValue(expr, ctx),
@@ -788,7 +798,7 @@ function wrapScriptForShell(script: string, shell: string): string {
     return script;
   }
   // Use a delimiter that is extremely unlikely to appear in real scripts.
-  const delimiter = "__AGENT_CI_SHELL_WRAP_EOF__";
+  const delimiter = "__LOCAL_CI_SHELL_WRAP_EOF__";
   return `${invocation} <<'${delimiter}'\n${script}\n${delimiter}`;
 }
 
@@ -1147,17 +1157,100 @@ export async function parseWorkflowSteps(
     .filter(Boolean);
 }
 
+export interface WorkflowRegistryCredentials {
+  username: string;
+  password: string;
+}
+
+export interface WorkflowExpressionContext {
+  repoPath?: string;
+  secrets?: Record<string, string>;
+  matrixContext?: Record<string, string>;
+  needsContext?: Record<string, Record<string, string>>;
+  inputsContext?: Record<string, string>;
+  vars?: Record<string, string>;
+  envContext?: Record<string, string>;
+  githubContext?: Record<string, string>;
+}
+
 export interface WorkflowService {
   name: string;
   image: string;
+  credentials?: WorkflowRegistryCredentials;
   env?: Record<string, string>;
   ports?: string[];
   options?: string;
 }
 
+function expandWorkflowExpression(value: unknown, context: WorkflowExpressionContext): string {
+  return expandExpressions(
+    String(value),
+    context.repoPath,
+    context.secrets,
+    context.matrixContext,
+    context.needsContext,
+    context.inputsContext,
+    context.vars,
+    undefined,
+    context.envContext,
+    context.githubContext,
+  );
+}
+
+function resolveWorkflowJobEnv(
+  rawYaml: unknown,
+  rawJob: unknown,
+  context: WorkflowExpressionContext,
+): Record<string, string> {
+  const pick = (source: unknown): Record<string, unknown> => {
+    if (!source || typeof source !== "object") {
+      return {};
+    }
+    const env = (source as { env?: unknown }).env;
+    return env && typeof env === "object" && !Array.isArray(env)
+      ? (env as Record<string, unknown>)
+      : {};
+  };
+  const resolveScope = (
+    values: Record<string, unknown>,
+    envContext: Record<string, string>,
+  ): Record<string, string> =>
+    Object.fromEntries(
+      Object.entries(values).map(([key, value]) => [
+        key,
+        expandWorkflowExpression(value, { ...context, envContext }),
+      ]),
+    );
+
+  const outerEnv = context.envContext ?? {};
+  const workflowEnv = resolveScope(pick(rawYaml), outerEnv);
+  const jobEnv = resolveScope(pick(rawJob), { ...outerEnv, ...workflowEnv });
+  return { ...outerEnv, ...workflowEnv, ...jobEnv };
+}
+
+function parseRegistryCredentials(
+  value: unknown,
+  context: WorkflowExpressionContext,
+): WorkflowRegistryCredentials | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const raw = value as Record<string, unknown>;
+  if (raw.username === undefined || raw.password === undefined) {
+    return undefined;
+  }
+
+  return {
+    username: expandWorkflowExpression(raw.username, context),
+    password: expandWorkflowExpression(raw.password, context),
+  };
+}
+
 export async function parseWorkflowServices(
   filePath: string,
   taskName: string,
+  context: WorkflowExpressionContext = {},
 ): Promise<WorkflowService[]> {
   const rawYaml = parseYaml(fs.readFileSync(filePath, "utf8"));
   const rawJob = rawYaml.jobs?.[taskName] || {};
@@ -1165,12 +1258,20 @@ export async function parseWorkflowServices(
   if (!rawServices || typeof rawServices !== "object") {
     return [];
   }
+  const expressionContext = {
+    ...context,
+    envContext: resolveWorkflowJobEnv(rawYaml, rawJob, context),
+  };
 
   return Object.entries(rawServices).map(([name, def]: [string, any]) => {
     const svc: WorkflowService = {
       name,
-      image: def.image || "",
+      image: expandWorkflowExpression(def.image || "", expressionContext),
     };
+    const credentials = parseRegistryCredentials(def.credentials, expressionContext);
+    if (credentials) {
+      svc.credentials = credentials;
+    }
     if (def.env && typeof def.env === "object") {
       svc.env = Object.fromEntries(Object.entries(def.env).map(([k, v]) => [k, String(v)]));
     }
@@ -1186,6 +1287,7 @@ export async function parseWorkflowServices(
 
 export interface WorkflowContainer {
   image: string;
+  credentials?: WorkflowRegistryCredentials;
   env?: Record<string, string>;
   ports?: string[];
   volumes?: string[];
@@ -1202,6 +1304,7 @@ export interface WorkflowContainer {
 export async function parseWorkflowContainer(
   filePath: string,
   taskName: string,
+  context: WorkflowExpressionContext = {},
 ): Promise<WorkflowContainer | null> {
   const rawYaml = parseYaml(fs.readFileSync(filePath, "utf8"));
   const rawJob = rawYaml.jobs?.[taskName] || {};
@@ -1209,10 +1312,14 @@ export async function parseWorkflowContainer(
   if (!rawContainer) {
     return null;
   }
+  const expressionContext = {
+    ...context,
+    envContext: resolveWorkflowJobEnv(rawYaml, rawJob, context),
+  };
 
   // Short form: `container: node:18`
   if (typeof rawContainer === "string") {
-    return { image: rawContainer };
+    return { image: expandWorkflowExpression(rawContainer, expressionContext) };
   }
 
   if (typeof rawContainer !== "object") {
@@ -1220,10 +1327,14 @@ export async function parseWorkflowContainer(
   }
 
   const result: WorkflowContainer = {
-    image: rawContainer.image || "",
+    image: expandWorkflowExpression(rawContainer.image || "", expressionContext),
   };
   if (!result.image) {
     return null;
+  }
+  const credentials = parseRegistryCredentials(rawContainer.credentials, expressionContext);
+  if (credentials) {
+    result.credentials = credentials;
   }
   if (rawContainer.env && typeof rawContainer.env === "object") {
     result.env = Object.fromEntries(
@@ -1377,7 +1488,7 @@ export function isWorkflowRelevant(
   // 4. workflow_dispatch-only workflows are local fixtures (e.g.
   // smoke-resource-mismatch.yml uses an unsatisfiable runner label and is
   // never expected to run on real GitHub Actions). Include them in --all so
-  // agent-ci can still exercise them locally. Only opt in when
+  // local-ci can still exercise them locally. Only opt in when
   // workflow_dispatch is the sole event — if the workflow also lists
   // pull_request / push, those checks already had their say above and the
   // user's path/branch filters should be honored.
@@ -1438,7 +1549,7 @@ export function validateSecrets(
     return;
   }
   throw new Error(
-    `[Agent CI] Missing secrets required by workflow job "${taskName}".\n` +
+    `[Local CI] Missing secrets required by workflow job "${taskName}".\n` +
       `Add the following to ${secretsFilePath} or set them as environment variables:\n\n` +
       missing.map((n) => `${n}=`).join("\n") +
       "\n",
@@ -1489,7 +1600,7 @@ export function validateVars(
     return;
   }
   throw new Error(
-    `[Agent CI] Missing vars required by workflow job "${taskName}".\n` +
+    `[Local CI] Missing vars required by workflow job "${taskName}".\n` +
       `Pass them via --var NAME=value (one flag per variable) or --var-file <path>:\n\n` +
       missing.map((n) => `  --var ${n}=<value>`).join("\n") +
       "\n",

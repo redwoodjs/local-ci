@@ -7,7 +7,7 @@ import { getDefaultMaxConcurrentJobsFromInputs } from "../packages/cli/src/outpu
 import { planFixtureWorkflow } from "../packages/cli/src/workflow/fixture-plan.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const fixturesRoot = path.join(root, "crates/agent-ci/fixtures");
+const fixturesRoot = path.join(root, "crates/local-ci/fixtures");
 const plansDir = path.join(fixturesRoot, "plans");
 const workflowsDir = path.join(fixturesRoot, "workflows");
 const eventsDir = path.join(fixturesRoot, "events");
@@ -106,7 +106,7 @@ function checkRunResultFixtures() {
 }
 
 function resolveDockerSocket(probe) {
-  const envHost = probe.env?.AGENT_CI_DOCKER_HOST?.trim();
+  const envHost = probe.env?.LOCAL_CI_DOCKER_HOST?.trim();
   if (envHost) {
     if (!envHost.startsWith("unix://")) {
       return { socketPath: "", uri: envHost, bindMountPath: "" };
@@ -116,7 +116,7 @@ function resolveDockerSocket(probe) {
     if (resolved) {
       return { socketPath: resolved, uri: `unix://${resolved}`, bindMountPath: socketPath };
     }
-    throw new Error(`AGENT_CI_DOCKER_HOST=${envHost} does not resolve to a working socket.`);
+    throw new Error(`LOCAL_CI_DOCKER_HOST=${envHost} does not resolve to a working socket.`);
   }
 
   if (!pathExists(probe, "/var/run/docker.sock")) {

@@ -1,0 +1,9 @@
+{
+  "name": "run-local-ci",
+  "version": "0.0.0-fixture",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "local-ci": "./bin/local-ci.mjs"
+  }
+}

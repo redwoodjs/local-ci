@@ -20,7 +20,7 @@ export function findRepoRoot(startPath: string): string | undefined {
 
 /**
  * Derive workflowRunId (group key) by stripping job/matrix/retry suffixes.
- * e.g. agent-ci-redwoodjssdk-14-j1-m2-r2 → agent-ci-redwoodjssdk-14
+ * e.g. local-ci-redwoodjssdk-14-j1-m2-r2 → local-ci-redwoodjssdk-14
  */
 export function deriveWorkflowRunId(containerName: string): string {
   return containerName.replace(/(-j\d+)?(-m\d+)?(-r\d+)?$/, "");
@@ -53,7 +53,7 @@ export function writeJobMetadata(opts: WriteJobMetadataOpts): void {
 
   // If the orchestrator (or retryRun) already wrote a metadata.json with the
   // correct workflowRunId, honour it. This is critical for retries of multi-job
-  // runs (e.g. agent-ci-runner-125-001-001) where a naive regex would strip only a
+  // runs (e.g. local-ci-runner-125-001-001) where a naive regex would strip only a
   // single suffix and produce the wrong group key.
   let workflowRunId: string | undefined;
   let attempt: number | undefined;

@@ -1,19 +1,19 @@
 #!/bin/sh
 set -eu
 
-repo="redwoodjs/agent-ci"
-base_url="${AGENT_CI_BASE_URL:-https://github.com/${repo}/releases/download}"
-version="${AGENT_CI_VERSION:-latest}"
-prefix="${AGENT_CI_PREFIX:-$HOME/.local}"
-bin_dir="${AGENT_CI_BIN_DIR:-}"
-os_override="${AGENT_CI_OS:-}"
-arch_override="${AGENT_CI_ARCH:-}"
+repo="redwoodjs/local-ci"
+base_url="${LOCAL_CI_BASE_URL:-${AGENT_CI_BASE_URL:-https://github.com/${repo}/releases/download}}"
+version="${LOCAL_CI_VERSION:-${AGENT_CI_VERSION:-latest}}"
+prefix="${LOCAL_CI_PREFIX:-${AGENT_CI_PREFIX:-$HOME/.local}}"
+bin_dir="${LOCAL_CI_BIN_DIR:-${AGENT_CI_BIN_DIR:-}}"
+os_override="${LOCAL_CI_OS:-${AGENT_CI_OS:-}}"
+arch_override="${LOCAL_CI_ARCH:-${AGENT_CI_ARCH:-}}"
 
 usage() {
   cat <<'USAGE'
-Install Agent CI native binary.
+Install Local CI native binary.
 
-Usage: curl -fsSL https://raw.githubusercontent.com/redwoodjs/agent-ci/main/install.sh | sh -s -- [options]
+Usage: curl -fsSL https://raw.githubusercontent.com/redwoodjs/local-ci/main/install.sh | sh -s -- [options]
 
 Options:
   --version <version>   Version tag to install, for example v0.16.1
@@ -22,9 +22,9 @@ Options:
   --help                Show this help
 
 Environment:
-  AGENT_CI_VERSION      Version tag to install
-  AGENT_CI_PREFIX       Prefix used when --prefix is not provided
-  AGENT_CI_BIN_DIR      Direct binary directory override
+  LOCAL_CI_VERSION      Version tag to install
+  LOCAL_CI_PREFIX       Prefix used when --prefix is not provided
+  LOCAL_CI_BIN_DIR      Direct binary directory override
 USAGE
 }
 
@@ -88,7 +88,7 @@ fetch_latest_version() {
       | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
       | head -n 1
   else
-    echo "curl is required to resolve the latest Agent CI release" >&2
+    echo "curl is required to resolve the latest Local CI release" >&2
     exit 1
   fi
 }
@@ -101,7 +101,7 @@ fetch() {
   elif command -v wget >/dev/null 2>&1; then
     wget -q "$src" -O "$dst"
   else
-    echo "curl or wget is required to install Agent CI" >&2
+    echo "curl or wget is required to install Local CI" >&2
     exit 1
   fi
 }
@@ -116,7 +116,7 @@ verify_checksum() {
   elif command -v sha256sum >/dev/null 2>&1; then
     (cd "$checksum_dir" && sha256sum -c "$checksum_base")
   else
-    echo "shasum or sha256sum is required to verify Agent CI downloads" >&2
+    echo "shasum or sha256sum is required to verify Local CI downloads" >&2
     exit 1
   fi
   test -s "$archive"
@@ -133,10 +133,10 @@ esac
 platform="$(detect_os)-$(detect_arch)"
 case "$platform" in
   linux-x64|linux-arm64|macos-x64|macos-arm64) ;;
-  *) echo "Unsupported Agent CI platform: $platform" >&2; exit 1 ;;
+  *) echo "Unsupported Local CI platform: $platform" >&2; exit 1 ;;
 esac
 
-archive="agent-ci-${version}-${platform}.tar.gz"
+archive="local-ci-${version}-${platform}.tar.gz"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT INT TERM
 
@@ -151,12 +151,12 @@ fetch "$checksum_url" "$checksum_path"
 verify_checksum "$archive_path" "$checksum_path"
 
 tar -xzf "$archive_path" -C "$tmp_dir"
-if [ ! -f "$tmp_dir/agent-ci" ]; then
-  echo "Archive did not contain agent-ci binary" >&2
+if [ ! -f "$tmp_dir/local-ci" ]; then
+  echo "Archive did not contain local-ci binary" >&2
   exit 1
 fi
 
 mkdir -p "$bin_dir"
-install -m 0755 "$tmp_dir/agent-ci" "$bin_dir/agent-ci"
+install -m 0755 "$tmp_dir/local-ci" "$bin_dir/local-ci"
 
-echo "Installed agent-ci to $bin_dir/agent-ci"
+echo "Installed local-ci to $bin_dir/local-ci"

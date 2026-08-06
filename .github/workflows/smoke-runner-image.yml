@@ -1,16 +1,16 @@
-name: "Smoke: .github/agent-ci.Dockerfile runner image"
+name: "Smoke: .github/local-ci.Dockerfile runner image"
 
 # Exercises the runner-image customization path documented in
-# packages/cli/runner-image.md: when a project has `.github/agent-ci.Dockerfile`
-# at its root, agent-ci builds that image and runs every job inside it.
+# packages/cli/runner-image.md: when a project has `.github/local-ci.Dockerfile`
+# at its root, local-ci builds that image and runs every job inside it.
 #
 # The nested project below bakes a marker file into the custom image at build
 # time. The nested workflow asserts the marker is present inside the runner —
-# which it only would be if agent-ci picked up the Dockerfile and used the
+# which it only would be if local-ci picked up the Dockerfile and used the
 # resulting image instead of the default `ghcr.io/actions/actions-runner:latest`.
 #
 # First CI run pays a ~60–90s docker build; subsequent runs reuse the cached
-# `agent-ci-runner:<hash>` tag and take ~0s.
+# `local-ci-runner:<hash>` tag and take ~0s.
 
 on:
   pull_request_target:
@@ -39,16 +39,16 @@ jobs:
 
       - run: pnpm install
 
-      - name: Build agent-ci
-        run: pnpm --filter @redwoodjs/agent-ci... -r build
+      - name: Build local-ci
+        run: pnpm --filter run-local-ci... -r build
 
       - name: Create temp project with custom runner Dockerfile
         run: |
           mkdir -p /tmp/runner-image-smoke/.github/workflows
 
-          cat > /tmp/runner-image-smoke/.github/agent-ci.Dockerfile << 'DOCKER'
+          cat > /tmp/runner-image-smoke/.github/local-ci.Dockerfile << 'DOCKER'
           FROM ghcr.io/actions/actions-runner:latest
-          RUN sudo sh -c 'echo from-custom-image > /usr/local/share/agent-ci-smoke-marker'
+          RUN sudo sh -c 'echo from-custom-image > /usr/local/share/local-ci-smoke-marker'
           DOCKER
 
           cat > /tmp/runner-image-smoke/.github/workflows/test.yml << 'WF'
@@ -60,7 +60,7 @@ jobs:
               steps:
                 - name: Marker baked into the custom runner image is present
                   run: |
-                    got=$(cat /usr/local/share/agent-ci-smoke-marker 2>/dev/null || echo MISSING)
+                    got=$(cat /usr/local/share/local-ci-smoke-marker 2>/dev/null || echo MISSING)
                     [ "$got" = "from-custom-image" ] || { echo "❌ marker=$got"; exit 1; }
                     echo "✅ custom runner image was used"
           WF
@@ -71,7 +71,7 @@ jobs:
           git add -A
           git -c user.name="test" -c user.email="test@test.com" commit -m "init"
 
-      - name: Run nested agent-ci (builds custom image on first invocation)
+      - name: Run nested local-ci (builds custom image on first invocation)
         working-directory: /tmp/runner-image-smoke
         run: |
           node "$GITHUB_WORKSPACE/packages/cli/dist/cli.js" \

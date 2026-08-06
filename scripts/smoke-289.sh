@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke #289: `agent-ci run --json` emits a well-formed NDJSON event stream
+# Smoke #289: `local-ci run --json` emits a well-formed NDJSON event stream
 # on stdout. Asserts run.start (with schemaVersion=1), step.start/finish for
 # every step, job.finish, and a final run.finish with status=passed. Also
 # asserts every JSON-shaped line on stdout parses and carries a known event.
@@ -17,7 +17,7 @@ while [ -L "$SOURCE" ]; do
 done
 SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-AGENT_CI="$REPO_ROOT/scripts/agent-ci-dev.sh"
+LOCAL_CI="$REPO_ROOT/scripts/local-ci-dev.sh"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -46,13 +46,13 @@ git commit -q -m init
 export GITHUB_REPO=smoke/issue-289
 
 OUT="$TMP/events.ndjson"
-echo "▶ agent-ci run --json -w ok.yml…"
-"$AGENT_CI" run --json -w ok.yml > "$OUT" 2>"$TMP/stderr.log"
+echo "▶ local-ci run --json -w ok.yml…"
+"$LOCAL_CI" run --json -w ok.yml > "$OUT" 2>"$TMP/stderr.log"
 EC=$?
 echo "▶ exit code: $EC"
 
 if [ "$EC" -ne 0 ]; then
-  echo "✗ FAIL: agent-ci exited $EC (expected 0)"
+  echo "✗ FAIL: local-ci exited $EC (expected 0)"
   echo "── stderr ─────"; cat "$TMP/stderr.log"
   echo "── stdout ─────"; cat "$OUT"
   exit 1

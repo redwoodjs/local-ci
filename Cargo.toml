@@ -1,11 +1,11 @@
 [workspace]
-members = ["crates/agent-ci", "crates/agent-ci-core", "crates/agent-ci-runtime"]
+members = ["crates/local-ci", "crates/local-ci-core", "crates/local-ci-runtime"]
 resolver = "3"
 
 [workspace.package]
 edition = "2024"
 license = "FSL-1.1-MIT"
-repository = "https://github.com/redwoodjs/agent-ci"
+repository = "https://github.com/redwoodjs/local-ci"
 rust-version = "1.85"
 
 [workspace.lints.rust]

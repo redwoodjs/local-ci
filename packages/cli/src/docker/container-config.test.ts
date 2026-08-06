@@ -23,8 +23,8 @@ describe("buildContainerEnv", () => {
 
     expect(env).toContain("RUNNER_NAME=runner-1");
     expect(env).toContain("GITHUB_REPOSITORY=org/repo");
-    expect(env).toContain("AGENT_CI_LOCAL=true");
-    expect(env).toContain("AGENT_CI_HEAD_SHA=abc123");
+    expect(env).toContain("LOCAL_CI_LOCAL=true");
+    expect(env).toContain("LOCAL_CI_HEAD_SHA=abc123");
     expect(env).toContain("FORCE_COLOR=1");
     // Should NOT include root-mode vars for standard container
     expect(env).not.toContain("RUNNER_ALLOW_RUNASROOT=1");
@@ -68,7 +68,7 @@ describe("buildContainerBinds", () => {
 
     expect(binds).toContain("/tmp/work:/home/runner/_work");
     expect(binds).toContain("/var/run/docker.sock:/var/run/docker.sock"); // default when dockerSocketPath is not set
-    expect(binds).toContain("/tmp/shims:/tmp/agent-ci-shims");
+    expect(binds).toContain("/tmp/shims:/tmp/local-ci-shims");
     expect(binds).toContain("/tmp/pnpm:/home/runner/_work/.pnpm-store");
     expect(binds).toContain("/tmp/npm:/home/runner/.npm");
     expect(binds).toContain("/tmp/yarn:/home/runner/.cache/yarn");
@@ -281,28 +281,28 @@ describe("resolveDockerApiUrl", () => {
 });
 
 describe("resolveDtuHost", () => {
-  const originalBridgeGateway = process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY;
-  const originalDtuHost = process.env.AGENT_CI_DTU_HOST;
+  const originalBridgeGateway = process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY;
+  const originalDtuHost = process.env.LOCAL_CI_DTU_HOST;
 
   beforeEach(() => {
-    delete process.env.AGENT_CI_DTU_HOST;
+    delete process.env.LOCAL_CI_DTU_HOST;
   });
 
   afterEach(() => {
     if (originalBridgeGateway === undefined) {
-      delete process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY;
+      delete process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY;
     } else {
-      process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY = originalBridgeGateway;
+      process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY = originalBridgeGateway;
     }
     if (originalDtuHost === undefined) {
-      delete process.env.AGENT_CI_DTU_HOST;
+      delete process.env.LOCAL_CI_DTU_HOST;
     } else {
-      process.env.AGENT_CI_DTU_HOST = originalDtuHost;
+      process.env.LOCAL_CI_DTU_HOST = originalDtuHost;
     }
   });
 
   it("uses host alias when available outside Docker", async () => {
-    delete process.env.AGENT_CI_DTU_HOST;
+    delete process.env.LOCAL_CI_DTU_HOST;
     const { resolveDtuHost } = await import("./container-config.ts");
     const originalExistsSync = fs.existsSync;
 
@@ -317,7 +317,7 @@ describe("resolveDtuHost", () => {
   });
 
   it("uses configured bridge gateway outside Docker when provided", async () => {
-    delete process.env.AGENT_CI_DTU_HOST;
+    delete process.env.LOCAL_CI_DTU_HOST;
     const { resolveDtuHost } = await import("./container-config.ts");
     const originalExistsSync = fs.existsSync;
 
@@ -327,13 +327,13 @@ describe("resolveDtuHost", () => {
       }
       return originalExistsSync(filePath);
     });
-    process.env.AGENT_CI_DOCKER_BRIDGE_GATEWAY = "10.10.0.1";
+    process.env.LOCAL_CI_DOCKER_BRIDGE_GATEWAY = "10.10.0.1";
 
     await expect(resolveDtuHost()).resolves.toBe("10.10.0.1");
   });
 
   it("uses host alias outside Docker when no gateway override is configured", async () => {
-    delete process.env.AGENT_CI_DTU_HOST;
+    delete process.env.LOCAL_CI_DTU_HOST;
     const { resolveDtuHost } = await import("./container-config.ts");
     const originalExistsSync = fs.existsSync;
 
@@ -349,34 +349,34 @@ describe("resolveDtuHost", () => {
 });
 
 describe("resolveDockerExtraHosts", () => {
-  const originalExtraHosts = process.env.AGENT_CI_DOCKER_EXTRA_HOSTS;
-  const originalDisable = process.env.AGENT_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
-  const originalGateway = process.env.AGENT_CI_DOCKER_HOST_GATEWAY;
+  const originalExtraHosts = process.env.LOCAL_CI_DOCKER_EXTRA_HOSTS;
+  const originalDisable = process.env.LOCAL_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
+  const originalGateway = process.env.LOCAL_CI_DOCKER_HOST_GATEWAY;
 
   afterEach(() => {
     if (originalExtraHosts === undefined) {
-      delete process.env.AGENT_CI_DOCKER_EXTRA_HOSTS;
+      delete process.env.LOCAL_CI_DOCKER_EXTRA_HOSTS;
     } else {
-      process.env.AGENT_CI_DOCKER_EXTRA_HOSTS = originalExtraHosts;
+      process.env.LOCAL_CI_DOCKER_EXTRA_HOSTS = originalExtraHosts;
     }
 
     if (originalDisable === undefined) {
-      delete process.env.AGENT_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
+      delete process.env.LOCAL_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
     } else {
-      process.env.AGENT_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS = originalDisable;
+      process.env.LOCAL_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS = originalDisable;
     }
 
     if (originalGateway === undefined) {
-      delete process.env.AGENT_CI_DOCKER_HOST_GATEWAY;
+      delete process.env.LOCAL_CI_DOCKER_HOST_GATEWAY;
     } else {
-      process.env.AGENT_CI_DOCKER_HOST_GATEWAY = originalGateway;
+      process.env.LOCAL_CI_DOCKER_HOST_GATEWAY = originalGateway;
     }
   });
 
   it("maps host.docker.internal to host-gateway by default", async () => {
-    delete process.env.AGENT_CI_DOCKER_EXTRA_HOSTS;
-    delete process.env.AGENT_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
-    delete process.env.AGENT_CI_DOCKER_HOST_GATEWAY;
+    delete process.env.LOCAL_CI_DOCKER_EXTRA_HOSTS;
+    delete process.env.LOCAL_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
+    delete process.env.LOCAL_CI_DOCKER_HOST_GATEWAY;
 
     const { resolveDockerExtraHosts } = await import("./container-config.ts");
     expect(resolveDockerExtraHosts("host.docker.internal")).toEqual([
@@ -384,9 +384,9 @@ describe("resolveDockerExtraHosts", () => {
     ]);
   });
 
-  it("uses AGENT_CI_DOCKER_EXTRA_HOSTS when provided", async () => {
-    process.env.AGENT_CI_DOCKER_EXTRA_HOSTS = "host.docker.internal:172.17.0.1,api.local:10.0.0.2";
-    delete process.env.AGENT_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
+  it("uses LOCAL_CI_DOCKER_EXTRA_HOSTS when provided", async () => {
+    process.env.LOCAL_CI_DOCKER_EXTRA_HOSTS = "host.docker.internal:172.17.0.1,api.local:10.0.0.2";
+    delete process.env.LOCAL_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
 
     const { resolveDockerExtraHosts } = await import("./container-config.ts");
     expect(resolveDockerExtraHosts("host.docker.internal")).toEqual([
@@ -396,16 +396,16 @@ describe("resolveDockerExtraHosts", () => {
   });
 
   it("returns undefined when defaults are disabled", async () => {
-    delete process.env.AGENT_CI_DOCKER_EXTRA_HOSTS;
-    process.env.AGENT_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS = "1";
+    delete process.env.LOCAL_CI_DOCKER_EXTRA_HOSTS;
+    process.env.LOCAL_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS = "1";
 
     const { resolveDockerExtraHosts } = await import("./container-config.ts");
     expect(resolveDockerExtraHosts("host.docker.internal")).toBeUndefined();
   });
 
   it("does not add default mapping for non-host.docker.internal hosts", async () => {
-    delete process.env.AGENT_CI_DOCKER_EXTRA_HOSTS;
-    delete process.env.AGENT_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
+    delete process.env.LOCAL_CI_DOCKER_EXTRA_HOSTS;
+    delete process.env.LOCAL_CI_DOCKER_DISABLE_DEFAULT_EXTRA_HOSTS;
 
     const { resolveDockerExtraHosts } = await import("./container-config.ts");
     expect(resolveDockerExtraHosts("10.10.10.10")).toBeUndefined();
@@ -465,12 +465,12 @@ describe("buildContainerBinds with signalsDir", () => {
   it("includes signals bind-mount when signalsDir is provided", async () => {
     const { buildContainerBinds } = await import("./container-config.ts");
     const binds = buildContainerBinds({ ...baseOpts, signalsDir: "/tmp/signals" });
-    expect(binds).toContain("/tmp/signals:/tmp/agent-ci-signals");
+    expect(binds).toContain("/tmp/signals:/tmp/local-ci-signals");
   });
 
   it("omits signals bind-mount when signalsDir is undefined", async () => {
     const { buildContainerBinds } = await import("./container-config.ts");
     const binds = buildContainerBinds(baseOpts);
-    expect(binds.some((b) => b.includes("agent-ci-signals"))).toBe(false);
+    expect(binds.some((b) => b.includes("local-ci-signals"))).toBe(false);
   });
 });

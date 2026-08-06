@@ -50,7 +50,7 @@ describe("truncateStepsThroughId", () => {
 
 describe("findPrewarmInstallCandidates", () => {
   function writeWorkflow(content: string): string {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-ci-prewarm-test-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "local-ci-prewarm-test-"));
     const file = path.join(dir, "ci.yml");
     fs.writeFileSync(file, content);
     return file;
@@ -111,9 +111,9 @@ describe("formatPrewarmWarning", () => {
     expect(warning).toContain("2 parallel jobs will start with a cold dependency cache");
     expect(warning).toContain("Each job has private node_modules");
     expect(warning).toContain(
-      "agent-ci run --all --prewarm-through .github/workflows/ci.yml:test:install",
+      "local-ci run --all --prewarm-through .github/workflows/ci.yml:test:install",
     );
-    expect(warning).toContain("AGENT_CI_PREWARM_THROUGH=.github/workflows/ci.yml:test:install");
+    expect(warning).toContain("LOCAL_CI_PREWARM_THROUGH=.github/workflows/ci.yml:test:install");
   });
 });
 

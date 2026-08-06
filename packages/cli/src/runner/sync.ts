@@ -88,5 +88,5 @@ export function syncWorkspaceForRetry(runDir: string): void {
     }
   }
 
-  console.log(`[Agent CI] Synced workspace from ${repoRoot}`);
+  console.log(`[Local CI] Synced workspace from ${repoRoot}`);
 }

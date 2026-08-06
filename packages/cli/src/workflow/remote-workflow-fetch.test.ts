@@ -329,7 +329,7 @@ jobs:
     expect(fetchCall[1].headers["Authorization"]).toBeUndefined();
   });
 
-  it("throws on 403 with auth hint mentioning --github-token and AGENT_CI_GITHUB_TOKEN", async () => {
+  it("throws on 403 with auth hint mentioning --github-token and LOCAL_CI_GITHUB_TOKEN", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 403,
@@ -342,7 +342,7 @@ jobs:
 `);
 
     await expect(prefetchRemoteWorkflows(wf, cacheDir)).rejects.toThrow(/--github-token/);
-    await expect(prefetchRemoteWorkflows(wf, cacheDir)).rejects.toThrow(/AGENT_CI_GITHUB_TOKEN/);
+    await expect(prefetchRemoteWorkflows(wf, cacheDir)).rejects.toThrow(/LOCAL_CI_GITHUB_TOKEN/);
   });
 
   it("throws on 401 with token-invalid hint when githubToken is provided", async () => {

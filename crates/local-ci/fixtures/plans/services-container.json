@@ -1,0 +1,19 @@
+{
+  "workflow": "services-container.yml",
+  "plan": {
+    "jobs": [
+      {
+        "id": "integration",
+        "runnerName": "local-ci-1-j1",
+        "target": "linux:ubuntu-latest",
+        "needs": [],
+        "if": null,
+        "matrix": null,
+        "outputs": [],
+        "services": ["postgres", "redis"],
+        "container": "node:22"
+      }
+    ],
+    "schedule": [["integration"]]
+  }
+}

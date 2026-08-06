@@ -4,6 +4,8 @@ import { execSync } from "node:child_process";
 
 // ─── Docker container cleanup ─────────────────────────────────────────────────
 
+const RESOURCE_PREFIXES = ["local-ci", "agent-ci"] as const;
+
 /**
  * Force-kill a specific runner and its associated service containers + network.
  * Used when stopping a single workflow run.
@@ -33,20 +35,22 @@ export function killRunnerContainers(runnerName: string): void {
     // no sidecars or Docker not reachable
   }
 
-  // 3. Remove the shared bridge network
-  try {
-    execSync(`docker network rm agent-ci-net-${runnerName}`, {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-  } catch {
-    // network doesn't exist or already removed
+  // 3. Remove the shared bridge network, including the legacy name.
+  for (const prefix of RESOURCE_PREFIXES) {
+    try {
+      execSync(`docker network rm ${prefix}-net-${runnerName}`, {
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch {
+      // network doesn't exist or already removed
+    }
   }
 }
 
 /**
  * Remove orphaned Docker resources left behind by previous runs:
- *   1. Stopped `agent-ci-*` containers (runners + sidecars)
- *   2. `agent-ci-net-*` networks with no connected containers
+ *   1. Stopped `local-ci-*` containers (runners + sidecars)
+ *   2. `local-ci-net-*` networks with no connected containers
  *   3. Dangling volumes (anonymous volumes from service containers like MySQL)
  *
  * Stopped containers must be removed first so their network references are
@@ -62,44 +66,47 @@ export function pruneOrphanedDockerResources(): void {
     return;
   }
 
-  // 1. Remove stopped/stale agent-ci-* containers (runners + sidecars) so their
+  // 1. Remove stopped/stale local-ci-* containers (runners + sidecars) so their
   //    network references are released before we try to prune networks.
   //    Includes both "exited" and "created" (never started) containers.
-  try {
-    const stoppedIds = execSync(
-      `docker ps -aq --filter "name=agent-ci-" --filter "status=exited" --filter "status=created"`,
-      { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
-    ).trim();
-    if (stoppedIds) {
-      execSync(`docker rm -f ${stoppedIds.split("\n").join(" ")}`, {
-        stdio: ["pipe", "pipe", "pipe"],
-      });
+  for (const prefix of RESOURCE_PREFIXES) {
+    try {
+      const stoppedIds = execSync(
+        `docker ps -aq --filter "name=${prefix}-" --filter "status=exited" --filter "status=created"`,
+        { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
+      ).trim();
+      if (stoppedIds) {
+        execSync(`docker rm -f ${stoppedIds.split("\n").join(" ")}`, {
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+      }
+    } catch {
+      // Docker not reachable or no stopped containers — skip
     }
-  } catch {
-    // Docker not reachable or no stopped containers — skip
   }
 
-  // 2. Remove orphaned agent-ci-net-* networks
-  try {
-    const nets = execSync(`docker network ls -q --filter "name=agent-ci-net-"`, {
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim();
-    if (nets) {
-      for (const netId of nets.split("\n")) {
-        try {
-          // docker network rm fails if containers are still attached — that's fine,
-          // we only want to remove truly orphaned networks.
-          execSync(`docker network rm ${netId}`, {
-            stdio: ["pipe", "pipe", "pipe"],
-          });
-        } catch {
-          // Network still in use — skip
+  // 2. Remove orphaned Local CI and legacy Agent CI networks.
+  for (const prefix of RESOURCE_PREFIXES) {
+    try {
+      const nets = execSync(`docker network ls -q --filter "name=${prefix}-net-"`, {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
+      if (nets) {
+        for (const netId of nets.split("\n")) {
+          try {
+            // docker network rm fails if containers are still attached — that's fine.
+            execSync(`docker network rm ${netId}`, {
+              stdio: ["pipe", "pipe", "pipe"],
+            });
+          } catch {
+            // Network still in use — skip
+          }
         }
       }
+    } catch {
+      // Docker not reachable — skip
     }
-  } catch {
-    // Docker not reachable — skip
   }
 
   // 3. Remove dangling volumes (anonymous volumes from service containers)
@@ -115,10 +122,10 @@ export function pruneOrphanedDockerResources(): void {
 // ─── Orphaned container cleanup ───────────────────────────────────────────────
 
 /**
- * Find and kill running `agent-ci-*` containers whose parent process is dead.
+ * Find and kill running `local-ci-*` containers whose parent process is dead.
  *
  * Every container created by `executeLocalJob` (and its service containers)
- * is labelled with `agent-ci.pid=<PID>`. If the process that spawned the
+ * is labelled with `local-ci.pid=<PID>`. If the process that spawned the
  * container is no longer alive, the container is an orphan and should be
  * killed — along with its svc-* sidecars and bridge network (via
  * `killRunnerContainers`).
@@ -127,7 +134,7 @@ export function pruneOrphanedDockerResources(): void {
  * containers or service containers created before the label was added.
  */
 export function killOrphanedContainers(): void {
-  // Skip when running inside a Docker container (e.g. nested agent-ci or
+  // Skip when running inside a Docker container (e.g. nested local-ci or
   // integration tests inside a runner container). The pid labels reference
   // host PIDs which don't exist in the container's PID namespace — every
   // container would look like an orphan, including our own parent.
@@ -135,19 +142,22 @@ export function killOrphanedContainers(): void {
     return;
   }
 
-  let lines: string[];
-  try {
-    // Format: "containerId containerName pid-label"
-    const raw = execSync(
-      `docker ps --filter "name=agent-ci-" --filter "status=running" --format "{{.ID}} {{.Names}} {{.Label \\"agent-ci.pid\\"}}"`,
-      { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
-    ).trim();
-    if (!raw) {
-      return;
+  const lines: string[] = [];
+  for (const prefix of RESOURCE_PREFIXES) {
+    try {
+      // Format: "containerId containerName pid-label"
+      const raw = execSync(
+        `docker ps --filter "name=${prefix}-" --filter "status=running" --format "{{.ID}} {{.Names}} {{.Label \\"${prefix}.pid\\"}}"`,
+        { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
+      ).trim();
+      if (raw) {
+        lines.push(...raw.split("\n"));
+      }
+    } catch {
+      // Docker not reachable — skip this namespace.
     }
-    lines = raw.split("\n");
-  } catch {
-    // Docker not reachable — skip
+  }
+  if (lines.length === 0) {
     return;
   }
 
@@ -175,7 +185,7 @@ export function killOrphanedContainers(): void {
       }
     }
 
-    // Derive the runner name: for svc containers (e.g. "agent-ci-2307-j2-svc-cache-db"),
+    // Derive the runner name: for svc containers (e.g. "local-ci-2307-j2-svc-cache-db"),
     // extract the runner prefix before "-svc-"; for runner containers, use the name as-is.
     const svcIdx = containerName.indexOf("-svc-");
     const runnerName = svcIdx !== -1 ? containerName.substring(0, svcIdx) : containerName;
@@ -190,7 +200,7 @@ export function killOrphanedContainers(): void {
 // ─── Workspace pruning ────────────────────────────────────────────────────────
 
 /**
- * Remove stale `agent-ci-*` run directories older than `maxAgeMs` from
+ * Remove stale `local-ci-*` run directories older than `maxAgeMs` from
  * `<workDir>/runs/`. Each run dir contains logs, work, shims, and diag
  * co-located, so a single rm removes everything for that run.
  *
@@ -206,7 +216,10 @@ export function pruneStaleWorkspaces(workDir: string, maxAgeMs: number): string[
   const pruned: string[] = [];
 
   for (const entry of fs.readdirSync(runsPath, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !entry.name.startsWith("agent-ci-")) {
+    if (
+      !entry.isDirectory() ||
+      !RESOURCE_PREFIXES.some((prefix) => entry.name.startsWith(`${prefix}-`))
+    ) {
       continue;
     }
 

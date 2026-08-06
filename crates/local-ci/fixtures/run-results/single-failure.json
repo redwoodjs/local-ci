@@ -1,0 +1,49 @@
+{
+  "input": {
+    "schemaVersion": 1,
+    "repo": "owner/repo",
+    "branch": "feature/test",
+    "worktreePath": "/tmp/local-ci/repo",
+    "headSha": "abc123",
+    "startedAt": "2026-01-01T00:00:00.000Z",
+    "finishedAt": "2026-01-01T00:00:10.000Z",
+    "status": "failed",
+    "jobs": [
+      {
+        "name": "test",
+        "workflow": "ci.yml",
+        "status": "failed",
+        "durationMs": 10000,
+        "failingStep": "Run tests",
+        "debugLogPath": "/tmp/local-ci/logs/debug.log",
+        "steps": [
+          {
+            "name": "Run tests",
+            "status": "failed",
+            "logPath": "/tmp/local-ci/logs/steps/run-tests.log"
+          }
+        ]
+      }
+    ]
+  },
+  "normalized": {
+    "schemaVersion": 1,
+    "repo": "owner/repo",
+    "branch": "feature/test",
+    "status": "failed",
+    "jobs": [
+      {
+        "name": "test",
+        "workflow": "ci.yml",
+        "status": "failed",
+        "failingStep": "Run tests",
+        "steps": [
+          {
+            "name": "Run tests",
+            "status": "failed"
+          }
+        ]
+      }
+    ]
+  }
+}

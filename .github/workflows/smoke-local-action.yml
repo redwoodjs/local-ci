@@ -4,7 +4,7 @@ name: "Smoke: step-level local action (uses: ./)"
 # action resolved from the workspace, separate from reusable workflows
 # (`jobs.<id>.uses: ./`). The action writes a marker file; the next step
 # reads it back. We avoid `steps.<id>.outputs.*` on purpose — that context
-# does not round-trip reliably from composite actions in agent-ci today.
+# does not round-trip reliably from composite actions in local-ci today.
 
 on:
   pull_request_target:
@@ -26,6 +26,6 @@ jobs:
 
       - name: Assert the marker file written by the local action exists
         run: |
-          got=$(cat /tmp/agent-ci-smoke-local-action 2>/dev/null || echo MISSING)
+          got=$(cat /tmp/local-ci-smoke-local-action 2>/dev/null || echo MISSING)
           [ "$got" = "tag=smoke-run-ok" ] || { echo "❌ marker=$got"; exit 1; }
           echo "✅ local action resolved, ran, and wrote its marker"

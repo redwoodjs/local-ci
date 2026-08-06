@@ -2,7 +2,7 @@ import { allPosts } from "content-collections";
 
 // Canonical origin for absolute URLs in the sitemap.
 // Per sitemaps.org the <loc> must be a fully-qualified URL.
-const ORIGIN = "https://agent-ci.dev";
+const ORIGIN = "https://local-ci.dev";
 
 // Static routes that are always part of the sitemap.
 // Blog posts are enumerated dynamically from content-collections.

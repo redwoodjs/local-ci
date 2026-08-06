@@ -43,11 +43,11 @@ describe("deriveWorkflowRunId", () => {
   it("strips job/matrix/retry suffixes", async () => {
     const { deriveWorkflowRunId } = await import("./metadata.ts");
 
-    expect(deriveWorkflowRunId("agent-ci-redwoodjssdk-14-j1-m2-r2")).toBe(
-      "agent-ci-redwoodjssdk-14",
+    expect(deriveWorkflowRunId("local-ci-redwoodjssdk-14-j1-m2-r2")).toBe(
+      "local-ci-redwoodjssdk-14",
     );
-    expect(deriveWorkflowRunId("agent-ci-redwoodjssdk-14-j1")).toBe("agent-ci-redwoodjssdk-14");
-    expect(deriveWorkflowRunId("agent-ci-redwoodjssdk-14")).toBe("agent-ci-redwoodjssdk-14");
+    expect(deriveWorkflowRunId("local-ci-redwoodjssdk-14-j1")).toBe("local-ci-redwoodjssdk-14");
+    expect(deriveWorkflowRunId("local-ci-redwoodjssdk-14")).toBe("local-ci-redwoodjssdk-14");
   });
 
   it("handles names without suffixes", async () => {
@@ -84,7 +84,7 @@ describe("writeJobMetadata", () => {
 
     writeJobMetadata({
       logDir,
-      containerName: "agent-ci-test-1",
+      containerName: "local-ci-test-1",
       job: {
         deliveryId: "d1",
         eventType: "push",
@@ -98,7 +98,7 @@ describe("writeJobMetadata", () => {
     const meta = JSON.parse(fs.readFileSync(path.join(logDir, "metadata.json"), "utf-8"));
     expect(meta.workflowPath).toBe(workflowPath);
     expect(meta.workflowName).toBe("ci");
-    expect(meta.workflowRunId).toBe("agent-ci-test-1");
+    expect(meta.workflowRunId).toBe("local-ci-test-1");
     expect(meta.commitId).toBe("abc123");
     expect(meta.taskId).toBe("build");
     expect(meta.attempt).toBe(1);
@@ -125,7 +125,7 @@ describe("writeJobMetadata", () => {
 
     writeJobMetadata({
       logDir,
-      containerName: "agent-ci-test-1-j1-m1",
+      containerName: "local-ci-test-1-j1-m1",
       job: {
         deliveryId: "d1",
         eventType: "push",

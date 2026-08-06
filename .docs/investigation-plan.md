@@ -1,16 +1,16 @@
-# Agent CI Marketing & Adoption Investigation Plan
+# Local CI Marketing & Adoption Investigation Plan
 
-## What agent-ci Actually Is
+## What local-ci Actually Is
 
-agent-ci is a **local GitHub Actions runner** that replaces the GitHub cloud API with local emulation. Key capabilities:
+local-ci is a **local GitHub Actions runner** that replaces the GitHub cloud API with local emulation. Key capabilities:
 
 - Runs the **official, unmodified** GitHub Actions runner binary locally
 - **~0 ms caching** via bind-mounts (no upload/download cycles)
 - **Pause on failure** — container stays alive; fix the issue and retry just the failed step
 - Ideal for **AI-agent-driven development**: an agent can fix CI failures in a tight loop without full remote CI cycles
-- Install: `npm install -D @redwoodjs/agent-ci`
+- Install: `npm install -D local-ci`
 
-The "AI-aware" angle is about workflow: agent-ci creates an environment where AI coding agents (Claude, Copilot, etc.) can iterate on CI failures efficiently — not about writing CI in natural language.
+The "AI-aware" angle is about workflow: local-ci creates an environment where AI coding agents (Claude, Copilot, etc.) can iterate on CI failures efficiently — not about writing CI in natural language.
 
 ---
 
@@ -54,12 +54,12 @@ The "AI-aware" angle is about workflow: agent-ci creates an environment where AI
 3. **Recommendation Surfacing**: How do agents recommend tools?
 4. **Knowledge Source Priority**: Which sources do agents weight most?
 5. **Agent Awareness Tactics**: What makes a tool "discoverable" to agents?
-6. **Prompt Surface**: How can agent-ci surface itself in agent prompts?
+6. **Prompt Surface**: How can local-ci surface itself in agent prompts?
 
 ### Hypotheses
 
 - **H6**: Agents rely primarily on GitHub READMEs and package registry metadata
-- **H7**: llms.txt convention will become "SEO for agents"; early adoption positions agent-ci as agent-friendly
+- **H7**: llms.txt convention will become "SEO for agents"; early adoption positions local-ci as agent-friendly
 - **H8**: Agents weight recency and GitHub stars heavily (flywheel effect with human adoption)
 - **H9**: Integration with popular coding agent frameworks is necessary but not sufficient
 - **H10**: High-quality blog posts and documentation have outsized impact on agent training data
@@ -100,7 +100,7 @@ The "AI-aware" angle is about workflow: agent-ci creates an environment where AI
 
 **Phase 6 deliverable:** `.docs/marketing-strategy.md`
 
-1. Executive summary: agent-ci positioning for devs and agents
+1. Executive summary: local-ci positioning for devs and agents
 2. Track 1 tactics: prioritized channels, messaging, proof points, quick wins
 3. Track 2 tactics: agent discoverability roadmap
 4. Integrated timeline: phased approach (quick wins, medium-term, long-term)

@@ -2,16 +2,16 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [["@redwoodjs/agent-ci", "dtu-github-actions"]],
+  "fixed": [["run-local-ci", "@redwoodjs/agent-ci", "dtu-github-actions"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
     "@redwoodjs/ts-runner",
-    "@redwoodjs/agent-ci-darwin-arm64",
-    "@redwoodjs/agent-ci-darwin-x64",
-    "@redwoodjs/agent-ci-linux-arm64",
-    "@redwoodjs/agent-ci-linux-x64"
+    "@redwoodjs/local-ci-darwin-arm64",
+    "@redwoodjs/local-ci-darwin-x64",
+    "@redwoodjs/local-ci-linux-arm64",
+    "@redwoodjs/local-ci-linux-x64"
   ]
 }

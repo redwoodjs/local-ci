@@ -1,7 +1,7 @@
 name: "Smoke: C compiler (cc) availability"
 
 # Reproduces a failure where a workflow that needs a C compiler (`cc`)
-# fails under agent-ci because the runner image (ghcr.io/actions/actions-runner)
+# fails under local-ci because the runner image (ghcr.io/actions/actions-runner)
 # does not ship with build-essential/gcc. On GitHub-hosted ubuntu-latest, `cc`
 # is always present — users hitting Rust crates with `cc-rs` build dependencies
 # (e.g. `cargo build`) expect the same locally.
