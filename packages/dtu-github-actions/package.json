@@ -1,6 +1,6 @@
 {
   "name": "dtu-github-actions",
-  "version": "0.17.1",
+  "version": "0.18.0",
   "description": "Digital Twin Universe - GitHub Actions Mock and Simulation",
   "keywords": [
     "ci",

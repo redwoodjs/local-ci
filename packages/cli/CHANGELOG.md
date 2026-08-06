@@ -1,5 +1,18 @@
 # Local CI
 
+## 0.18.0
+
+### Minor Changes
+
+- 417bd26: Rename Agent CI to Local CI. The canonical package is now `run-local-ci` and the canonical executable is `local-ci`. The old `@redwoodjs/agent-ci` package forwards to Local CI, while `AGENT_CI_*`, `.env.agent-ci`, and `.github/agent-ci*` remain supported compatibility aliases throughout the `0.x` release line.
+- 417bd26: Support private job and service container images with workflow registry credentials, and reuse images that are already cached locally. Refs #384.
+
+### Patch Changes
+
+- Updated dependencies [417bd26]
+- Updated dependencies [417bd26]
+  - dtu-github-actions@0.18.0
+
 ## 0.17.1
 
 ### Patch Changes
