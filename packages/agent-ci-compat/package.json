@@ -1,6 +1,6 @@
 {
   "name": "@redwoodjs/agent-ci",
-  "version": "0.17.1",
+  "version": "0.18.0",
   "description": "Compatibility package for local-ci.",
   "license": "FSL-1.1-MIT",
   "repository": {

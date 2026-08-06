@@ -1,6 +1,6 @@
 {
   "name": "run-local-ci",
-  "version": "0.17.1",
+  "version": "0.18.0",
   "description": "Run GitHub Actions locally — pause on failure, retry in place, and keep caches on your machine.",
   "keywords": [
     "act-alternative",
