@@ -1,5 +1,12 @@
 # @redwoodjs/agent-ci
 
+## 0.18.1
+
+### Patch Changes
+
+- 0f1e599: Republish the Agent CI compatibility package from the provenance-enabled GitHub release workflow so strict package-manager trust policies can upgrade safely.
+  - run-local-ci@0.18.1
+
 ## 0.18.0
 
 ### Minor Changes
