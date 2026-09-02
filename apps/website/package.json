@@ -31,7 +31,7 @@
     "lucide-react": "^1.7.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-server-dom-webpack": "19.2.6",
+    "react-server-dom-webpack": "19.2.8",
     "rwsdk": "1.2.3",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2"
