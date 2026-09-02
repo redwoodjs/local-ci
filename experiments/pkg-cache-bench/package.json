@@ -24,7 +24,7 @@
   "dependencies": {
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-server-dom-webpack": "19.2.6",
+    "react-server-dom-webpack": "19.2.8",
     "rwsdk": "1.2.3"
   },
   "devDependencies": {
