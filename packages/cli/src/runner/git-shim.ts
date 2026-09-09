@@ -48,6 +48,8 @@ if [[ "$*" == *"fetch"* ]]; then
     /usr/bin/git.real commit --allow-empty -m "workspace" 2>/dev/null
   fi
   /usr/bin/git.real update-ref refs/remotes/origin/main HEAD 2>/dev/null || true
+  # actions/checkout may detach at FETCH_HEAD after a successful fetch.
+  /usr/bin/git.real rev-parse HEAD > "$(/usr/bin/git.real rev-parse --git-path FETCH_HEAD)" || exit $?
   exit 0
 fi
 
