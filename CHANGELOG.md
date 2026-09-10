@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed simulated Git fetches to write `FETCH_HEAD`, allowing actions to check out the fetched commit in detached mode.
 - Restored SLSA provenance for the `@redwoodjs/agent-ci` compatibility package so pnpm's no-downgrade trust policy can upgrade safely.
 - Renamed Agent CI to Local CI. The canonical npm package is now `run-local-ci` and the executable is `local-ci`; `@redwoodjs/agent-ci`, the `agent-ci` executable, `AGENT_CI_*`, `.env.agent-ci`, and legacy Docker resources remain supported compatibility aliases through the remaining `0.x` releases.
 - Added private registry authentication for job and service container images. Workflow credential expressions are resolved before Docker pulls missing images, while images already cached locally skip the registry request.
